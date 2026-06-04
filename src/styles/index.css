@@ -1,0 +1,76 @@
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,400;0,500;0,700;1,400&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-primario: #8b5cf6;
+  --color-secundario: #ec4899;
+  --color-fondo: #080612;
+  --color-texto: #ffffff;
+  --color-muted: #a1a1aa;
+  --color-border: #27272a;
+}
+
+@layer base {
+  * { box-sizing: border-box; }
+  html { background: #080612; }
+  body {
+    @apply bg-df-bg text-df-text font-sans antialiased;
+    min-height: 100dvh;
+    font-family: 'DM Sans', sans-serif;
+  }
+  ::-webkit-scrollbar { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-track { background: #120d22; }
+  ::-webkit-scrollbar-thumb { background: #2d1f50; border-radius: 4px; }
+}
+
+@layer utilities {
+  /* Superficies */
+  .df-card    { @apply bg-df-card border border-df-border rounded-2xl; }
+  .df-surface { @apply bg-df-surface border border-df-border rounded-xl; }
+
+  /* Botones */
+  .df-btn         { @apply bg-df-purple hover:bg-df-violet text-white font-bold rounded-full transition-all duration-200 active:scale-95; }
+  .df-btn-outline { @apply border border-df-border hover:border-df-violet text-df-muted hover:text-df-pink rounded-full transition-all duration-200; }
+  .df-btn-ghost   { @apply text-df-muted hover:text-white transition-colors duration-200; }
+
+  /* Inputs */
+  .df-input {
+    @apply bg-df-surface border border-df-border rounded-xl px-4 py-3 text-df-text placeholder-df-muted text-sm
+           focus:outline-none focus:border-df-violet transition-colors w-full;
+  }
+
+  /* Badges */
+  .df-badge-adv     { @apply bg-purple-900/50 text-df-pink    text-xs font-semibold px-2 py-0.5 rounded-full; }
+  .df-badge-int     { @apply bg-blue-900/50   text-blue-400   text-xs font-semibold px-2 py-0.5 rounded-full; }
+  .df-badge-beg     { @apply bg-green-900/50  text-green-400  text-xs font-semibold px-2 py-0.5 rounded-full; }
+  .df-badge-paid    { @apply bg-green-900/50  text-green-400  text-xs font-semibold px-2 py-0.5 rounded-full; }
+  .df-badge-pending { @apply bg-amber-900/50  text-amber-400  text-xs font-semibold px-2 py-0.5 rounded-full; }
+  .df-badge-overdue { @apply bg-red-900/50    text-red-400    text-xs font-semibold px-2 py-0.5 rounded-full; }
+  .df-badge-done    { @apply bg-green-900/50  text-green-400  text-xs font-semibold px-2 py-0.5 rounded-full; }
+  .df-badge-cancel  { @apply bg-zinc-900/50   text-zinc-400   text-xs font-semibold px-2 py-0.5 rounded-full; }
+
+  /* Efectos */
+  .glow-purple  { box-shadow: 0 0 30px rgba(124,58,237,0.25); }
+  .glow-pink    { box-shadow: 0 0 30px rgba(236,72,153,0.2); }
+  .circuit-bg {
+    background-image:
+      linear-gradient(rgba(168,85,247,.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(168,85,247,.05) 1px, transparent 1px);
+    background-size: 32px 32px;
+  }
+
+  /* Compatibilidad legacy */
+  .bg-primario          { background-color: var(--color-primario); }
+  .text-primario        { color: var(--color-primario); }
+  .border-primario      { border-color: var(--color-primario); }
+  .bg-df-violet         { background-color: var(--color-primario); }
+  .text-df-violet       { color: var(--color-primario); }
+  .border-df-violet     { border-color: var(--color-primario); }
+  .bg-df-pink           { background-color: var(--color-secundario); }
+  .text-df-pink         { color: var(--color-secundario); }
+  .hover\:bg-primario:hover   { background-color: var(--color-primario); }
+  .hover\:text-primario:hover { color: var(--color-primario); }
+}
