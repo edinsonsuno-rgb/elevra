@@ -2,21 +2,21 @@ import { NavLink, Outlet, Navigate, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/hooks/useAuth'
 import { supabase } from '@/lib/supabase'
 import { Spinner } from '@/components/ui/index'
-import InstalarAppButton from '@/components/ui/InstalarAppButton'
 import WhatsAppFloat from '@/components/ui/WhatsAppFloat'
 
 const NAV = [
-  { to: '/alumno',          icon: 'fa-solid fa-house',        label: 'Inicio'    },
-  { to: '/alumno/rutina',   icon: 'fa-solid fa-dumbbell',     label: 'Rutina'    },
-  { to: '/alumno/rutinas',  icon: 'fa-solid fa-layer-group',  label: 'Rutinas'   },
-  { to: '/alumno/videos',   icon: 'fa-solid fa-clapperboard', label: 'Videos'    },
-  { to: '/alumno/sesiones', icon: 'fa-solid fa-calendar',     label: 'Sesiones'  },
-  { to: '/alumno/mensajes', icon: 'fa-solid fa-message',      label: 'Mensajes'  },
-  { to: '/alumno/perfil',   icon: 'fa-solid fa-user',         label: 'Perfil'    },
+  { to: '/alumno',           icon: 'fa-solid fa-house',        label: 'Inicio'    },
+  { to: '/alumno/rutina',    icon: 'fa-solid fa-dumbbell',     label: 'Rutina'    },
+  { to: '/alumno/rutinas',   icon: 'fa-solid fa-layer-group',  label: 'Rutinas'   },
+  { to: '/alumno/videos',    icon: 'fa-solid fa-clapperboard', label: 'Videos'    },
+  { to: '/alumno/sesiones',  icon: 'fa-solid fa-calendar',     label: 'Sesiones'  },
+  { to: '/alumno/mensajes',  icon: 'fa-solid fa-message',      label: 'Mensajes'  },
+  { to: '/alumno/progreso',  icon: 'fa-solid fa-chart-line',   label: 'Progreso'  },
+  { to: '/alumno/perfil',    icon: 'fa-solid fa-user',         label: 'Perfil'    },
 ]
 
 export default function AlumnoLayout() {
-  const { role, loading, activa, displayName, signOut } = useAuth()
+  const { role, loading, activa, displayName, signOut } = useAuth() as any
   const navigate = useNavigate()
 
   async function handleSignOut() {
@@ -49,14 +49,11 @@ export default function AlumnoLayout() {
 
   return (
     <div className="flex h-screen bg-df-bg overflow-hidden">
-      {/* Sidebar */}
       <aside className="w-16 lg:w-56 flex-shrink-0 bg-df-card border-r border-df-border flex flex-col py-4">
-        {/* Logo */}
         <div className="px-3 lg:px-4 mb-6">
           <img src="/logo.png" alt="Logo" className="h-8 w-auto max-w-[120px] object-contain" />
         </div>
 
-        {/* Nav */}
         <nav className="flex-1 flex flex-col gap-1 px-2 overflow-y-auto">
           {NAV.map(item => (
             <NavLink key={item.to} to={item.to}
@@ -73,7 +70,6 @@ export default function AlumnoLayout() {
           ))}
         </nav>
 
-        {/* Footer */}
         <div className="px-2 pt-4 border-t border-df-border space-y-1">
           <NavLink to="/alumno/perfil"
             className={({ isActive }) =>
@@ -85,7 +81,6 @@ export default function AlumnoLayout() {
             </div>
             <span className="hidden lg:block text-sm font-medium truncate">{displayName ?? 'Mi perfil'}</span>
           </NavLink>
-          <InstalarAppButton />
           <button onClick={handleSignOut}
             className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-df-muted hover:text-red-400 hover:bg-red-900/10 transition-all">
             <i className="fa-solid fa-arrow-right-from-bracket text-sm w-4 text-center" />
@@ -94,14 +89,12 @@ export default function AlumnoLayout() {
         </div>
       </aside>
 
-      {/* Main */}
       <main className="flex-1 overflow-y-auto">
         <div className="max-w-3xl mx-auto p-5 lg:p-8">
           <Outlet />
         </div>
       </main>
 
-      {/* WhatsApp flotante */}
       <WhatsAppFloat mostrarProfe={true} />
     </div>
   )

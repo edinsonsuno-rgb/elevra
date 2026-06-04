@@ -40,6 +40,7 @@ import AlumnoRutinaPage          from '@/pages/alumno/AlumnoRutinaPage'
 import AlumnoSesionesPage        from '@/pages/alumno/AlumnoSesionesPage'
 import AlumnoPerfilPage          from '@/pages/alumno/AlumnoPerfilPage'
 import AlumnoEntrenamientoPage   from '@/pages/alumno/AlumnoEntrenamientoPage'
+import AlumnoProgresoPage        from '@/pages/alumno/AlumnoProgresoPage'
 
 import { Spinner } from '@/components/ui/index'
 
@@ -88,6 +89,7 @@ export default function App() {
           <Route element={<ProtectedRoute><AlumnoLayout /></ProtectedRoute>}>
             <Route path="/alumno"          element={<AlumnoDashboard />} />
             <Route path="/alumno/rutina"   element={<AlumnoRutinaPage />} />
+            <Route path="/alumno/progreso" element={<AlumnoProgresoPage />} />
             <Route path="/alumno/sesiones" element={<AlumnoSesionesPage />} />
             <Route path="/alumno/perfil"   element={<AlumnoPerfilPage />} />
             <Route path="/alumno/entrenamiento/:dia" element={<AlumnoEntrenamientoPage />} />
