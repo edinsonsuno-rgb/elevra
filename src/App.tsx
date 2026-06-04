@@ -47,7 +47,8 @@ import { Spinner } from '@/components/ui/index'
 function RootRedirect() {
   const { user, role, loading } = useAuth()
   if (loading) return <Spinner />
-  if (!user)             return <Navigate to="/login" replace />
+  if (!user) return <Navigate to="/login" replace />
+  if (!role) return <Navigate to="/login" replace />
   if (role === 'alumno') return <Navigate to="/alumno" replace />
   return <Navigate to="/dashboard" replace />
 }
