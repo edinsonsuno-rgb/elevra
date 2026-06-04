@@ -29,7 +29,7 @@ export default function SesionFormPage() {
 
   useEffect(() => {
     supabase.from('alumnos').select('id,nombre').eq('activo', true).order('nombre')
-      .then(({ data }) => setAlumnos(data ?? []))
+      .then(({ data }) => setAlumnos((data ?? []) as any))
     if (isEdit) {
       supabase.from('sesiones').select('*').eq('id', id!).single().then(({ data }) => {
         if (data) setForm({
