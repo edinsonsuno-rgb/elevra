@@ -1,4 +1,4 @@
-import { NavLink, Outlet, useNavigate } from 'react-router-dom'
+import { NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '@/hooks/useAuth'
 import { Avatar } from '@/components/ui/index'
 import InstalarAppButton from '@/components/ui/InstalarAppButton'
@@ -24,7 +24,9 @@ const NAV_ADMIN = [
 export default function AppLayout() {
   const { displayName, role, signOut } = useAuth()
   const navigate = useNavigate()
+  const location = useLocation()
   const isAdmin  = role === 'admin'
+  const esInicio = location.pathname === '/dashboard' || location.pathname === '/alumno'
 
   async function handleSignOut() {
     await signOut()
@@ -34,8 +36,8 @@ export default function AppLayout() {
   return (
     <div className="flex h-screen bg-df-bg overflow-hidden">
       <aside className="w-16 lg:w-56 flex-shrink-0 bg-df-card border-r border-df-border flex flex-col py-4">
-        <div className="px-3 lg:px-4 mb-6">
-          <img src="/logo.png" alt="Logo" className="h-8 w-auto max-w-[120px] object-contain" />
+        <div className="px-3 lg:px-4 mb-6 overflow-hidden">
+          <img src="/logo.png" alt="Logo" className="h-8 w-auto max-w-full object-contain" />
         </div>
 
         <nav className="flex-1 flex flex-col gap-1 px-2 overflow-y-auto">
@@ -101,7 +103,7 @@ export default function AppLayout() {
         </div>
       </main>
 
-      <WhatsAppFloat mostrarProfe={false} />
+      {esInicio && <WhatsAppFloat mostrarProfe={false} />}
     </div>
   )
 }

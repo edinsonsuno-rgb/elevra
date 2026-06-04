@@ -1,4 +1,4 @@
-import { NavLink, Outlet, Navigate, useNavigate } from 'react-router-dom'
+import { NavLink, Outlet, Navigate, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '@/hooks/useAuth'
 import { supabase } from '@/lib/supabase'
 import { Spinner } from '@/components/ui/index'
@@ -18,6 +18,8 @@ const NAV = [
 export default function AlumnoLayout() {
   const { role, loading, activa, displayName, signOut } = useAuth() as any
   const navigate = useNavigate()
+  const location = useLocation()
+  const esInicio = location.pathname === '/dashboard' || location.pathname === '/alumno'
 
   async function handleSignOut() {
     await signOut()
@@ -95,7 +97,7 @@ export default function AlumnoLayout() {
         </div>
       </main>
 
-      <WhatsAppFloat mostrarProfe={true} />
+      {esInicio && <WhatsAppFloat mostrarProfe={true} />}
     </div>
   )
 }
