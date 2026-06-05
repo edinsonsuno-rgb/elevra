@@ -159,44 +159,44 @@ export default function ProfesoresPage() {
           <div className="space-y-2">
             {invitaciones.map(inv => (
               <div key={inv.id} className="df-surface p-4 rounded-xl flex items-center gap-4 group">
-                {/* Avatar inicial */}
+                {/* Avatar */}
                 <div className="w-10 h-10 rounded-full bg-df-purple/20 border border-df-purple/30 flex items-center justify-center flex-shrink-0 font-bold text-df-violet text-sm">
                   {inv.nombre.charAt(0).toUpperCase()}
                 </div>
 
-                {/* Info */}
+                {/* Info + estado */}
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-bold text-white">{inv.nombre}</p>
-                  <p className="text-xs text-df-muted">{inv.email}</p>
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="text-sm font-bold text-white truncate">{inv.nombre}</p>
+                    <span className={`text-xs font-semibold px-2 py-0.5 rounded-full flex-shrink-0 ${
+                      inv.usado
+                        ? 'bg-green-900/50 text-green-400'
+                        : 'bg-amber-900/50 text-amber-400'
+                    }`}>
+                      {inv.usado ? '✓ Registrado' : 'Pendiente'}
+                    </span>
+                  </div>
+                  <p className="text-xs text-df-muted mt-1 truncate">{inv.email}</p>
                 </div>
 
-                {/* Estado */}
-                <span className={`text-xs font-semibold px-2 py-0.5 rounded-full flex-shrink-0 ${
-                  inv.usado
-                    ? 'bg-green-900/50 text-green-400'
-                    : 'bg-amber-900/50 text-amber-400'
-                }`}>
-                  {inv.usado ? '✓ Registrado' : 'Pendiente'}
-                </span>
-
-                {/* Acciones */}
-                <div className="flex items-center gap-2 flex-shrink-0">
-                  {!inv.usado && (
-                    <button onClick={() => copiarLink(inv.token, inv.id)}
-                      className={`flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg transition-all ${
-                        copiado === inv.id
-                          ? 'bg-green-900/30 text-green-400'
-                          : 'df-surface text-df-muted hover:text-white hover:border-df-violet/40'
-                      }`}>
-                      <i className={`fa-solid ${copiado === inv.id ? 'fa-check' : 'fa-copy'} text-xs`} />
-                      {copiado === inv.id ? '¡Copiado!' : 'Copiar link'}
-                    </button>
-                  )}
-                  <button onClick={() => eliminarInvitacion(inv.id)}
-                    className="opacity-0 group-hover:opacity-100 w-8 h-8 rounded-lg text-red-400 hover:bg-red-900/20 flex items-center justify-center transition-all">
-                    <i className="fa-solid fa-trash text-xs" />
+                {/* Botón copiar link */}
+                {!inv.usado && (
+                  <button onClick={() => copiarLink(inv.token, inv.id)}
+                    className={`w-full flex items-center justify-center gap-1.5 text-xs px-3 py-2 rounded-lg transition-all ${
+                      copiado === inv.id
+                        ? 'bg-green-900/30 text-green-400'
+                        : 'df-surface text-df-muted hover:text-white hover:border-df-violet/40'
+                    }`}>
+                    <i className={`fa-solid ${copiado === inv.id ? 'fa-check' : 'fa-copy'} text-xs`} />
+                    {copiado === inv.id ? '¡Link copiado!' : 'Copiar link de registro'}
                   </button>
-                </div>
+                )}
+
+                {/* Botón eliminar */}
+                <button onClick={() => eliminarInvitacion(inv.id)}
+                  className="opacity-0 group-hover:opacity-100 w-8 h-8 rounded-lg text-red-400 hover:bg-red-900/20 flex items-center justify-center transition-all flex-shrink-0">
+                  <i className="fa-solid fa-trash text-xs" />
+                </button>
               </div>
             ))}
           </div>
