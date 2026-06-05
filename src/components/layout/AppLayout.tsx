@@ -4,16 +4,6 @@ import { Avatar } from '@/components/ui/index'
 import InstalarAppButton from '@/components/ui/InstalarAppButton'
 import WhatsAppFloat from '@/components/ui/WhatsAppFloat'
 
-const NAV_BASE = [
-  { to: '/dashboard',  icon: 'fa-solid fa-house',               label: 'Inicio' },
-  { to: '/alumnos',    icon: 'fa-solid fa-users',               label: 'Alumnos' },
-  { to: '/rutinas',    icon: 'fa-solid fa-dumbbell',            label: 'Rutinas' },
-  { to: '/catalogo',   icon: 'fa-solid fa-layer-group',         label: 'Catálogo' },
-  { to: '/agenda',     icon: 'fa-solid fa-calendar-days',       label: 'Agenda' },
-  { to: '/cobros',     icon: 'fa-solid fa-file-invoice-dollar', label: 'Cobros' },
-  { to: '/videos',     icon: 'fa-solid fa-clapperboard',        label: 'Videos' },
-  { to: '/mensajes',   icon: 'fa-solid fa-message',             label: 'Mensajes' },
-]
 
 const NAV_ADMIN = [
   { to: '/profesores',   icon: 'fa-solid fa-chalkboard-user',  label: 'Profesores' },
@@ -27,6 +17,17 @@ export default function AppLayout() {
   const location = useLocation()
   const isAdmin  = role === 'admin'
   const esInicio = location.pathname === '/dashboard' || location.pathname === '/alumno'
+
+  const NAV_BASE = [
+    { to: '/dashboard',  icon: 'fa-solid fa-house',               label: 'Inicio' },
+    ...(!isAdmin ? [{ to: '/alumnos', icon: 'fa-solid fa-users', label: 'Alumnos' }] : []),
+    { to: '/rutinas',    icon: 'fa-solid fa-dumbbell',            label: 'Rutinas' },
+    { to: '/catalogo',   icon: 'fa-solid fa-layer-group',         label: 'Catálogo' },
+    { to: '/agenda',     icon: 'fa-solid fa-calendar-days',       label: 'Agenda' },
+    { to: '/cobros',     icon: 'fa-solid fa-file-invoice-dollar', label: 'Cobros' },
+    { to: '/videos',     icon: 'fa-solid fa-clapperboard',        label: 'Videos' },
+    { to: '/mensajes',   icon: 'fa-solid fa-message',             label: 'Mensajes' },
+  ]
 
   async function handleSignOut() {
     await signOut()
