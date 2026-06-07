@@ -1,4 +1,4 @@
-import { NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom'
+import { NavLink, Outlet, Navigate, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '@/hooks/useAuth'
 import { Avatar } from '@/components/ui/index'
 import InstalarAppButton from '@/components/ui/InstalarAppButton'
@@ -14,6 +14,9 @@ const NAV_ADMIN = [
 export default function AppLayout() {
   const { displayName, role, signOut } = useAuth()
   const navigate = useNavigate()
+
+  if (role === 'alumno') return <Navigate to="/alumno" replace />
+
   const location = useLocation()
   const isAdmin  = role === 'admin'
   const esInicio = location.pathname === '/dashboard' || location.pathname === '/alumno'

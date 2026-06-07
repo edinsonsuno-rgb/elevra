@@ -54,9 +54,10 @@ function RootRedirect() {
 }
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { user, loading } = useAuth()
+  const { user, role, loading } = useAuth()
   if (loading) return <Spinner />
   if (!user) return <Navigate to="/login" replace />
+  if (!role) return <Spinner />
   return <>{children}</>
 }
 
