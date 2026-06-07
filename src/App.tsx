@@ -48,7 +48,7 @@ function RootRedirect() {
   const { user, role, loading } = useAuth()
   if (loading) return <Spinner />
   if (!user) return <Navigate to="/login" replace />
-  if (!role) return <Navigate to="/login" replace />
+  if (!role) return <Spinner />
   if (role === 'alumno') return <Navigate to="/alumno" replace />
   return <Navigate to="/dashboard" replace />
 }
@@ -63,6 +63,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 function PublicRoute({ children }: { children: React.ReactNode }) {
   const { user, role, loading } = useAuth()
   if (loading) return <Spinner />
+  if (!role && user) return <Spinner />
   if (user) return <Navigate to={role === 'alumno' ? '/alumno' : '/dashboard'} replace />
   return <>{children}</>
 }
