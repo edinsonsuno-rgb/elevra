@@ -3,6 +3,9 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
 import { Spinner } from '@/components/ui/index'
 import { useAuth } from '@/hooks/useAuth'
+import { getCache, setCache, invalidateCachePrefix } from '@/lib/queryCache'
+
+const TTL_CONFIG = 24 * 60 * 60 * 1000 // 24 h
 
 interface Config {
   clave: string
@@ -26,9 +29,19 @@ export default function ConfiguracionPage() {
   useEffect(() => { cargar() }, [])
 
   async function cargar() {
+    const cached = getCache<Config[]>('configuracion:all')
+    if (cached) {
+      setConfigs(cached)
+      const p = cached.find(c => c.clave === 'precio_por_alumno')
+      if (p) setPrecio(Number(p.valor))
+      setLoading(false)
+      return
+    }
     const { data } = await supabase.from('configuracion').select('*').order('clave')
-    setConfigs(data ?? [])
-    const p = data?.find(c => c.clave === 'precio_por_alumno')
+    const list = data ?? []
+    setCache('configuracion:all', list, TTL_CONFIG)
+    setConfigs(list)
+    const p = list.find(c => c.clave === 'precio_por_alumno')
     if (p) setPrecio(Number(p.valor))
     setLoading(false)
   }
@@ -40,6 +53,9 @@ export default function ConfiguracionPage() {
       supabase.from('configuracion').update({ valor: String(precio) }).eq('clave', 'precio_por_alumno'),
       supabase.from('configuracion').update({ valor: String(precioDia) }).eq('clave', 'precio_diario'),
     ])
+    // Invalida caches de precio en todas las páginas
+    invalidateCachePrefix('configuracion:')
+    invalidateCachePrefix('config:precio')
     setSaving(null)
     setSaved('precio')
     setTimeout(() => setSaved(null), 3000)

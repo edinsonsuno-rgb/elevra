@@ -4,6 +4,10 @@ import { supabase, Alumno, Sesion, Pago } from '@/lib/supabase'
 import { Avatar, ProgresBar, EstadoSesionBadge, EstadoPagoBadge, Spinner } from '@/components/ui/index'
 import { useAuth } from '@/hooks/useAuth'
 import { useProfesional } from '@/hooks/useProfesional'
+import { getCache, setCache } from '@/lib/queryCache'
+
+const TTL_FRASE        = 10 * 60 * 1000   // 10 min
+const TTL_INSTRUCTORES = 15 * 60 * 1000   // 15 min (compartido con InstructoresPage)
 
 const FRASES = [
   '¡Listo para transformar vidas hoy! 💪',
@@ -38,6 +42,17 @@ export default function DashboardPage() {
     const mes = new Date().toISOString().slice(0, 7)
 
     if (superadmin) {
+      // Reutiliza cache de InstructoresPage si existe
+      const cached = getCache<any[]>('admin:instructores')
+      if (cached) {
+        setInstructoresLista(cached.map(i => ({
+          id: i.tenant_id, nombre: i.tenant_nombre, subdominio: i.subdominio,
+          display_name: i.display_name, alumnos_count: i.alumnos_count,
+        })))
+        setLoading(false)
+        return
+      }
+
       const [{ data: tenants }, { data: admins }, { data: alums }] = await Promise.all([
         supabase.from('tenants').select('id, nombre, subdominio').eq('activo', true).order('nombre'),
         supabase.from('profiles').select('display_name, tenant_id').eq('role', 'instructor'),
@@ -45,33 +60,39 @@ export default function DashboardPage() {
       ])
       const conteo: Record<string, number> = {}
       for (const a of (alums ?? [])) conteo[a.tenant_id] = (conteo[a.tenant_id] ?? 0) + 1
-      setInstructoresLista(
-        (tenants ?? []).map(t => ({
-          id: t.id, nombre: t.nombre, subdominio: t.subdominio,
-          display_name: (admins ?? []).find(a => a.tenant_id === t.id)?.display_name ?? null,
-          alumnos_count: conteo[t.id] ?? 0,
-        }))
-      )
-      const { data: profile } = await supabase.from('profiles').select('motivational_phrase').eq('id', user?.id).single()
-      if (profile?.motivational_phrase) setFraseMot(profile.motivational_phrase)
+      const lista = (tenants ?? []).map(t => ({
+        id: t.id, nombre: t.nombre, subdominio: t.subdominio,
+        display_name: (admins ?? []).find(a => a.tenant_id === t.id)?.display_name ?? null,
+        alumnos_count: conteo[t.id] ?? 0,
+      }))
+      setCache('admin:instructores_dash', lista, TTL_INSTRUCTORES)
+      setInstructoresLista(lista)
       setLoading(false)
       return
     }
 
-    const [{ data: a }, { data: s }, { data: p }, { data: pagados }] = await Promise.all([
+    // Frase motivacional: cache 10 min para evitar fetch repetido
+    const fraseKey = `frase:${user?.id}`
+    const fraseCached = getCache<string>(fraseKey)
+    if (fraseCached) setFraseMot(fraseCached)
+
+    const [{ data: a }, { data: s }, { data: p }, { data: pagados }, { data: profile }] = await Promise.all([
       supabase.from('alumnos').select('*').eq('activo', true).order('nombre'),
       supabase.from('sesiones').select('*, alumno:alumnos(nombre,foto_url)')
         .gte('fecha', hoy).order('fecha').order('hora_inicio').limit(5),
       supabase.from('pagos').select('*, alumno:alumnos(nombre)')
         .in('estado', ['Pendiente', 'Vencido']).order('fecha_vencimiento').limit(5),
       supabase.from('pagos').select('monto').eq('estado', 'Pagado').gte('fecha_pago', `${mes}-01`),
+      fraseCached ? Promise.resolve({ data: null }) : supabase.from('profiles').select('motivational_phrase').eq('id', user?.id).single(),
     ])
     setAlumnos(a ?? [])
     setSesiones((s as any) ?? [])
     setPagos((p as any) ?? [])
     setIngresosMes(pagados?.reduce((acc, x) => acc + x.monto, 0) ?? 0)
-    const { data: profile } = await supabase.from('profiles').select('motivational_phrase').eq('id', user?.id).single()
-    if (profile?.motivational_phrase) setFraseMot(profile.motivational_phrase)
+    if (profile?.motivational_phrase) {
+      setFraseMot(profile.motivational_phrase)
+      setCache(fraseKey, profile.motivational_phrase, TTL_FRASE)
+    }
     setLoading(false)
   }
 

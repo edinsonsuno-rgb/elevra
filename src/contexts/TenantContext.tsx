@@ -1,5 +1,8 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
 import { supabase } from '@/lib/supabase'
+import { getCache, setCache } from '@/lib/queryCache'
+
+const TTL_TENANT = 60 * 60 * 1000 // 1 hora
 
 export interface TenantBrand {
   id:               string
@@ -55,7 +58,7 @@ export function TenantProvider({ children }: { children: ReactNode }) {
   const [tenant,  setTenant]  = useState<TenantBrand>(DEFAULT)
   const [loading, setLoading] = useState(true)
 
-  async function load() {
+  async function load(forceRefresh = false) {
     const subdomain = getSubdomain()
 
     if (!subdomain) {
@@ -63,6 +66,19 @@ export function TenantProvider({ children }: { children: ReactNode }) {
       setTenant(DEFAULT)
       setLoading(false)
       return
+    }
+
+    const cacheKey = `tenant:${subdomain}`
+
+    if (!forceRefresh) {
+      const cached = getCache<TenantBrand>(cacheKey)
+      if (cached) {
+        setTenant(cached)
+        applyColors(cached.color_primario, cached.color_secundario)
+        applyTitle(cached.nombre)
+        setLoading(false)
+        return
+      }
     }
 
     const { data } = await supabase
@@ -80,6 +96,7 @@ export function TenantProvider({ children }: { children: ReactNode }) {
         color_primario:   t.color_primario   || DEFAULT.color_primario,
         color_secundario: t.color_secundario || DEFAULT.color_secundario,
       }
+      setCache(cacheKey, merged, TTL_TENANT)
       setTenant(merged)
       applyColors(merged.color_primario, merged.color_secundario)
       applyTitle(t.nombre)
@@ -91,7 +108,7 @@ export function TenantProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => { load() }, [])
 
-  return <Ctx.Provider value={{ tenant, loading, refetch: load }}>{children}</Ctx.Provider>
+  return <Ctx.Provider value={{ tenant, loading, refetch: () => load(true) }}>{children}</Ctx.Provider>
 }
 
 export function useTenant() { return useContext(Ctx) }

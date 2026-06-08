@@ -4,6 +4,12 @@ import { supabase } from '@/lib/supabase'
 import { Avatar, Spinner, EmptyState, Modal } from '@/components/ui/index'
 import ImageUpload from '@/components/ui/ImageUpload'
 import { useAuth } from '@/hooks/useAuth'
+import { getCache, setCache, invalidateCache } from '@/lib/queryCache'
+
+const CACHE_INSTRUCTORES = 'admin:instructores'
+const CACHE_PRECIO       = 'config:precio_por_alumno'
+const TTL_INSTRUCTORES   = 15 * 60 * 1000   // 15 min
+const TTL_PRECIO         = 24 * 60 * 60 * 1000 // 24 h
 
 interface InstructorItem {
   tenant_id:     string
@@ -37,44 +43,55 @@ export default function InstructoresPage() {
   useEffect(() => { cargar() }, [])
 
   async function cargar() {
-    const [{ data: tenants }, { data: admins }, { data: alumnos }, { data: config }] = await Promise.all([
-      supabase.from('tenants')
-        .select('id, nombre, subdominio, al_dia')
-        .eq('activo', true)
-        .order('nombre'),
-      supabase.from('profiles')
-        .select('id, display_name, avatar_url, tenant_id')
-        .eq('role', 'instructor'),
-      supabase.from('alumnos')
-        .select('tenant_id')
-        .eq('activo', true),
-      supabase.from('configuracion')
-        .select('valor')
-        .eq('clave', 'precio_por_alumno')
-        .maybeSingle(),
+    // Precio: cache 24h (casi nunca cambia)
+    const precioCached = getCache<number>(CACHE_PRECIO)
+    if (precioCached !== null) {
+      setPrecioMensual(precioCached)
+    }
+
+    // Lista de instructores: cache 15 min
+    const listaCached = getCache<InstructorItem[]>(CACHE_INSTRUCTORES)
+    if (listaCached) {
+      setInstructores(listaCached)
+      setLoading(false)
+      if (precioCached !== null) return  // todo en cache, sin consultas
+    }
+
+    const [{ data: tenants }, { data: admins }, { data: alumnos }] = await Promise.all([
+      supabase.from('tenants').select('id, nombre, subdominio, al_dia').eq('activo', true).order('nombre'),
+      supabase.from('profiles').select('id, display_name, avatar_url, tenant_id').eq('role', 'instructor'),
+      supabase.from('alumnos').select('tenant_id').eq('activo', true),
     ])
 
-    if (config) setPrecioMensual(Number(config.valor ?? 10000))
+    if (precioCached === null) {
+      const { data: config } = await supabase.from('configuracion').select('valor').eq('clave', 'precio_por_alumno').maybeSingle()
+      if (config) {
+        const precio = Number(config.valor ?? 10000)
+        setPrecioMensual(precio)
+        setCache(CACHE_PRECIO, precio, TTL_PRECIO)
+      }
+    }
 
     const conteo: Record<string, number> = {}
     for (const a of (alumnos ?? [])) {
       conteo[a.tenant_id] = (conteo[a.tenant_id] ?? 0) + 1
     }
 
-    setInstructores(
-      (tenants ?? []).map(t => {
-        const admin = (admins ?? []).find(a => a.tenant_id === t.id)
-        return {
-          tenant_id:     t.id,
-          tenant_nombre: t.nombre,
-          subdominio:    t.subdominio,
-          al_dia:        (t as any).al_dia ?? true,
-          display_name:  admin?.display_name ?? null,
-          avatar_url:    admin?.avatar_url ?? null,
-          alumnos_count: conteo[t.id] ?? 0,
-        }
-      })
-    )
+    const lista: InstructorItem[] = (tenants ?? []).map((t: any) => {
+      const admin = (admins ?? []).find((a: any) => a.tenant_id === t.id)
+      return {
+        tenant_id:     t.id,
+        tenant_nombre: t.nombre,
+        subdominio:    t.subdominio,
+        al_dia:        (t as any).al_dia ?? true,
+        display_name:  admin?.display_name ?? null,
+        avatar_url:    admin?.avatar_url ?? null,
+        alumnos_count: conteo[t.id] ?? 0,
+      }
+    })
+
+    setCache(CACHE_INSTRUCTORES, lista, TTL_INSTRUCTORES)
+    setInstructores(lista)
     setLoading(false)
   }
 
@@ -140,7 +157,23 @@ export default function InstructoresPage() {
     const link = `${window.location.origin}/registro?token=${inv.token}`
     setLinkGenerado(link)
     setSaving(false)
-    cargar()
+
+    // Update optimista: agrega el nuevo instructor al estado local sin recargar
+    const nuevoItem: InstructorItem = {
+      tenant_id:     tenant.id,
+      tenant_nombre: form.gym.trim(),
+      subdominio:    form.subdominio.trim().toLowerCase(),
+      al_dia:        true,
+      display_name:  form.nombre.trim(),
+      avatar_url:    null,
+      alumnos_count: 0,
+    }
+    setInstructores(prev => {
+      const nueva = [...prev, nuevoItem].sort((a, b) => a.tenant_nombre.localeCompare(b.tenant_nombre))
+      setCache(CACHE_INSTRUCTORES, nueva, TTL_INSTRUCTORES)
+      return nueva
+    })
+    invalidateCache(CACHE_INSTRUCTORES) // fuerza recarga real en próxima visita
   }
 
   function copiarLink() {
