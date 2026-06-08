@@ -21,8 +21,9 @@ export default function DashboardPage() {
   const [loading, setLoading]       = useState(true)
   const [fraseMot, setFraseMot]     = useState('"La confianza en ti misma es el secreto de tu éxito."')
   const [editandoFrase, setEditandoFrase] = useState(false)
+  const [instructoresLista, setInstructoresLista] = useState<{id:string; nombre:string; display_name:string|null; subdominio:string; alumnos_count:number}[]>([])
 
-  const { displayName, user, role } = useAuth()
+  const { displayName, user, role, superadmin } = useAuth()
   const { profesional } = useProfesional()
 
   const hora = new Date().getHours()
@@ -30,11 +31,33 @@ export default function DashboardPage() {
   const frase = FRASES[Math.floor(Math.random() * FRASES.length)]
   const hoy = new Date().toISOString().split('T')[0]
 
-  useEffect(() => { if (profesional?.id) cargar() }, [profesional?.id])
+  useEffect(() => { cargar() }, [superadmin, profesional?.id])
 
   async function cargar() {
     setLoading(true)
     const mes = new Date().toISOString().slice(0, 7)
+
+    if (superadmin) {
+      const [{ data: tenants }, { data: admins }, { data: alums }] = await Promise.all([
+        supabase.from('tenants').select('id, nombre, subdominio').eq('activo', true).order('nombre'),
+        supabase.from('profiles').select('display_name, tenant_id').eq('role', 'admin'),
+        supabase.from('alumnos').select('tenant_id').eq('activo', true),
+      ])
+      const conteo: Record<string, number> = {}
+      for (const a of (alums ?? [])) conteo[a.tenant_id] = (conteo[a.tenant_id] ?? 0) + 1
+      setInstructoresLista(
+        (tenants ?? []).map(t => ({
+          id: t.id, nombre: t.nombre, subdominio: t.subdominio,
+          display_name: (admins ?? []).find(a => a.tenant_id === t.id)?.display_name ?? null,
+          alumnos_count: conteo[t.id] ?? 0,
+        }))
+      )
+      const { data: profile } = await supabase.from('profiles').select('motivational_phrase').eq('id', user?.id).single()
+      if (profile?.motivational_phrase) setFraseMot(profile.motivational_phrase)
+      setLoading(false)
+      return
+    }
+
     const [{ data: a }, { data: s }, { data: p }, { data: pagados }] = await Promise.all([
       supabase.from('alumnos').select('*').eq('activo', true).order('nombre'),
       supabase.from('sesiones').select('*, alumno:alumnos(nombre,foto_url)')
@@ -114,12 +137,17 @@ export default function DashboardPage() {
 
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {[
-          { icon: 'fa-solid fa-fire',                 label: 'Alumnos activos',       value: alumnos.length,                            color: 'text-orange-400' },
-          { icon: 'fa-solid fa-calendar-check',       label: 'Sesiones hoy',      value: sesionesHoy,                           color: 'text-blue-400' },
-          { icon: 'fa-solid fa-triangle-exclamation', label: 'Cobros pendientes', value: pendientesCobro,                       color: 'text-amber-400' },
-          { icon: 'fa-solid fa-dollar-sign',          label: 'Ingresos del mes',  value: `$${ingresosMes.toLocaleString()}`,    color: 'text-df-pink' },
-        ].map((s, i) => (
+        {(superadmin ? [
+          { icon: 'fa-solid fa-users-gear',           label: 'Instructores activos', value: instructoresLista.length,             color: 'text-df-violet' },
+          { icon: 'fa-solid fa-users',                label: 'Total alumnos',        value: instructoresLista.reduce((s,i)=>s+i.alumnos_count,0), color: 'text-orange-400' },
+          { icon: 'fa-solid fa-circle-check',         label: 'Al día',               value: '—',                                  color: 'text-green-400' },
+          { icon: 'fa-solid fa-dollar-sign',          label: 'Ingresos del mes',     value: '—',                                  color: 'text-df-pink' },
+        ] : [
+          { icon: 'fa-solid fa-fire',                 label: 'Alumnos activos',      value: alumnos.length,                       color: 'text-orange-400' },
+          { icon: 'fa-solid fa-calendar-check',       label: 'Sesiones hoy',         value: sesionesHoy,                          color: 'text-blue-400' },
+          { icon: 'fa-solid fa-triangle-exclamation', label: 'Cobros pendientes',    value: pendientesCobro,                      color: 'text-amber-400' },
+          { icon: 'fa-solid fa-dollar-sign',          label: 'Ingresos del mes',     value: `$${ingresosMes.toLocaleString()}`,   color: 'text-df-pink' },
+        ]).map((s, i) => (
           <div key={i} className="df-surface p-4 rounded-2xl">
             <div className={`text-xl mb-2 ${s.color}`}><i className={s.icon} /></div>
             <div className="text-2xl font-black text-white">{s.value}</div>
@@ -163,26 +191,51 @@ export default function DashboardPage() {
             </div>
           )}
 
-          {/* Mis alumnos */}
-          <div>
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="text-sm font-bold text-white">Mis alumnos</h2>
-              <Link to="/alumnos" className="text-xs text-df-violet hover:text-df-pink transition-colors">Ver todos →</Link>
+          {/* Mis alumnos / Instructores */}
+          {superadmin ? (
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="text-sm font-bold text-white">Instructores</h2>
+                <Link to="/instructores" className="text-xs text-df-violet hover:text-df-pink transition-colors">Ver todos →</Link>
+              </div>
+              <div className="grid sm:grid-cols-2 gap-3">
+                {instructoresLista.slice(0, 4).map(ins => (
+                  <Link key={ins.id} to={`/instructores/${ins.id}`}
+                    className="df-surface p-4 rounded-2xl flex items-center gap-3 hover:border-df-violet/40 transition-all">
+                    <Avatar nombre={ins.display_name ?? ins.nombre} size="sm" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-bold text-white truncate">{ins.display_name ?? ins.nombre}</p>
+                      <p className="text-xs text-df-muted">{ins.subdominio}.elevra.lat</p>
+                      <p className="text-[10px] text-df-muted mt-0.5">{ins.alumnos_count} alumnos</p>
+                    </div>
+                  </Link>
+                ))}
+                {instructoresLista.length === 0 && (
+                  <p className="text-xs text-df-muted col-span-2 text-center py-4">Sin instructores activos</p>
+                )}
+              </div>
             </div>
-            <div className="grid sm:grid-cols-2 gap-3">
-              {alumnos.slice(0, 4).map(a => (
-                <Link key={a.id} to={`/alumnos/${a.id}`}
-                  className="df-surface p-4 rounded-2xl flex items-center gap-3 hover:border-df-violet/40 transition-all">
-                  <Avatar nombre={a.nombre} foto_url={a.foto_url} size="sm" />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-bold text-white truncate">{a.nombre}</p>
-                    <p className="text-xs text-df-muted">{a.nivel}</p>
-                    <ProgresBar pct={65} className="mt-2" />
-                  </div>
-                </Link>
-              ))}
+          ) : (
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="text-sm font-bold text-white">Mis alumnos</h2>
+                <Link to="/alumnos" className="text-xs text-df-violet hover:text-df-pink transition-colors">Ver todos →</Link>
+              </div>
+              <div className="grid sm:grid-cols-2 gap-3">
+                {alumnos.slice(0, 4).map(a => (
+                  <Link key={a.id} to={`/alumnos/${a.id}`}
+                    className="df-surface p-4 rounded-2xl flex items-center gap-3 hover:border-df-violet/40 transition-all">
+                    <Avatar nombre={a.nombre} foto_url={a.foto_url} size="sm" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-bold text-white truncate">{a.nombre}</p>
+                      <p className="text-xs text-df-muted">{a.nivel}</p>
+                      <ProgresBar pct={65} className="mt-2" />
+                    </div>
+                  </Link>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Próximas sesiones */}
           <div>
