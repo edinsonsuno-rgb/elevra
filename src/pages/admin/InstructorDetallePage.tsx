@@ -2,15 +2,17 @@ import { useEffect, useState, FormEvent } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
 import { Avatar, NivelBadge, Spinner } from '@/components/ui/index'
+import ImageUpload from '@/components/ui/ImageUpload'
 
 interface TenantData {
-  id:             string
-  nombre:         string
-  subdominio:     string
-  logo_url:       string | null
-  color_primario: string
-  al_dia:         boolean
-  activo:         boolean
+  id:               string
+  nombre:           string
+  subdominio:       string
+  logo_url:         string | null
+  color_primario:   string
+  color_secundario: string
+  al_dia:           boolean
+  activo:           boolean
 }
 
 interface AdminProfile {
@@ -63,9 +65,12 @@ export default function InstructorDetallePage() {
   const [editing,    setEditing]    = useState(false)
   const [saving,     setSaving]     = useState(false)
   const [form, setForm] = useState({
-    nombre:       '',
-    display_name: '',
-    al_dia:       true,
+    nombre:           '',
+    display_name:     '',
+    al_dia:           true,
+    logo_url:         '',
+    color_primario:   '#9b30ff',
+    color_secundario: '#7c3aed',
   })
 
   useEffect(() => { if (tenantId) cargar() }, [tenantId])
@@ -77,7 +82,7 @@ export default function InstructorDetallePage() {
 
     const [{ data: t }, { data: p }, { data: a }, { data: pl }] = await Promise.all([
       supabase.from('tenants')
-        .select('id, nombre, subdominio, logo_url, color_primario, al_dia, activo')
+        .select('id, nombre, subdominio, logo_url, color_primario, color_secundario, al_dia, activo')
         .eq('id', tenantId!)
         .maybeSingle(),
       supabase.from('profiles')
@@ -102,9 +107,12 @@ export default function InstructorDetallePage() {
       const datos = t as TenantData
       setTenant(datos)
       setForm({
-        nombre:       datos.nombre,
-        display_name: (p as AdminProfile | null)?.display_name ?? '',
-        al_dia:       datos.al_dia ?? true,
+        nombre:           datos.nombre,
+        display_name:     (p as AdminProfile | null)?.display_name ?? '',
+        al_dia:           datos.al_dia ?? true,
+        logo_url:         datos.logo_url ?? '',
+        color_primario:   datos.color_primario ?? '#9b30ff',
+        color_secundario: datos.color_secundario ?? '#7c3aed',
       })
     }
     if (p) setAdmin(p as AdminProfile)
@@ -119,8 +127,11 @@ export default function InstructorDetallePage() {
     setSaving(true)
 
     await supabase.from('tenants').update({
-      nombre: form.nombre,
-      al_dia: form.al_dia,
+      nombre:           form.nombre,
+      al_dia:           form.al_dia,
+      logo_url:         form.logo_url.trim() || null,
+      color_primario:   form.color_primario,
+      color_secundario: form.color_secundario,
     }).eq('id', tenant.id)
 
     if (admin && form.display_name !== (admin.display_name ?? '')) {
@@ -129,15 +140,29 @@ export default function InstructorDetallePage() {
         .eq('id', admin.id)
     }
 
-    setTenant(prev => prev ? { ...prev, nombre: form.nombre, al_dia: form.al_dia } : prev)
-    setAdmin(prev  => prev ? { ...prev, display_name: form.display_name || prev.display_name } : prev)
+    setTenant(prev => prev ? {
+      ...prev,
+      nombre:           form.nombre,
+      al_dia:           form.al_dia,
+      logo_url:         form.logo_url || null,
+      color_primario:   form.color_primario,
+      color_secundario: form.color_secundario,
+    } : prev)
+    setAdmin(prev => prev ? { ...prev, display_name: form.display_name || prev.display_name } : prev)
     setSaving(false)
     setEditing(false)
   }
 
   function cancelarEdicion() {
     if (tenant && admin) {
-      setForm({ nombre: tenant.nombre, display_name: admin.display_name ?? '', al_dia: tenant.al_dia ?? true })
+      setForm({
+        nombre:           tenant.nombre,
+        display_name:     admin.display_name ?? '',
+        al_dia:           tenant.al_dia ?? true,
+        logo_url:         tenant.logo_url ?? '',
+        color_primario:   tenant.color_primario ?? '#9b30ff',
+        color_secundario: tenant.color_secundario ?? '#7c3aed',
+      })
     }
     setEditing(false)
   }
@@ -243,6 +268,58 @@ export default function InstructorDetallePage() {
                   {form.al_dia ? '✓ Al día' : '⚠ Pendiente'}
                 </button>
               </div>
+
+              {/* Logo */}
+              <ImageUpload
+                label="Logo"
+                value={form.logo_url || null}
+                onChange={url => setForm(f => ({ ...f, logo_url: url }))}
+                bucket="ejercicios"
+                folder="logos"
+              />
+
+              {/* Colores */}
+              <div>
+                <label className="text-xs font-semibold text-df-muted uppercase tracking-wider mb-2 block">Colores de la app</label>
+                <div className="grid grid-cols-2 gap-3">
+                  {([
+                    { key: 'color_primario'   as const, label: 'Principal' },
+                    { key: 'color_secundario' as const, label: 'Secundario' },
+                  ]).map(({ key, label }) => (
+                    <div key={key}>
+                      <p className="text-[11px] text-df-muted mb-1.5">{label}</p>
+                      <div className="flex items-center gap-2">
+                        <label className="cursor-pointer">
+                          <input type="color" value={form[key]}
+                            onChange={e => setForm(f => ({ ...f, [key]: e.target.value }))}
+                            className="sr-only" />
+                          <div className="w-9 h-9 rounded-xl border border-df-border" style={{ background: form[key] }} />
+                        </label>
+                        <input value={form[key]}
+                          onChange={e => setForm(f => ({ ...f, [key]: e.target.value }))}
+                          maxLength={7} className="df-input font-mono text-xs" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Preview */}
+              <div className="rounded-xl p-3 flex items-center justify-between"
+                style={{ background: `linear-gradient(135deg, ${form.color_secundario}22, ${form.color_primario}22)`, border: `1px solid ${form.color_primario}44` }}>
+                <div className="flex items-center gap-2">
+                  <div className="w-7 h-7 rounded-lg overflow-hidden bg-df-surface flex items-center justify-center">
+                    <img src={form.logo_url || '/logo.png'} alt="" className="w-full h-full object-contain"
+                      onError={e => { (e.currentTarget as HTMLImageElement).src = '/logo.png' }} />
+                  </div>
+                  <span className="text-sm font-bold text-white">{form.nombre || 'Sin nombre'}</span>
+                </div>
+                <div className="px-3 py-1.5 rounded-lg text-white text-xs font-bold"
+                  style={{ background: `linear-gradient(135deg, ${form.color_secundario}, ${form.color_primario})` }}>
+                  Vista previa
+                </div>
+              </div>
+
               <button type="submit" disabled={saving}
                 className="df-btn px-5 py-2.5 text-sm flex items-center gap-2">
                 {saving

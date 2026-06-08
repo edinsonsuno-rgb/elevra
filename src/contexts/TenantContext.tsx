@@ -66,8 +66,14 @@ export function TenantProvider({ children }: { children: ReactNode }) {
 
     if (data) {
       const t = data as TenantBrand
-      setTenant(t)
-      applyColors(t.color_primario, t.color_secundario)
+      const merged: TenantBrand = {
+        ...t,
+        logo_url:         t.logo_url         || DEFAULT.logo_url,
+        color_primario:   t.color_primario   || DEFAULT.color_primario,
+        color_secundario: t.color_secundario || DEFAULT.color_secundario,
+      }
+      setTenant(merged)
+      applyColors(merged.color_primario, merged.color_secundario)
       document.title = t.nombre
     } else {
       applyColors(DEFAULT.color_primario, DEFAULT.color_secundario)
