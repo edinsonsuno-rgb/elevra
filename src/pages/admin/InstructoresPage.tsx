@@ -20,12 +20,14 @@ export default function InstructoresPage() {
   const [instructores,  setInstructores]  = useState<InstructorItem[]>([])
   const [loading,       setLoading]       = useState(true)
   const [precioMensual, setPrecioMensual] = useState(10000)
-  const [modalOpen,     setModalOpen]     = useState(false)
-  const [paso,          setPaso]          = useState<1 | 2>(1)
-  const [saving,        setSaving]        = useState(false)
-  const [error,         setError]         = useState<string | null>(null)
-  const [linkGenerado,  setLinkGenerado]  = useState<string | null>(null)
-  const [copiado,       setCopiado]       = useState(false)
+  const [modalOpen,      setModalOpen]      = useState(false)
+  const [paso,           setPaso]           = useState<1 | 2>(1)
+  const [saving,         setSaving]         = useState(false)
+  const [error,          setError]          = useState<string | null>(null)
+  const [linkGenerado,   setLinkGenerado]   = useState<string | null>(null)
+  const [copiado,        setCopiado]        = useState(false)
+  const [subDisponible,  setSubDisponible]  = useState<boolean | null>(null)
+  const [checkingSub,    setCheckingSub]    = useState(false)
 
   const [form, setForm] = useState({
     nombre: '', email: '', gym: '', subdominio: '',
@@ -74,6 +76,22 @@ export default function InstructoresPage() {
       })
     )
     setLoading(false)
+  }
+
+  async function verificarSubdominio(sub: string) {
+    if (!sub || sub.length < 2) { setSubDisponible(null); return }
+    setCheckingSub(true)
+    const { data } = await supabase.from('tenants').select('id').eq('subdominio', sub).maybeSingle()
+    setSubDisponible(!data)
+    setCheckingSub(false)
+  }
+
+  function cambiarSubdominio(val: string) {
+    const limpio = val.toLowerCase().replace(/[^a-z0-9-]/g, '')
+    setForm(f => ({ ...f, subdominio: limpio }))
+    setSubDisponible(null)
+    clearTimeout((window as any)._subTimer)
+    ;(window as any)._subTimer = setTimeout(() => verificarSubdominio(limpio), 600)
   }
 
   async function crearInstructor(e: FormEvent) {
@@ -264,15 +282,33 @@ export default function InstructoresPage() {
               <label className="text-xs font-semibold text-df-muted uppercase tracking-wider mb-1.5 block">Subdominio *</label>
               <div className="flex items-center gap-2">
                 <input value={form.subdominio}
-                  onChange={e => setForm(f => ({ ...f, subdominio: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '') }))}
+                  onChange={e => cambiarSubdominio(e.target.value)}
                   placeholder="laurafit" className="df-input flex-1" required />
                 <span className="text-xs text-df-muted flex-shrink-0">.elevra.lat</span>
               </div>
+              {form.subdominio.length >= 2 && (
+                <p className={`text-xs mt-1.5 flex items-center gap-1.5 ${
+                  checkingSub ? 'text-df-muted' :
+                  subDisponible === true ? 'text-green-400' :
+                  subDisponible === false ? 'text-red-400' : 'text-df-muted'
+                }`}>
+                  {checkingSub
+                    ? <><div className="w-3 h-3 border border-current border-t-transparent rounded-full animate-spin" /> Verificando...</>
+                    : subDisponible === true
+                      ? <><i className="fa-solid fa-circle-check" /> Disponible</>
+                      : subDisponible === false
+                        ? <><i className="fa-solid fa-circle-xmark" /> Ya está en uso</>
+                        : null
+                  }
+                </p>
+              )}
             </div>
             <div className="flex gap-3 pt-1">
               <button type="button" onClick={cerrarModal}
                 className="df-btn-outline border border-df-border px-5 py-2.5 text-sm rounded-xl flex-1">Cancelar</button>
-              <button type="submit" className="df-btn px-5 py-2.5 text-sm flex-1 flex items-center justify-center gap-2">
+              <button type="submit"
+                disabled={checkingSub || subDisponible === false || !form.subdominio}
+                className="df-btn px-5 py-2.5 text-sm flex-1 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
                 Siguiente <i className="fa-solid fa-arrow-right text-xs" />
               </button>
             </div>
