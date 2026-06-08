@@ -331,6 +331,29 @@ export default function InstructorDetallePage() {
             </form>
           ) : (
             <div className="space-y-2">
+              {/* Branding */}
+              <div className="rounded-xl p-3 flex items-center justify-between"
+                style={{
+                  background: `linear-gradient(135deg, ${tenant.color_secundario ?? '#7c3aed'}22, ${tenant.color_primario ?? '#9b30ff'}22)`,
+                  border: `1px solid ${tenant.color_primario ?? '#9b30ff'}44`
+                }}>
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-xl overflow-hidden bg-df-surface border border-df-border flex items-center justify-center flex-shrink-0">
+                    <img src={tenant.logo_url ?? '/logo.png'} alt={tenant.nombre}
+                      className="w-full h-full object-contain p-0.5"
+                      onError={e => { (e.currentTarget as HTMLImageElement).src = '/logo.png' }} />
+                  </div>
+                  <div>
+                    <p className="text-[10px] text-df-muted uppercase tracking-wider">Marca</p>
+                    <p className="text-sm text-white font-semibold">{tenant.nombre}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <div className="w-5 h-5 rounded-full border border-white/20" style={{ background: tenant.color_primario ?? '#9b30ff' }} title="Color principal" />
+                  <div className="w-5 h-5 rounded-full border border-white/20" style={{ background: tenant.color_secundario ?? '#7c3aed' }} title="Color secundario" />
+                </div>
+              </div>
+
               <div className="df-surface rounded-xl p-3 flex items-center gap-3">
                 <i className="fa-solid fa-globe text-df-muted text-sm w-4 flex-shrink-0" />
                 <div>
