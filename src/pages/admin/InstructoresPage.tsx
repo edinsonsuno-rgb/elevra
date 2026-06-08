@@ -2,6 +2,7 @@ import { useEffect, useState, FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
 import { Avatar, Spinner, EmptyState, Modal } from '@/components/ui/index'
+import ImageUpload from '@/components/ui/ImageUpload'
 import { useAuth } from '@/hooks/useAuth'
 
 interface InstructorItem {
@@ -20,12 +21,16 @@ export default function InstructoresPage() {
   const [loading,       setLoading]       = useState(true)
   const [precioMensual, setPrecioMensual] = useState(10000)
   const [modalOpen,     setModalOpen]     = useState(false)
+  const [paso,          setPaso]          = useState<1 | 2>(1)
   const [saving,        setSaving]        = useState(false)
   const [error,         setError]         = useState<string | null>(null)
   const [linkGenerado,  setLinkGenerado]  = useState<string | null>(null)
   const [copiado,       setCopiado]       = useState(false)
 
-  const [form, setForm] = useState({ nombre: '', email: '', gym: '', subdominio: '' })
+  const [form, setForm] = useState({
+    nombre: '', email: '', gym: '', subdominio: '',
+    logo_url: '', color_primario: '#39D353', color_secundario: '#2ECC71',
+  })
 
   useEffect(() => { cargar() }, [])
 
@@ -75,14 +80,17 @@ export default function InstructoresPage() {
     e.preventDefault()
     setSaving(true); setError(null)
 
-    // 1. Crear tenant
+    // 1. Crear tenant con branding
     const { data: tenant, error: tenantErr } = await supabase
       .from('tenants')
       .insert({
-        nombre:     form.gym.trim(),
-        subdominio: form.subdominio.trim().toLowerCase(),
-        activo:     true,
-        al_dia:     true,
+        nombre:           form.gym.trim(),
+        subdominio:       form.subdominio.trim().toLowerCase(),
+        activo:           true,
+        al_dia:           true,
+        logo_url:         form.logo_url || null,
+        color_primario:   form.color_primario,
+        color_secundario: form.color_secundario,
       })
       .select('id')
       .single()
@@ -129,7 +137,8 @@ export default function InstructoresPage() {
     setError(null)
     setLinkGenerado(null)
     setCopiado(false)
-    setForm({ nombre: '', email: '', gym: '', subdominio: '' })
+    setPaso(1)
+    setForm({ nombre: '', email: '', gym: '', subdominio: '', logo_url: '', color_primario: '#39D353', color_secundario: '#2ECC71' })
   }
 
   if (loading) return <Spinner />
@@ -210,13 +219,15 @@ export default function InstructoresPage() {
       )}
 
       {/* Modal nuevo instructor */}
-      <Modal open={modalOpen} onClose={cerrarModal} title="Nuevo instructor">
+      <Modal open={modalOpen} onClose={cerrarModal}
+        title={linkGenerado ? '¡Instructor creado!' : paso === 1 ? 'Nuevo instructor — Datos' : 'Nuevo instructor — Marca'}>
+
         {linkGenerado ? (
           <div className="space-y-4">
             <div className="bg-green-900/20 border border-green-500/30 rounded-xl p-4 text-center space-y-2">
               <i className="fa-solid fa-circle-check text-2xl text-green-400 block" />
-              <p className="text-sm font-bold text-white">¡Instructor creado!</p>
-              <p className="text-xs text-df-muted">Comparte este link para que complete su registro</p>
+              <p className="text-sm font-bold text-white">{form.gym}</p>
+              <p className="text-xs text-df-muted">Comparte este link para que el instructor active su cuenta</p>
             </div>
             <div className="df-surface rounded-xl p-3 flex items-center gap-2">
               <p className="text-xs text-df-muted flex-1 truncate">{linkGenerado}</p>
@@ -228,43 +239,29 @@ export default function InstructoresPage() {
                 {copiado ? 'Copiado' : 'Copiar'}
               </button>
             </div>
-            <button onClick={cerrarModal} className="df-btn w-full py-2.5 text-sm">
-              Listo
-            </button>
+            <button onClick={cerrarModal} className="df-btn w-full py-2.5 text-sm">Listo</button>
           </div>
-        ) : (
-          <form onSubmit={crearInstructor} className="space-y-4">
-            <p className="text-xs text-df-muted">
-              Se creará el espacio y un link de registro para que el instructor active su cuenta.
-            </p>
+
+        ) : paso === 1 ? (
+          /* ── Paso 1: Datos básicos ── */
+          <form onSubmit={e => { e.preventDefault(); setPaso(2) }} className="space-y-4">
             <div>
-              <label className="text-xs font-semibold text-df-muted uppercase tracking-wider mb-1.5 block">
-                Nombre del instructor *
-              </label>
-              <input value={form.nombre}
-                onChange={e => setForm(f => ({ ...f, nombre: e.target.value }))}
+              <label className="text-xs font-semibold text-df-muted uppercase tracking-wider mb-1.5 block">Nombre del instructor *</label>
+              <input value={form.nombre} onChange={e => setForm(f => ({ ...f, nombre: e.target.value }))}
                 placeholder="Ej: Laura Martínez" className="df-input" required />
             </div>
             <div>
-              <label className="text-xs font-semibold text-df-muted uppercase tracking-wider mb-1.5 block">
-                Correo electrónico *
-              </label>
-              <input type="email" value={form.email}
-                onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
+              <label className="text-xs font-semibold text-df-muted uppercase tracking-wider mb-1.5 block">Correo electrónico *</label>
+              <input type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
                 placeholder="laura@correo.com" className="df-input" required />
             </div>
             <div>
-              <label className="text-xs font-semibold text-df-muted uppercase tracking-wider mb-1.5 block">
-                Nombre del gimnasio / negocio *
-              </label>
-              <input value={form.gym}
-                onChange={e => setForm(f => ({ ...f, gym: e.target.value }))}
+              <label className="text-xs font-semibold text-df-muted uppercase tracking-wider mb-1.5 block">Nombre del negocio *</label>
+              <input value={form.gym} onChange={e => setForm(f => ({ ...f, gym: e.target.value }))}
                 placeholder="Ej: Laura Fit" className="df-input" required />
             </div>
             <div>
-              <label className="text-xs font-semibold text-df-muted uppercase tracking-wider mb-1.5 block">
-                Subdominio *
-              </label>
+              <label className="text-xs font-semibold text-df-muted uppercase tracking-wider mb-1.5 block">Subdominio *</label>
               <div className="flex items-center gap-2">
                 <input value={form.subdominio}
                   onChange={e => setForm(f => ({ ...f, subdominio: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '') }))}
@@ -272,15 +269,75 @@ export default function InstructoresPage() {
                 <span className="text-xs text-df-muted flex-shrink-0">.elevra.lat</span>
               </div>
             </div>
+            <div className="flex gap-3 pt-1">
+              <button type="button" onClick={cerrarModal}
+                className="df-btn-outline border border-df-border px-5 py-2.5 text-sm rounded-xl flex-1">Cancelar</button>
+              <button type="submit" className="df-btn px-5 py-2.5 text-sm flex-1 flex items-center justify-center gap-2">
+                Siguiente <i className="fa-solid fa-arrow-right text-xs" />
+              </button>
+            </div>
+          </form>
+
+        ) : (
+          /* ── Paso 2: Logo y colores ── */
+          <form onSubmit={crearInstructor} className="space-y-4">
+            <ImageUpload
+              label="Logo del negocio"
+              value={form.logo_url || null}
+              onChange={url => setForm(f => ({ ...f, logo_url: url }))}
+              bucket="ejercicios"
+              folder="logos"
+            />
+            <div>
+              <label className="text-xs font-semibold text-df-muted uppercase tracking-wider mb-2 block">Colores de la app</label>
+              <div className="grid grid-cols-2 gap-3">
+                {([
+                  { key: 'color_primario'   as const, label: 'Principal' },
+                  { key: 'color_secundario' as const, label: 'Secundario' },
+                ]).map(({ key, label }) => (
+                  <div key={key}>
+                    <p className="text-[11px] text-df-muted mb-1.5">{label}</p>
+                    <div className="flex items-center gap-2">
+                      <label className="cursor-pointer">
+                        <input type="color" value={form[key]}
+                          onChange={e => setForm(f => ({ ...f, [key]: e.target.value }))}
+                          className="sr-only" />
+                        <div className="w-9 h-9 rounded-xl border border-df-border" style={{ background: form[key] }} />
+                      </label>
+                      <input value={form[key]}
+                        onChange={e => setForm(f => ({ ...f, [key]: e.target.value }))}
+                        maxLength={7} className="df-input font-mono text-xs" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Preview */}
+            <div className="rounded-xl p-3 flex items-center justify-between"
+              style={{ background: `linear-gradient(135deg, ${form.color_secundario}22, ${form.color_primario}22)`, border: `1px solid ${form.color_primario}44` }}>
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 rounded-lg overflow-hidden bg-df-surface flex items-center justify-center">
+                  <img src={form.logo_url || '/logo.png'} alt="" className="w-full h-full object-contain"
+                    onError={e => { (e.currentTarget as HTMLImageElement).src = '/logo.png' }} />
+                </div>
+                <span className="text-sm font-bold text-white">{form.gym || 'Sin nombre'}</span>
+              </div>
+              <div className="px-3 py-1.5 rounded-lg text-white text-xs font-bold"
+                style={{ background: `linear-gradient(135deg, ${form.color_secundario}, ${form.color_primario})` }}>
+                Vista previa
+              </div>
+            </div>
+
             {error && (
               <div className="bg-red-900/30 border border-red-500/30 rounded-xl p-3 text-xs text-red-400 flex items-center gap-2">
                 <i className="fa-solid fa-triangle-exclamation" /> {error}
               </div>
             )}
             <div className="flex gap-3 pt-1">
-              <button type="button" onClick={cerrarModal}
-                className="df-btn-outline border border-df-border px-5 py-2.5 text-sm rounded-xl flex-1">
-                Cancelar
+              <button type="button" onClick={() => setPaso(1)}
+                className="df-btn-outline border border-df-border px-5 py-2.5 text-sm rounded-xl flex-1 flex items-center justify-center gap-2">
+                <i className="fa-solid fa-arrow-left text-xs" /> Atrás
               </button>
               <button type="submit" disabled={saving}
                 className="df-btn px-5 py-2.5 text-sm flex-1 flex items-center justify-center gap-2">

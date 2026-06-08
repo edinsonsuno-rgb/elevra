@@ -38,9 +38,17 @@ function applyColors(primary: string, secondary: string) {
   const root = document.documentElement
   root.style.setProperty('--brand-primary',    primary)
   root.style.setProperty('--brand-secondary',  secondary)
-  // Actualiza también las variables legacy para que text-df-violet etc. cambien
   root.style.setProperty('--color-primario',   primary)
   root.style.setProperty('--color-secundario', secondary)
+  // Actualiza theme-color para PWA instalada
+  const meta = document.querySelector('meta[name="theme-color"]')
+  if (meta) meta.setAttribute('content', primary)
+}
+
+function applyTitle(nombre: string) {
+  document.title = nombre
+  const appleTitle = document.querySelector('meta[name="apple-mobile-web-app-title"]')
+  if (appleTitle) appleTitle.setAttribute('content', nombre)
 }
 
 export function TenantProvider({ children }: { children: ReactNode }) {
@@ -74,7 +82,7 @@ export function TenantProvider({ children }: { children: ReactNode }) {
       }
       setTenant(merged)
       applyColors(merged.color_primario, merged.color_secundario)
-      document.title = t.nombre
+      applyTitle(t.nombre)
     } else {
       applyColors(DEFAULT.color_primario, DEFAULT.color_secundario)
     }
