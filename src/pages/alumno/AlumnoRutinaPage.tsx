@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
-import { useAuth } from '@/hooks/useAuth'
+import { useAlumnoId } from '@/hooks/useAlumnoId'
 import { Spinner } from '@/components/ui/index'
 
 const DIAS = ['lunes','martes','miercoles','jueves','viernes','sabado','domingo'] as const
@@ -20,23 +20,23 @@ interface DiaInfo {
 }
 
 export default function AlumnoRutinaPage() {
-  const { user } = useAuth()
+  const { alumnoId, loading: loadingAlumno } = useAlumnoId()
   const navigate  = useNavigate()
   const [dias,    setDias]    = useState<DiaInfo[]>([])
   const [loading, setLoading] = useState(true)
   const hoy = DIAS_MAP[new Date().getDay()]
 
-  useEffect(() => { if (user) cargar() }, [user])
+  useEffect(() => {
+    if (loadingAlumno) return
+    if (!alumnoId) { setLoading(false); return }
+    cargar(alumnoId)
+  }, [alumnoId, loadingAlumno])
 
-  async function cargar() {
-    const { data: alumno } = await supabase
-      .from('alumnos').select('id').eq('user_id', user!.id).single()
-    if (!alumno) { setLoading(false); return }
-
+  async function cargar(id: string) {
     const { data: rutina } = await supabase
       .from('alumno_rutinas')
       .select('id, alumno_rutina_dias(dia_semana, es_descanso, alumno_rutina_items(id))')
-      .eq('alumno_id', alumno.id)
+      .eq('alumno_id', id)
       .eq('activa', true)
       .maybeSingle()
 

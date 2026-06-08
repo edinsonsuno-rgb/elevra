@@ -19,9 +19,14 @@ export default function CobrosPage() {
     setLoading(false)
   }
 
-  async function marcarPagado(id: string) {
-    await supabase.from('pagos').update({ estado: 'Pagado', fecha_pago: new Date().toISOString().split('T')[0] }).eq('id', id)
-    cargar()
+  function marcarPagado(id: string) {
+    const fechaPago = new Date().toISOString().split('T')[0]
+    // Update optimista: el usuario ve el cambio instantáneamente
+    setPagos(prev => prev.map(p =>
+      p.id === id ? { ...p, estado: 'Pagado' as const, fecha_pago: fechaPago } : p
+    ))
+    // Persistir en background sin bloquear la UI
+    supabase.from('pagos').update({ estado: 'Pagado', fecha_pago: fechaPago }).eq('id', id)
   }
 
   const estados = ['Todos', 'Pendiente', 'Vencido', 'Pagado']

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
-import { useAuth } from '@/hooks/useAuth'
+import { useAlumnoId } from '@/hooks/useAlumnoId'
 import { EstadoSesionBadge, Spinner } from '@/components/ui/index'
 
 interface Sesion {
@@ -10,21 +10,21 @@ interface Sesion {
 }
 
 export default function AlumnoSesionesPage() {
-  const { user }  = useAuth()
+  const { alumnoId, loading: loadingAlumno } = useAlumnoId()
   const [sesiones, setSesiones] = useState<Sesion[]>([])
   const [loading,  setLoading]  = useState(true)
   const hoy = new Date().toISOString().split('T')[0]
 
-  useEffect(() => { if (user) cargar() }, [user])
+  useEffect(() => {
+    if (loadingAlumno) return
+    if (!alumnoId) { setLoading(false); return }
+    cargar(alumnoId)
+  }, [alumnoId, loadingAlumno])
 
-  async function cargar() {
-    const { data: alumno } = await supabase
-      .from('alumnos').select('id').eq('user_id', user!.id).single()
-    if (!alumno) { setLoading(false); return }
-
+  async function cargar(id: string) {
     const { data } = await supabase
       .from('sesiones').select('*')
-      .eq('alumno_id', alumno.id)
+      .eq('alumno_id', id)
       .gte('fecha', hoy)
       .order('fecha').order('hora_inicio')
     setSesiones(data ?? [])

@@ -184,7 +184,6 @@ export default function EditarRutinaPage() {
   async function guardar() {
     setSaving(true); setError(null)
 
-    // Si no hay rutina activa, crear una nueva
     let rId = rutinaId
     if (!rId) {
       const { data: nueva } = await supabase.from('alumno_rutinas').insert({
@@ -194,41 +193,42 @@ export default function EditarRutinaPage() {
     }
     if (!rId) { setError('Error al guardar'); setSaving(false); return }
 
-    // Actualizar cada día
-    for (const dia of DIAS) {
-      const diaData = semana[dia]
+    // Actualizar los 7 días en paralelo; dentro de cada día, batch-insert de items
+    await Promise.all(
+      DIAS.map(async (dia) => {
+        const diaData = semana[dia]
+        let diaId: string | undefined = diaData.id
 
-      // Upsert día
-      let diaId = diaData.id
-      if (diaId) {
-        await supabase.from('alumno_rutina_dias').update({ es_descanso: diaData.esDescanso }).eq('id', diaId)
-        // Eliminar items existentes y reinsertar en nuevo orden
-        await supabase.from('alumno_rutina_items').delete().eq('dia_id', diaId)
-      } else {
-        const { data: nuevoDia } = await supabase.from('alumno_rutina_dias').insert({
-          rutina_id: rId, dia_semana: dia, es_descanso: diaData.esDescanso
-        }).select().single()
-        diaId = nuevoDia?.id
-      }
+        if (diaId) {
+          // Actualizar día y limpiar items en paralelo (no dependen entre sí)
+          await Promise.all([
+            supabase.from('alumno_rutina_dias').update({ es_descanso: diaData.esDescanso }).eq('id', diaId),
+            supabase.from('alumno_rutina_items').delete().eq('dia_id', diaId),
+          ])
+        } else {
+          const { data: nuevoDia } = await supabase.from('alumno_rutina_dias').insert({
+            rutina_id: rId!, dia_semana: dia, es_descanso: diaData.esDescanso
+          }).select().single()
+          diaId = nuevoDia?.id
+        }
 
-      if (!diaId) continue
+        if (!diaId || diaData.items.length === 0) return
 
-      // Insertar items en orden actual
-      for (let i = 0; i < diaData.items.length; i++) {
-        const item = diaData.items[i]
-        await supabase.from('alumno_rutina_items').insert({
-          dia_id:           diaId,
-          tipo:             item.tipo,
-          orden:            i + 1,
-          ejercicio_id:     item.tipo === 'ejercicio' ? (item.ejercicio?.id ?? item.ejercicio_id) : null,
-          series:           item.series ?? null,
-          repeticiones:     item.repeticiones ?? null,
-          descanso_seg:     item.descanso_seg ?? null,
-          descanso_minutos: item.descanso_minutos ?? null,
-          notas:            item.notas ?? null,
-        })
-      }
-    }
+        await supabase.from('alumno_rutina_items').insert(
+          diaData.items.map((item, i) => ({
+            dia_id:           diaId as string,
+            tipo:             item.tipo,
+            orden:            i + 1,
+            ejercicio_id:     item.tipo === 'ejercicio' ? (item.ejercicio?.id ?? item.ejercicio_id) : null,
+            series:           item.series ?? null,
+            repeticiones:     item.repeticiones ?? null,
+            descanso_seg:     item.descanso_seg ?? null,
+            descanso_minutos: item.descanso_minutos ?? null,
+            notas:            item.notas ?? null,
+          }))
+        )
+      })
+    )
 
     setSaving(false)
     navigate(`/alumnos/${id}`)

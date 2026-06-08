@@ -1,6 +1,6 @@
 import { useEffect, useState, FormEvent } from 'react'
 import { supabase } from '@/lib/supabase'
-import { useAuth } from '@/hooks/useAuth'
+import { useAlumnoId } from '@/hooks/useAlumnoId'
 import { Spinner } from '@/components/ui/index'
 
 interface Registro {
@@ -47,7 +47,7 @@ function formatSemana(fecha: string): string {
 }
 
 export default function AlumnoProgresoPage() {
-  const { user } = useAuth()
+  const { alumnoId, loading: loadingAlumno } = useAlumnoId()
   const [alumno,    setAlumno]    = useState<AlumnoData | null>(null)
   const [registros, setRegistros] = useState<Registro[]>([])
   const [loading,   setLoading]   = useState(true)
@@ -70,7 +70,11 @@ export default function AlumnoProgresoPage() {
   const [nuevaMeta,    setNuevaMeta]    = useState('')
   const [resetear,     setResetear]     = useState(false)
 
-  useEffect(() => { if (user) cargar() }, [user])
+  useEffect(() => {
+    if (loadingAlumno) return
+    if (!alumnoId) { setLoading(false); return }
+    cargar(alumnoId)
+  }, [alumnoId, loadingAlumno])
 
   // Cargar Chart.js al montar
   useEffect(() => {
@@ -149,10 +153,10 @@ export default function AlumnoProgresoPage() {
     return () => clearTimeout(timer)
   }, [registros, alumno])
 
-  async function cargar() {
+  async function cargar(id: string) {
     const { data: a } = await supabase
       .from('alumnos').select('id, peso_inicial, peso_objetivo, created_at')
-      .eq('user_id', user!.id).single()
+      .eq('id', id).single()
     if (!a) { setLoading(false); return }
     setAlumno(a)
 
@@ -180,7 +184,7 @@ export default function AlumnoProgresoPage() {
       peso_objetivo: parseFloat(pesoObjetivo),
     }).eq('id', alumno.id)
     setSavingMeta(false)
-    cargar()
+    if (alumnoId) cargar(alumnoId)
   }
 
   async function guardarRegistro(e: FormEvent) {
@@ -196,7 +200,7 @@ export default function AlumnoProgresoPage() {
     setSavingReg(false)
     setModalReg(false)
     setPesoInput(''); setNotasInput('')
-    cargar()
+    if (alumnoId) cargar(alumnoId)
   }
 
   async function guardarNuevaMeta(e: FormEvent) {
@@ -212,7 +216,7 @@ export default function AlumnoProgresoPage() {
     }).eq('id', alumno.id)
     setSavingMeta(false)
     setModalMeta(false)
-    cargar()
+    if (alumnoId) cargar(alumnoId)
   }
 
   function abrirRegistro(semana: string) {

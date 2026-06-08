@@ -58,21 +58,22 @@ export default function RegistroAlumnoPage() {
     if (authError) { setError(authError.message); setSaving(false); return }
     if (!authData.user) { setError('Error al crear cuenta'); setSaving(false); return }
 
-    // Crear perfil como alumno
+    // Crear perfil como alumno (bloqueante: el rol se necesita en el primer login)
     await supabase.from('profiles').upsert({
       id:           authData.user.id,
       display_name: alumno.nombre,
       role:         'alumno',
     })
 
-    // Vincular user_id al registro del alumno y marcar invitación como usada
-    await supabase.from('alumnos').update({
+    setStep('listo')
+    setSaving(false)
+
+    // Fire-and-forget: vincular user_id y cerrar invitación en segundo plano.
+    // El usuario aún tiene que pulsar "Ir al login", hay tiempo de sobra.
+    supabase.from('alumnos').update({
       user_id:          authData.user.id,
       invitacion_usada: true,
     }).eq('id', alumno.id)
-
-    setStep('listo')
-    setSaving(false)
   }
 
   // ── Validando ──

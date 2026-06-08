@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
-import { useAuth } from '@/hooks/useAuth'
+import { useAlumnoId } from '@/hooks/useAlumnoId'
 
 interface EjercicioItem {
   id: string
@@ -30,7 +30,7 @@ const DIAS_LABEL: Record<string, string> = {
 export default function AlumnoEntrenamientoPage() {
   const { dia }  = useParams<{ dia: string }>()
   const navigate = useNavigate()
-  const { user } = useAuth()
+  const { alumno, loading: loadingAlumno } = useAlumnoId()
 
   const [items,       setItems]       = useState<EjercicioItem[]>([])
   const [loading,     setLoading]     = useState(true)
@@ -43,16 +43,16 @@ export default function AlumnoEntrenamientoPage() {
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const animRef     = useRef<ReturnType<typeof setInterval> | null>(null)
 
-  useEffect(() => { if (user && dia) cargar() }, [user, dia])
+  useEffect(() => {
+    if (loadingAlumno) return
+    if (!alumno || !dia) { setLoading(false); return }
+    cargar(alumno.id, alumno.nivel)
+  }, [alumno, loadingAlumno, dia])
 
-  async function cargar() {
-    const { data: alumno } = await supabase
-      .from('alumnos').select('id, nivel').eq('user_id', user!.id).single()
-    if (!alumno) { setLoading(false); return }
-
+  async function cargar(alumnoId: string, nivel: string | null) {
     const { data: rutina } = await supabase
       .from('alumno_rutinas').select('id')
-      .eq('alumno_id', alumno.id).eq('activa', true).maybeSingle()
+      .eq('alumno_id', alumnoId).eq('activa', true).maybeSingle()
     if (!rutina) { setLoading(false); return }
 
     const { data: diaData } = await supabase
@@ -66,11 +66,11 @@ export default function AlumnoEntrenamientoPage() {
       .eq('dia_id', diaData.id)
       .order('orden')
 
-    const nivel = alumno.nivel?.toLowerCase() ?? 'principiante'
+    const nivelStr = nivel?.toLowerCase() ?? 'principiante'
     const mapped: EjercicioItem[] = (itemsData ?? []).map((it: any) => {
       const seg = it.ejercicio
-        ? nivel === 'avanzado'   ? it.ejercicio.seg_avanzado
-        : nivel === 'intermedio' ? it.ejercicio.seg_intermedio
+        ? nivelStr === 'avanzado'   ? it.ejercicio.seg_avanzado
+        : nivelStr === 'intermedio' ? it.ejercicio.seg_intermedio
         : it.ejercicio.seg_principiante
         : 3
       return {

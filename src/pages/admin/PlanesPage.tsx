@@ -79,38 +79,42 @@ export default function PlanesPage() {
     setSaving(true); setError(null)
 
     if (editando) {
-      // Si es invitado solo puede cambiar cantidad
       const payload = editando.es_invitado
         ? { cantidad: form.cantidad }
         : { nombre: form.nombre, tipo: form.tipo, cantidad: form.cantidad }
       const { error: err } = await supabase.from('planes').update(payload).eq('id', editando.id)
       if (err) { setError(err.message); setSaving(false); return }
+      // Update optimista: reflejar cambio en local sin refetch
+      setPlanes(prev => prev.map(p => p.id === editando.id ? { ...p, ...payload } : p))
     } else {
-      const { error: err } = await supabase.from('planes').insert({
+      const { data: nuevo, error: err } = await supabase.from('planes').insert({
         nombre:     form.nombre,
         tipo:       form.tipo,
         cantidad:   form.cantidad,
         creado_por: user?.id,
-      })
+      }).select().single()
       if (err) { setError(err.message); setSaving(false); return }
+      if (nuevo) setPlanes(prev => [...prev, nuevo])
     }
 
     setSaving(false)
     setModalOpen(false)
-    cargar()
   }
 
-  async function toggleActivo(plan: Plan) {
-    if (plan.es_invitado) return // planes invitado siempre activos
-    await supabase.from('planes').update({ activo: !plan.activo }).eq('id', plan.id)
-    cargar()
+  function toggleActivo(plan: Plan) {
+    if (plan.es_invitado) return
+    const nuevoActivo = !plan.activo
+    // Update optimista: toggle inmediato en UI
+    setPlanes(prev => prev.map(p => p.id === plan.id ? { ...p, activo: nuevoActivo } : p))
+    supabase.from('planes').update({ activo: nuevoActivo }).eq('id', plan.id)
   }
 
-  async function eliminar(plan: Plan) {
+  function eliminar(plan: Plan) {
     if (plan.es_invitado) return
     if (!confirm('¿Eliminar este plan?')) return
-    await supabase.from('planes').delete().eq('id', plan.id)
-    cargar()
+    // Update optimista: quitar de la lista inmediatamente
+    setPlanes(prev => prev.filter(p => p.id !== plan.id))
+    supabase.from('planes').delete().eq('id', plan.id)
   }
 
   const planesInvitado = planes.filter(p => p.es_invitado)

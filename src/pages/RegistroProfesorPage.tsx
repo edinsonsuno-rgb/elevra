@@ -75,11 +75,12 @@ export default function RegistroProfesorPage() {
 
     if (profileError) { setError(profileError.message); setSaving(false); return }
 
-    // 3. Marcar invitación como usada
-    await supabase.from('invitaciones').update({ usado: true }).eq('id', invitacion.id)
-
     setStep('listo')
     setSaving(false)
+
+    // Fire-and-forget: marcar invitación como usada en segundo plano.
+    // La cuenta ya está creada; no hay razón para bloquear la confirmación.
+    supabase.from('invitaciones').update({ usado: true }).eq('id', invitacion.id)
   }
 
   // ── Pantalla validando ──

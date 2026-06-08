@@ -165,40 +165,41 @@ export default function AsignarRutinaPage() {
   async function guardar() {
     setSaving(true); setError(null)
 
-    // Desactivar rutina activa previa
-    await supabase.from('alumno_rutinas').update({ activa: false }).eq('alumno_id', id!).eq('activa', true)
-
-    // Crear rutina
-    const { data: rutina, error: rErr } = await supabase.from('alumno_rutinas').insert({
-      alumno_id: id!, tenant_id: tenantId!, creado_por: user?.id, activa: true
-    }).select().single()
+    // Desactivar rutina previa y crear la nueva en paralelo (son independientes)
+    const [, { data: rutina, error: rErr }] = await Promise.all([
+      supabase.from('alumno_rutinas').update({ activa: false }).eq('alumno_id', id!).eq('activa', true),
+      supabase.from('alumno_rutinas').insert({
+        alumno_id: id!, tenant_id: tenantId!, creado_por: user?.id, activa: true
+      }).select().single(),
+    ])
 
     if (rErr || !rutina) { setError(rErr?.message ?? 'Error'); setSaving(false); return }
 
-    // Crear días e items
-    for (const dia of DIAS) {
-      const diaData = semana[dia]
-      const { data: diaRow, error: dErr } = await supabase.from('alumno_rutina_dias').insert({
-        rutina_id: rutina.id, dia_semana: dia, es_descanso: diaData.esDescanso
-      }).select().single()
+    // Crear los 7 días en paralelo; dentro de cada día, batch-insert de todos sus items
+    await Promise.all(
+      DIAS.map(async (dia) => {
+        const diaData = semana[dia]
+        const { data: diaRow, error: dErr } = await supabase.from('alumno_rutina_dias').insert({
+          rutina_id: rutina.id, dia_semana: dia, es_descanso: diaData.esDescanso
+        }).select().single()
 
-      if (dErr || !diaRow) continue
+        if (dErr || !diaRow || diaData.items.length === 0) return
 
-      for (let i = 0; i < diaData.items.length; i++) {
-        const item = diaData.items[i]
-        await supabase.from('alumno_rutina_items').insert({
-          dia_id:            diaRow.id,
-          tipo:              item.tipo,
-          orden:             i + 1,
-          ejercicio_id:      item.tipo === 'ejercicio' ? item.ejercicio?.id : null,
-          series:            item.series ?? null,
-          repeticiones:      item.repeticiones ?? null,
-          descanso_seg:      item.descanso_seg ?? null,
-          descanso_minutos:  item.descanso_minutos ?? null,
-          notas:             item.notas ?? null,
-        })
-      }
-    }
+        await supabase.from('alumno_rutina_items').insert(
+          diaData.items.map((item, i) => ({
+            dia_id:           diaRow.id,
+            tipo:             item.tipo,
+            orden:            i + 1,
+            ejercicio_id:     item.tipo === 'ejercicio' ? item.ejercicio?.id : null,
+            series:           item.series ?? null,
+            repeticiones:     item.repeticiones ?? null,
+            descanso_seg:     item.descanso_seg ?? null,
+            descanso_minutos: item.descanso_minutos ?? null,
+            notas:            item.notas ?? null,
+          }))
+        )
+      })
+    )
 
     setSaving(false)
     navigate(`/alumnos/${id}`)

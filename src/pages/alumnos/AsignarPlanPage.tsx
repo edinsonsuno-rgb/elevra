@@ -118,7 +118,9 @@ export default function AsignarPlanPage() {
     })
 
     if (err) { setError(err.message); setSaving(false); return }
-    await supabase.from('alumnos').update({ activo: true }).eq('id', id!)
+    // Fire-and-forget: marcar alumno activo mientras se navega.
+    // El plan ya quedó guardado; este campo es derivado.
+    supabase.from('alumnos').update({ activo: true }).eq('id', id!)
     navigate(`/alumnos/${id}`)
   }
 

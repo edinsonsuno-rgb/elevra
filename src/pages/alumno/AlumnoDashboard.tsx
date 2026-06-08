@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/hooks/useAuth'
+import { useAlumnoId } from '@/hooks/useAlumnoId'
 import { Spinner } from '@/components/ui/index'
 
 const DIAS_MAP: Record<number, string> = {
@@ -44,8 +45,9 @@ function pctPlan(inicio: string, fin: string): number {
 }
 
 export default function AlumnoDashboard() {
-  const { user, displayName } = useAuth()
+  const { displayName } = useAuth()
   const navigate = useNavigate()
+  const { alumnoId, loading: loadingAlumno } = useAlumnoId()
 
   const [planActivo,  setPlanActivo]  = useState<any | null>(null)
   const [diasRutina,  setDiasRutina]  = useState<DiaRutina[]>([])
@@ -57,38 +59,36 @@ export default function AlumnoDashboard() {
   const hora = new Date().getHours()
   const saludo = hora < 12 ? 'Buenos días' : hora < 18 ? 'Buenas tardes' : 'Buenas noches'
 
-  useEffect(() => { if (user) cargar() }, [user])
+  useEffect(() => {
+    if (loadingAlumno) return
+    if (!alumnoId) { setLoading(false); return }
+    cargar(alumnoId)
+  }, [alumnoId, loadingAlumno])
 
-  async function cargar() {
+  async function cargar(id: string) {
     const hoy = new Date().toISOString().split('T')[0]
-
-    // Alumno vinculado
-    const { data: alumnoData } = await supabase
-      .from('alumnos').select('id').eq('user_id', user!.id).single()
-    if (!alumnoData) { setLoading(false); return }
-    const alumnoId = alumnoData.id
 
     const [{ data: planes }, { data: rutina }, { data: ses }, { data: pag }] = await Promise.all([
       supabase.from('alumno_planes')
         .select('*, plan:planes(nombre)')
-        .eq('alumno_id', alumnoId)
+        .eq('alumno_id', id)
         .gte('fecha_fin', hoy)
         .order('fecha_inicio', { ascending: false })
         .limit(1),
       supabase.from('alumno_rutinas')
         .select('id, alumno_rutina_dias(dia_semana, es_descanso, alumno_rutina_items(id))')
-        .eq('alumno_id', alumnoId)
+        .eq('alumno_id', id)
         .eq('activa', true)
         .maybeSingle(),
       supabase.from('sesiones')
         .select('id, titulo, tipo, fecha, hora_inicio')
-        .eq('alumno_id', alumnoId)
+        .eq('alumno_id', id)
         .gte('fecha', hoy)
         .order('fecha').order('hora_inicio')
         .limit(3),
       supabase.from('pagos')
         .select('id, concepto, monto, estado')
-        .eq('alumno_id', alumnoId)
+        .eq('alumno_id', id)
         .neq('estado', 'Pagado')
         .limit(2),
     ])
