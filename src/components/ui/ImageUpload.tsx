@@ -30,20 +30,29 @@ export default function ImageUpload({ label, value, onChange, bucket = 'ejercici
     const filename = `${folder}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
 
     try {
+      const controller = new AbortController()
+      const timeoutId  = setTimeout(() => controller.abort(), 20_000)
+
       const { error: uploadError } = await supabase.storage
         .from(bucket)
-        .upload(filename, file, { upsert: true, contentType: file.type })
+        .upload(filename, file, { upsert: false, contentType: file.type })
+
+      clearTimeout(timeoutId)
 
       if (uploadError) {
-        setError(`Error al subir: ${uploadError.message}`)
-        setUploading(false)
+        console.error('[ImageUpload] error:', uploadError)
+        setError(`Error: ${uploadError.message}`)
         return
       }
 
       const { data } = supabase.storage.from(bucket).getPublicUrl(filename)
       onChange(data.publicUrl)
     } catch (err: any) {
-      setError(err?.message ?? 'Error de red al subir la imagen')
+      const msg = err?.name === 'AbortError'
+        ? 'Tiempo de espera agotado — verifica tu conexión'
+        : (err?.message ?? 'Error de red al subir la imagen')
+      console.error('[ImageUpload] catch:', err)
+      setError(msg)
     } finally {
       setUploading(false)
     }

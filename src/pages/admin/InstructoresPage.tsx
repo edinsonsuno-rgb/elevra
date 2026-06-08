@@ -39,6 +39,15 @@ export default function InstructoresPage() {
     nombre: '', email: '', gym: '', subdominio: '',
     logo_url: '', color_primario: '#39D353', color_secundario: '#2ECC71',
   })
+  // Texto crudo de los inputs de color (puede ser hex incompleto mientras el usuario escribe)
+  const [colorTexto, setColorTexto] = useState({ color_primario: '#39D353', color_secundario: '#2ECC71' })
+
+  function isValidHex(v: string) { return /^#[0-9a-fA-F]{6}$/.test(v) }
+
+  function onColorTexto(key: 'color_primario' | 'color_secundario', val: string) {
+    setColorTexto(p => ({ ...p, [key]: val }))
+    if (isValidHex(val)) setForm(f => ({ ...f, [key]: val }))
+  }
 
   useEffect(() => { cargar() }, [])
 
@@ -190,6 +199,7 @@ export default function InstructoresPage() {
     setCopiado(false)
     setPaso(1)
     setForm({ nombre: '', email: '', gym: '', subdominio: '', logo_url: '', color_primario: '#39D353', color_secundario: '#2ECC71' })
+    setColorTexto({ color_primario: '#39D353', color_secundario: '#2ECC71' })
   }
 
   if (loading) return <Spinner />
@@ -369,12 +379,12 @@ export default function InstructoresPage() {
                     <div className="flex items-center gap-2">
                       <label className="cursor-pointer">
                         <input type="color" value={form[key]}
-                          onChange={e => setForm(f => ({ ...f, [key]: e.target.value }))}
+                          onChange={e => { setForm(f => ({ ...f, [key]: e.target.value })); setColorTexto(p => ({ ...p, [key]: e.target.value })) }}
                           className="sr-only" />
                         <div className="w-9 h-9 rounded-xl border border-df-border" style={{ background: form[key] }} />
                       </label>
-                      <input value={form[key]}
-                        onChange={e => setForm(f => ({ ...f, [key]: e.target.value }))}
+                      <input value={colorTexto[key]}
+                        onChange={e => onColorTexto(key, e.target.value)}
                         maxLength={7} className="df-input font-mono text-xs" />
                     </div>
                   </div>
