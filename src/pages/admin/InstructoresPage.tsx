@@ -29,7 +29,7 @@ export default function InstructoresPage() {
         .order('nombre'),
       supabase.from('profiles')
         .select('id, display_name, avatar_url, tenant_id')
-        .eq('role', 'admin'),
+        .eq('role', 'instructor'),
       supabase.from('alumnos')
         .select('tenant_id')
         .eq('activo', true),

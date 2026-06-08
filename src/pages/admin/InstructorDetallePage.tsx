@@ -83,7 +83,7 @@ export default function InstructorDetallePage() {
       supabase.from('profiles')
         .select('id, display_name, avatar_url, created_at')
         .eq('tenant_id', tenantId!)
-        .eq('role', 'admin')
+        .eq('role', 'instructor')
         .maybeSingle(),
       supabase.from('alumnos')
         .select('id, nombre, email, foto_url, nivel, activo, objetivo')

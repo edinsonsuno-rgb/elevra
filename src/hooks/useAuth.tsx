@@ -20,7 +20,7 @@ const Ctx = createContext<AuthCtx | null>(null)
 async function fetchProfile(userId: string) {
   const { data } = await supabase
     .from('profiles')
-    .select('display_name, role, tenant_id, superadmin')
+    .select('display_name, role, tenant_id')
     .eq('id', userId)
     .maybeSingle()
   return data
@@ -41,7 +41,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setDisplayName(data?.display_name ?? null)
     setRole(data?.role ?? null)
     setTenantId(data?.tenant_id ?? null)
-    setSuperadmin(data?.superadmin ?? false)
+    setSuperadmin(data?.role === 'admin')
     if (data?.role === 'alumno') {
       const { data: a } = await supabase
         .from('alumnos').select('activo').eq('user_id', u.id).single()

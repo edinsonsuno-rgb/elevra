@@ -40,7 +40,7 @@ export default function DashboardPage() {
     if (superadmin) {
       const [{ data: tenants }, { data: admins }, { data: alums }] = await Promise.all([
         supabase.from('tenants').select('id, nombre, subdominio').eq('activo', true).order('nombre'),
-        supabase.from('profiles').select('display_name, tenant_id').eq('role', 'admin'),
+        supabase.from('profiles').select('display_name, tenant_id').eq('role', 'instructor'),
         supabase.from('alumnos').select('tenant_id').eq('activo', true),
       ])
       const conteo: Record<string, number> = {}
@@ -108,7 +108,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Frase motivacional */}
-      <div className="df-card p-4 border-df-purple/40 relative overflow-hidden">
+      {!superadmin && <div className="df-card p-4 border-df-purple/40 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-df-purple/10 to-transparent pointer-events-none" />
         <div className="flex items-center justify-between mb-2">
           <img src="/logo.png" alt="Logo" className="h-10" />
@@ -133,7 +133,7 @@ export default function DashboardPage() {
           </p>
         )}
         <p className="text-[10px] text-df-muted mt-1 text-right">{fraseMot.length}/120</p>
-      </div>
+      </div>}
 
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -289,23 +289,37 @@ export default function DashboardPage() {
           </div>
 
           {/* Accesos rápidos */}
-          <div className="df-card p-4">
-            <h3 className="text-sm font-bold text-white mb-3">Accesos rápidos</h3>
-            <div className="grid grid-cols-2 gap-2">
-              {[
-                { to: '/alumnos/nuevo',  icon: 'fa-solid fa-user-plus',           label: 'Nuevo alumno',  color: 'text-df-violet' },
-                { to: '/rutinas/nueva',  icon: 'fa-solid fa-plus-circle',          label: 'Nueva rutina',  color: 'text-df-pink' },
-                { to: '/agenda/nueva',   icon: 'fa-solid fa-calendar-plus',        label: 'Nueva sesión',  color: 'text-blue-400' },
-                { to: '/cobros/nuevo',   icon: 'fa-solid fa-file-invoice-dollar',  label: 'Nuevo cobro',   color: 'text-amber-400' },
-              ].map(q => (
-                <Link key={q.to} to={q.to}
-                  className="df-surface p-3 rounded-xl flex flex-col items-center gap-2 hover:border-df-violet/40 transition-all text-center">
-                  <i className={`${q.icon} text-lg ${q.color}`} />
-                  <span className="text-[10px] text-df-muted leading-tight">{q.label}</span>
-                </Link>
-              ))}
+          {superadmin ? (
+            <Link to="/instructores"
+              className="df-card p-4 flex items-center gap-4 hover:border-df-violet/40 transition-all group">
+              <div className="w-10 h-10 rounded-xl bg-df-purple/20 flex items-center justify-center flex-shrink-0">
+                <i className="fa-solid fa-user-plus text-df-violet" />
+              </div>
+              <div>
+                <p className="text-sm font-bold text-white group-hover:text-df-violet transition-colors">Nuevo instructor</p>
+                <p className="text-xs text-df-muted">Ver y gestionar instructores</p>
+              </div>
+              <i className="fa-solid fa-arrow-right text-df-muted text-xs ml-auto" />
+            </Link>
+          ) : (
+            <div className="df-card p-4">
+              <h3 className="text-sm font-bold text-white mb-3">Accesos rápidos</h3>
+              <div className="grid grid-cols-2 gap-2">
+                {[
+                  { to: '/alumnos/nuevo',  icon: 'fa-solid fa-user-plus',           label: 'Nuevo alumno',  color: 'text-df-violet' },
+                  { to: '/rutinas/nueva',  icon: 'fa-solid fa-plus-circle',          label: 'Nueva rutina',  color: 'text-df-pink' },
+                  { to: '/agenda/nueva',   icon: 'fa-solid fa-calendar-plus',        label: 'Nueva sesión',  color: 'text-blue-400' },
+                  { to: '/cobros/nuevo',   icon: 'fa-solid fa-file-invoice-dollar',  label: 'Nuevo cobro',   color: 'text-amber-400' },
+                ].map(q => (
+                  <Link key={q.to} to={q.to}
+                    className="df-surface p-3 rounded-xl flex flex-col items-center gap-2 hover:border-df-violet/40 transition-all text-center">
+                    <i className={`${q.icon} text-lg ${q.color}`} />
+                    <span className="text-[10px] text-df-muted leading-tight">{q.label}</span>
+                  </Link>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
     </div>

@@ -16,7 +16,7 @@ SECURITY DEFINER
 SET search_path = public
 AS $$
   SELECT COALESCE(
-    (SELECT superadmin FROM profiles WHERE id = auth.uid()),
+    (SELECT role = 'admin' FROM profiles WHERE id = auth.uid()),
     false
   );
 $$;
