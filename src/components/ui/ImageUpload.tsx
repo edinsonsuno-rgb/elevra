@@ -18,25 +18,35 @@ export default function ImageUpload({ label, value, onChange, bucket = 'ejercici
     const file = e.target.files?.[0]
     if (!file) return
 
+    if (file.size > 5 * 1024 * 1024) {
+      setError('La imagen no puede superar 5MB')
+      return
+    }
+
     setUploading(true)
     setError(null)
 
     const ext      = file.name.split('.').pop()
     const filename = `${folder}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
 
-    const { error: uploadError } = await supabase.storage
-      .from(bucket)
-      .upload(filename, file, { upsert: false, contentType: file.type })
+    try {
+      const { error: uploadError } = await supabase.storage
+        .from(bucket)
+        .upload(filename, file, { upsert: true, contentType: file.type })
 
-    if (uploadError) {
-      setError(uploadError.message)
+      if (uploadError) {
+        setError(`Error al subir: ${uploadError.message}`)
+        setUploading(false)
+        return
+      }
+
+      const { data } = supabase.storage.from(bucket).getPublicUrl(filename)
+      onChange(data.publicUrl)
+    } catch (err: any) {
+      setError(err?.message ?? 'Error de red al subir la imagen')
+    } finally {
       setUploading(false)
-      return
     }
-
-    const { data } = supabase.storage.from(bucket).getPublicUrl(filename)
-    onChange(data.publicUrl)
-    setUploading(false)
   }
 
   async function handleRemove() {
