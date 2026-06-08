@@ -31,15 +31,15 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen bg-df-bg circuit-bg flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(124,58,237,0.16),_transparent_45%)] pointer-events-none" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(57,211,83,0.10),_transparent_45%)] pointer-events-none" />
       <div className="relative w-full max-w-sm mx-auto">
-        <div className="overflow-hidden rounded-[40px] border border-white/10 bg-[#0b081a]/95 shadow-[0_30px_90px_rgba(124,58,237,0.25)]">
+        <div className="overflow-hidden rounded-[40px] border border-white/10 bg-[#0D1117]/95 shadow-[0_30px_90px_rgba(57,211,83,0.15)]">
           <div className="px-8 py-10 text-center">
             <div className="w-40 mx-auto mb-6">
               <img
                 src={tenant.logo_url ?? '/logo.png'}
                 alt={tenant.nombre}
-                className="mx-auto h-12 w-full object-contain drop-shadow-[0_0_18px_rgba(139,92,246,0.6)]"
+                className="mx-auto h-12 w-full object-contain drop-shadow-[0_0_18px_rgba(57,211,83,0.5)]"
               />
             </div>
             <p className="text-[11px] uppercase tracking-[0.35em] text-df-muted mb-3">
@@ -58,15 +58,19 @@ export default function LoginPage() {
               <div className="flex flex-col items-center gap-4">
                 <div className="flex gap-2">
                   {[0,1,2].map(i => (
-                    <div key={i} className={`h-1.5 rounded ${i===0? 'w-12 bg-[#9b30ff]': 'w-2 bg-[#9b30ff]/30'}`} />
+                    <div key={i} style={{
+                      height: 6, borderRadius: 3,
+                      width: i === 0 ? 48 : 8,
+                      background: i === 0 ? 'var(--brand-primary)' : 'color-mix(in srgb, var(--brand-primary) 30%, transparent)',
+                    }} />
                   ))}
                 </div>
                 <button
                   onClick={() => setStarted(true)}
                   className="w-3/4 py-3 rounded-2xl text-white font-bold text-lg"
                   style={{
-                    background: 'linear-gradient(135deg, #7c3aed 0%, #9b30ff 50%, #a855f7 100%)',
-                    boxShadow: '0 6px 32px rgba(124,58,237,0.55)'
+                    background: 'linear-gradient(135deg, var(--brand-secondary) 0%, var(--brand-primary) 100%)',
+                    boxShadow: `0 6px 32px ${tenant.color_primario}88`,
                   }}
                 >
                   COMENZAR

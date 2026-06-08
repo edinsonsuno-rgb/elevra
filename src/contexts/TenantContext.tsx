@@ -15,8 +15,8 @@ const DEFAULT: TenantBrand = {
   nombre:           'Elevra',
   subdominio:       '',
   logo_url:         null,
-  color_primario:   '#9b30ff',
-  color_secundario: '#7c3aed',
+  color_primario:   '#39D353',
+  color_secundario: '#2ECC71',
 }
 
 interface TenantCtx {
@@ -68,6 +68,7 @@ export function TenantProvider({ children }: { children: ReactNode }) {
       const t = data as TenantBrand
       setTenant(t)
       applyColors(t.color_primario, t.color_secundario)
+      document.title = t.nombre
     } else {
       applyColors(DEFAULT.color_primario, DEFAULT.color_secundario)
     }

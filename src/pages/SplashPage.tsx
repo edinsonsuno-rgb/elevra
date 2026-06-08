@@ -5,121 +5,115 @@ import { useTenant } from '@/contexts/TenantContext'
 export default function SplashPage() {
   const navigate   = useNavigate()
   const { tenant } = useTenant()
-  const [dot, setDot] = useState(0)
+  const [dot, setDot]       = useState(0)
   const [visible, setVisible] = useState(false)
 
   useEffect(() => {
-    // fade in on mount
-    const t = setTimeout(() => setVisible(true), 50)
-    // auto-rotate dots
+    const t        = setTimeout(() => setVisible(true), 50)
     const interval = setInterval(() => setDot(d => (d + 1) % 3), 2000)
     return () => { clearTimeout(t); clearInterval(interval) }
   }, [])
 
+  const p  = tenant.color_primario
+  const s  = tenant.color_secundario
+
   return (
-    <div
-      style={{
-        minHeight: '100dvh',
-        background: 'linear-gradient(175deg, #1a0533 0%, #2d0d5e 25%, #3b0f7a 45%, #2a0a60 65%, #150328 100%)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        fontFamily: "'DM Sans', sans-serif",
-        overflow: 'hidden',
-        position: 'relative',
-      }}
-    >
-      {/* Noise texture overlay */}
+    <div style={{
+      minHeight: '100dvh',
+      background: '#0D1117',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      fontFamily: "'DM Sans', sans-serif",
+      overflow: 'hidden',
+      position: 'relative',
+      padding: '24px 16px',
+    }}>
+
+      {/* Glow ambiente — esquinas */}
       <div style={{
-        position: 'absolute', inset: 0, opacity: 0.035,
-        backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
-        backgroundRepeat: 'repeat', backgroundSize: '180px',
+        position: 'absolute', top: -80, left: '50%', transform: 'translateX(-50%)',
+        width: 500, height: 400,
+        background: `radial-gradient(ellipse, ${p}22 0%, transparent 65%)`,
+        pointerEvents: 'none',
+      }} />
+      <div style={{
+        position: 'absolute', bottom: -60, right: -40,
+        width: 300, height: 300,
+        background: `radial-gradient(circle, ${p}11 0%, transparent 70%)`,
+        pointerEvents: 'none',
       }} />
 
-      {/* Glow orbs */}
+      {/* Card */}
       <div style={{
-        position: 'absolute', top: '10%', left: '50%', transform: 'translateX(-50%)',
-        width: 340, height: 340,
-        background: 'radial-gradient(circle, rgba(139,92,246,0.18) 0%, transparent 70%)',
-        borderRadius: '50%', pointerEvents: 'none',
-      }} />
-      <div style={{
-        position: 'absolute', bottom: '15%', left: '30%',
-        width: 220, height: 220,
-        background: 'radial-gradient(circle, rgba(236,72,153,0.10) 0%, transparent 70%)',
-        borderRadius: '50%', pointerEvents: 'none',
-      }} />
-
-      {/* Card container — mobile width */}
-      <div style={{
-        width: '100%', maxWidth: 380,
-        padding: '0 32px',
+        width: '100%', maxWidth: 360,
+        background: 'rgba(22, 27, 34, 0.96)',
+        border: `1px solid ${p}44`,
+        borderRadius: 32,
+        boxShadow: `0 0 0 1px ${p}18, 0 24px 80px rgba(0,0,0,0.6), 0 0 60px ${p}18`,
+        padding: '40px 32px 36px',
         display: 'flex', flexDirection: 'column', alignItems: 'center',
         opacity: visible ? 1 : 0,
-        transform: visible ? 'translateY(0)' : 'translateY(24px)',
-        transition: 'opacity 0.7s ease, transform 0.7s ease',
-        gap: 0,
+        transform: visible ? 'translateY(0)' : 'translateY(20px)',
+        transition: 'opacity 0.6s ease, transform 0.6s ease',
       }}>
 
         {/* Logo */}
         <div style={{
-          marginBottom: 56,
+          marginBottom: 20,
           opacity: visible ? 1 : 0,
-          transform: visible ? 'translateY(0)' : 'translateY(-16px)',
-          transition: 'opacity 0.8s ease 0.1s, transform 0.8s ease 0.1s',
-          filter: 'drop-shadow(0 0 24px rgba(167,139,250,0.5))',
-          textAlign: 'center',
+          transform: visible ? 'translateY(0)' : 'translateY(-12px)',
+          transition: 'opacity 0.6s ease 0.1s, transform 0.6s ease 0.1s',
+          filter: `drop-shadow(0 0 20px ${p}55)`,
         }}>
           <img
             src={tenant.logo_url ?? '/logo.png'}
             alt={tenant.nombre}
-            style={{ height: 100, width: 'auto', maxWidth: 300, objectFit: 'contain' }}
+            style={{ height: 96, width: 'auto', maxWidth: 480, objectFit: 'contain' }}
           />
         </div>
 
-        {/* Texto motivacional */}
+        {/* Texto */}
         <div style={{
-          textAlign: 'center', marginBottom: 36,
+          textAlign: 'center', marginBottom: 20,
           opacity: visible ? 1 : 0,
-          transform: visible ? 'translateY(0)' : 'translateY(12px)',
-          transition: 'opacity 0.8s ease 0.25s, transform 0.8s ease 0.25s',
+          transform: visible ? 'translateY(0)' : 'translateY(10px)',
+          transition: 'opacity 0.6s ease 0.2s, transform 0.6s ease 0.2s',
         }}>
           <p style={{
-            fontSize: 12, letterSpacing: '0.2em', color: '#c084fc',
-            textTransform: 'uppercase', fontWeight: 600, marginBottom: 10,
+            fontSize: 11, letterSpacing: '0.25em', color: p,
+            textTransform: 'uppercase', fontWeight: 600, marginBottom: 8,
           }}>
             TU MEJOR VERSIÓN
           </p>
           <h1 style={{
             fontFamily: "'Bebas Neue', sans-serif",
-            fontSize: 48, letterSpacing: '0.06em',
+            fontSize: 44, letterSpacing: '0.06em',
             color: '#ffffff', lineHeight: 1,
-            margin: '0 0 18px',
-            textShadow: '0 0 40px rgba(167,139,250,0.3)',
+            margin: '0 0 12px',
+            textShadow: `0 0 32px ${p}33`,
           }}>
             EMPIEZA HOY
           </h1>
           <p style={{
-            fontSize: 13, color: '#a78bcc', lineHeight: 1.7,
-            maxWidth: 260, margin: '0 auto',
+            fontSize: 13, color: '#8B949E', lineHeight: 1.6,
+            maxWidth: 240, margin: '0 auto',
           }}>
-            Entrenamientos personalizados,<br />
-            seguimiento de progreso y<br />
-            motivación para lograr tus objetivos.
+            Entrenamientos personalizados, seguimiento de progreso y motivación para lograr tus objetivos.
           </p>
         </div>
 
         {/* Dots */}
         <div style={{
-          display: 'flex', gap: 8, marginBottom: 36,
+          display: 'flex', gap: 6, marginBottom: 20,
           opacity: visible ? 1 : 0,
-          transition: 'opacity 0.8s ease 0.4s',
+          transition: 'opacity 0.6s ease 0.35s',
         }}>
           {[0, 1, 2].map(i => (
             <div key={i} style={{
               height: 5, borderRadius: 3,
               width: i === dot ? 24 : 8,
-              background: i === dot ? '#9b30ff' : 'rgba(155,48,255,0.3)',
+              background: i === dot ? p : `${p}33`,
               transition: 'all 0.4s ease',
             }} />
           ))}
@@ -129,19 +123,25 @@ export default function SplashPage() {
         <button
           onClick={() => navigate('/login?start=1')}
           style={{
-            width: '70%', padding: '7px 0',
-            background: `linear-gradient(135deg, var(--brand-secondary) 0%, var(--brand-primary) 100%)`,
+            width: '550%', padding: '6px 0',
+            background: `linear-gradient(135deg, ${s} 0%, ${p} 100%)`,
             border: 'none', borderRadius: 14,
             fontFamily: "'Bebas Neue', sans-serif",
-            fontSize: 22, letterSpacing: '0.2em', color: '#ffffff',
-            cursor: 'pointer', marginBottom: 20,
-            boxShadow: `0 6px 32px ${tenant.color_primario}88, 0 0 0 1px ${tenant.color_primario}33`,
+            fontSize: 18, letterSpacing: '0.2em', color: '#ffffff',
+            cursor: 'pointer',
+            boxShadow: `0 4px 24px ${p}55`,
             opacity: visible ? 1 : 0,
             transform: visible ? 'translateY(0)' : 'translateY(8px)',
-            transition: 'opacity 0.8s ease 0.5s, transform 0.8s ease 0.5s, box-shadow 0.2s ease',
+            transition: 'opacity 0.6s ease 0.45s, transform 0.6s ease 0.45s, box-shadow 0.2s ease, transform 0.1s ease',
           }}
-          onMouseEnter={e => (e.currentTarget.style.boxShadow = `0 8px 40px ${tenant.color_primario}bb, 0 0 0 1px ${tenant.color_primario}66`)}
-          onMouseLeave={e => (e.currentTarget.style.boxShadow = `0 6px 32px ${tenant.color_primario}88, 0 0 0 1px ${tenant.color_primario}33`)}
+          onMouseEnter={e => {
+            e.currentTarget.style.boxShadow = `0 6px 32px ${p}88`
+            e.currentTarget.style.transform = 'translateY(-1px)'
+          }}
+          onMouseLeave={e => {
+            e.currentTarget.style.boxShadow = `0 4px 24px ${p}55`
+            e.currentTarget.style.transform = 'translateY(0)'
+          }}
         >
           COMENZAR
         </button>

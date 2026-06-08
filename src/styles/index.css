@@ -5,29 +5,29 @@
 @tailwind utilities;
 
 :root {
-  /* Variables de marca — sobreescritas dinámicamente por TenantContext */
-  --brand-primary:   #9b30ff;
-  --brand-secondary: #7c3aed;
-  /* Legacy (mapeadas a las de marca para que text-df-violet etc. cambien) */
-  --color-primario:  #9b30ff;
+  /* Variables de marca Elevra — sobreescritas dinámicamente por TenantContext */
+  --brand-primary:    #39D353;
+  --brand-secondary:  #2ECC71;
+  /* Legacy */
+  --color-primario:   #39D353;
   --color-secundario: #ec4899;
-  --color-fondo: #080612;
-  --color-texto: #ffffff;
-  --color-muted: #a1a1aa;
-  --color-border: #27272a;
+  --color-fondo:      #0D1117;
+  --color-texto:      #E6EDF3;
+  --color-muted:      #8B949E;
+  --color-border:     #30363D;
 }
 
 @layer base {
   * { box-sizing: border-box; }
-  html { background: #080612; }
+  html { background: #0D1117; }
   body {
     @apply bg-df-bg text-df-text font-sans antialiased;
     min-height: 100dvh;
     font-family: 'DM Sans', sans-serif;
   }
   ::-webkit-scrollbar { width: 4px; height: 4px; }
-  ::-webkit-scrollbar-track { background: #120d22; }
-  ::-webkit-scrollbar-thumb { background: #2d1f50; border-radius: 4px; }
+  ::-webkit-scrollbar-track { background: #161B22; }
+  ::-webkit-scrollbar-thumb { background: #30363D; border-radius: 4px; }
 }
 
 @layer utilities {
@@ -61,12 +61,12 @@
   .df-badge-cancel  { @apply bg-zinc-900/50   text-zinc-400   text-xs font-semibold px-2 py-0.5 rounded-full; }
 
   /* Efectos */
-  .glow-purple  { box-shadow: 0 0 30px rgba(124,58,237,0.25); }
+  .glow-purple  { box-shadow: 0 0 30px rgba(57,211,83,0.25); }
   .glow-pink    { box-shadow: 0 0 30px rgba(236,72,153,0.2); }
   .circuit-bg {
     background-image:
-      linear-gradient(rgba(168,85,247,.05) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(168,85,247,.05) 1px, transparent 1px);
+      linear-gradient(rgba(57,211,83,.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(57,211,83,.05) 1px, transparent 1px);
     background-size: 32px 32px;
   }
 

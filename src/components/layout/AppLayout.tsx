@@ -6,15 +6,15 @@ import InstalarAppButton from '@/components/ui/InstalarAppButton'
 import WhatsAppFloat from '@/components/ui/WhatsAppFloat'
 
 
-const NAV_ADMIN = [
+const NAV_ADMIN_BASE = [
   { to: '/profesores',   icon: 'fa-solid fa-chalkboard-user',  label: 'Profesores' },
   { to: '/planes',       icon: 'fa-solid fa-clipboard-list',   label: 'Planes' },
-  { to: '/mi-marca',     icon: 'fa-solid fa-palette',          label: 'Mi marca' },
   { to: '/configuracion',icon: 'fa-solid fa-gear',             label: 'Configuración' },
 ]
+const NAV_SUPERADMIN = { to: '/mi-marca', icon: 'fa-solid fa-palette', label: 'Mi marca' }
 
 export default function AppLayout() {
-  const { displayName, role, signOut } = useAuth()
+  const { displayName, role, signOut, superadmin } = useAuth()
   const { tenant } = useTenant()
   const navigate = useNavigate()
 
@@ -67,7 +67,7 @@ export default function AppLayout() {
               <p className="hidden lg:block text-[10px] text-df-muted uppercase tracking-widest px-3 mb-1">
                 Administración
               </p>
-              {NAV_ADMIN.map(item => (
+              {[...NAV_ADMIN_BASE, ...(superadmin ? [NAV_SUPERADMIN] : [])].map(item => (
                 <NavLink key={item.to} to={item.to}
                   className={({ isActive }) =>
                     `flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200
