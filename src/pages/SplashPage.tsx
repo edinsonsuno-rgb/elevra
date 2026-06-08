@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useTenant } from '@/contexts/TenantContext'
 
 export default function SplashPage() {
-  const navigate = useNavigate()
+  const navigate   = useNavigate()
+  const { tenant } = useTenant()
   const [dot, setDot] = useState(0)
   const [visible, setVisible] = useState(false)
 
@@ -69,8 +71,8 @@ export default function SplashPage() {
           textAlign: 'center',
         }}>
           <img
-            src="/logo.png"
-            alt="Dorita Fit"
+            src={tenant.logo_url ?? '/logo.png'}
+            alt={tenant.nombre}
             style={{ height: 100, width: 'auto', maxWidth: 300, objectFit: 'contain' }}
           />
         </div>
@@ -128,18 +130,18 @@ export default function SplashPage() {
           onClick={() => navigate('/login?start=1')}
           style={{
             width: '70%', padding: '7px 0',
-            background: 'linear-gradient(135deg, #7c3aed 0%, #9b30ff 50%, #a855f7 100%)',
+            background: `linear-gradient(135deg, var(--brand-secondary) 0%, var(--brand-primary) 100%)`,
             border: 'none', borderRadius: 14,
             fontFamily: "'Bebas Neue', sans-serif",
             fontSize: 22, letterSpacing: '0.2em', color: '#ffffff',
             cursor: 'pointer', marginBottom: 20,
-            boxShadow: '0 6px 32px rgba(124,58,237,0.55), 0 0 0 1px rgba(168,85,247,0.2)',
+            boxShadow: `0 6px 32px ${tenant.color_primario}88, 0 0 0 1px ${tenant.color_primario}33`,
             opacity: visible ? 1 : 0,
             transform: visible ? 'translateY(0)' : 'translateY(8px)',
             transition: 'opacity 0.8s ease 0.5s, transform 0.8s ease 0.5s, box-shadow 0.2s ease',
           }}
-          onMouseEnter={e => (e.currentTarget.style.boxShadow = '0 8px 40px rgba(124,58,237,0.75), 0 0 0 1px rgba(168,85,247,0.4)')}
-          onMouseLeave={e => (e.currentTarget.style.boxShadow = '0 6px 32px rgba(124,58,237,0.55), 0 0 0 1px rgba(168,85,247,0.2)')}
+          onMouseEnter={e => (e.currentTarget.style.boxShadow = `0 8px 40px ${tenant.color_primario}bb, 0 0 0 1px ${tenant.color_primario}66`)}
+          onMouseLeave={e => (e.currentTarget.style.boxShadow = `0 6px 32px ${tenant.color_primario}88, 0 0 0 1px ${tenant.color_primario}33`)}
         >
           COMENZAR
         </button>

@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from '@/hooks/useAuth'
+import { TenantProvider } from '@/contexts/TenantContext'
 import AppLayout        from '@/components/layout/AppLayout'
 import AlumnoLayout     from '@/components/layout/AlumnoLayout'
 
@@ -33,6 +34,7 @@ import PerfilPage                from '@/pages/PerfilPage'
 import ProfesoresPage            from '@/pages/admin/ProfesoresPage'
 import PlanesPage                from '@/pages/admin/PlanesPage'
 import ConfiguracionPage         from '@/pages/admin/ConfiguracionPage'
+import BrandingPage              from '@/pages/admin/BrandingPage'
 
 // Alumno
 import AlumnoDashboard           from '@/pages/alumno/AlumnoDashboard'
@@ -78,6 +80,7 @@ function AdminRoute({ children }: { children: React.ReactNode }) {
 
 export default function App() {
   return (
+    <TenantProvider>
     <AuthProvider>
       <BrowserRouter>
         <Routes>
@@ -128,11 +131,13 @@ export default function App() {
             <Route path="/profesores"    element={<AdminRoute><ProfesoresPage /></AdminRoute>} />
             <Route path="/planes"        element={<AdminRoute><PlanesPage /></AdminRoute>} />
             <Route path="/configuracion" element={<AdminRoute><ConfiguracionPage /></AdminRoute>} />
+            <Route path="/mi-marca"      element={<AdminRoute><BrandingPage /></AdminRoute>} />
           </Route>
 
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>
     </AuthProvider>
+    </TenantProvider>
   )
 }

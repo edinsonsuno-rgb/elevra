@@ -1,5 +1,6 @@
 import { NavLink, Outlet, Navigate, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '@/hooks/useAuth'
+import { useTenant } from '@/contexts/TenantContext'
 import { Avatar } from '@/components/ui/index'
 import InstalarAppButton from '@/components/ui/InstalarAppButton'
 import WhatsAppFloat from '@/components/ui/WhatsAppFloat'
@@ -8,11 +9,13 @@ import WhatsAppFloat from '@/components/ui/WhatsAppFloat'
 const NAV_ADMIN = [
   { to: '/profesores',   icon: 'fa-solid fa-chalkboard-user',  label: 'Profesores' },
   { to: '/planes',       icon: 'fa-solid fa-clipboard-list',   label: 'Planes' },
+  { to: '/mi-marca',     icon: 'fa-solid fa-palette',          label: 'Mi marca' },
   { to: '/configuracion',icon: 'fa-solid fa-gear',             label: 'Configuración' },
 ]
 
 export default function AppLayout() {
   const { displayName, role, signOut } = useAuth()
+  const { tenant } = useTenant()
   const navigate = useNavigate()
 
   if (role === 'alumno') return <Navigate to="/alumno" replace />
@@ -41,7 +44,7 @@ export default function AppLayout() {
     <div className="flex h-screen bg-df-bg overflow-hidden">
       <aside className="w-16 lg:w-56 flex-shrink-0 bg-df-card border-r border-df-border flex flex-col py-4">
         <div className="px-3 lg:px-4 mb-6 overflow-hidden">
-          <img src="/logo.png" alt="Logo" className="h-8 w-auto max-w-full object-contain" />
+          <img src={tenant.logo_url ?? '/logo.png'} alt={tenant.nombre} className="h-8 w-auto max-w-full object-contain" />
         </div>
 
         <nav className="flex-1 flex flex-col gap-1 px-2 overflow-y-auto">

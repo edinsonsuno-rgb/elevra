@@ -5,7 +5,11 @@
 @tailwind utilities;
 
 :root {
-  --color-primario: #8b5cf6;
+  /* Variables de marca — sobreescritas dinámicamente por TenantContext */
+  --brand-primary:   #9b30ff;
+  --brand-secondary: #7c3aed;
+  /* Legacy (mapeadas a las de marca para que text-df-violet etc. cambien) */
+  --color-primario:  #9b30ff;
   --color-secundario: #ec4899;
   --color-fondo: #080612;
   --color-texto: #ffffff;
@@ -32,7 +36,11 @@
   .df-surface { @apply bg-df-surface border border-df-border rounded-xl; }
 
   /* Botones */
-  .df-btn         { @apply bg-df-purple hover:bg-df-violet text-white font-bold rounded-full transition-all duration-200 active:scale-95; }
+  .df-btn {
+    @apply text-white font-bold rounded-full transition-all duration-200 active:scale-95;
+    background: var(--brand-primary);
+  }
+  .df-btn:hover { background: var(--brand-secondary); }
   .df-btn-outline { @apply border border-df-border hover:border-df-violet text-df-muted hover:text-df-pink rounded-full transition-all duration-200; }
   .df-btn-ghost   { @apply text-df-muted hover:text-white transition-colors duration-200; }
 

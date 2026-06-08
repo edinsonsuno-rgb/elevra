@@ -1,6 +1,7 @@
 import { useState, FormEvent } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '@/hooks/useAuth'
+import { useTenant } from '@/contexts/TenantContext'
 
 export default function LoginPage() {
   const [email, setEmail]       = useState('')
@@ -12,6 +13,7 @@ export default function LoginPage() {
   const [started, setStarted]   = useState(() => new URLSearchParams(location.search).get('start') === '1')
   const { signIn } = useAuth()
   const navigate   = useNavigate()
+  const { tenant } = useTenant()
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
@@ -35,8 +37,8 @@ export default function LoginPage() {
           <div className="px-8 py-10 text-center">
             <div className="w-40 mx-auto mb-6">
               <img
-                src="/logo.png"
-                alt="Logo"
+                src={tenant.logo_url ?? '/logo.png'}
+                alt={tenant.nombre}
                 className="mx-auto h-12 w-full object-contain drop-shadow-[0_0_18px_rgba(139,92,246,0.6)]"
               />
             </div>
