@@ -69,7 +69,6 @@ export default function LoginPage() {
                 >
                   COMENZAR
                 </button>
-                <p className="text-xs text-df-muted mt-3">¿Ya tienes cuenta? <span onClick={() => navigate('/login')} className="text-df-violet cursor-pointer">Inicia sesión</span></p>
               </div>
             ) : (
               <form onSubmit={handleSubmit} className="space-y-4">

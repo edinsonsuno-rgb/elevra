@@ -144,20 +144,6 @@ export default function SplashPage() {
           COMENZAR
         </button>
 
-        {/* Link login */}
-        <p style={{
-          fontSize: 12, color: '#7c5fa0',
-          opacity: visible ? 1 : 0,
-          transition: 'opacity 0.8s ease 0.6s',
-        }}>
-          ¿Ya tienes cuenta?{' '}
-          <span
-            onClick={() => navigate('/login')}
-            style={{ color: '#b46eff', fontWeight: 700, cursor: 'pointer' }}
-          >
-            Inicia sesión
-          </span>
-        </p>
       </div>
     </div>
   )
