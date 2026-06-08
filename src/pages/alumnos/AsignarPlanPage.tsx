@@ -56,6 +56,7 @@ export default function AsignarPlanPage() {
 
   const [planSeleccionado, setPlanSeleccionado] = useState<Plan | null>(null)
   const [fechaInicio, setFechaInicio] = useState(new Date().toISOString().split('T')[0])
+  const [precioDia,   setPrecioDia]   = useState(333)
 
   useEffect(() => { cargar() }, [id])
 
@@ -64,11 +65,17 @@ export default function AsignarPlanPage() {
       { data: alumnoData },
       { data: planesData },
       { data: historialData },
+      { data: configData },
     ] = await Promise.all([
       supabase.from('alumnos').select('id, nombre, documento, tipo_documento').eq('id', id!).single(),
       supabase.from('planes').select('*').eq('activo', true).order('es_invitado', { ascending: false }),
       supabase.from('alumno_planes').select('*, plan:planes(nombre)').eq('alumno_id', id!).order('created_at', { ascending: false }),
+      supabase.from('configuracion').select('clave, valor').eq('clave', 'precio_por_alumno').maybeSingle(),
     ])
+    if (configData) {
+      const mensual = Number(configData.valor ?? 10000)
+      setPrecioDia(Math.round(mensual / 30))
+    }
     setAlumno(alumnoData)
     setPlanes(planesData ?? [])
     setHistorial((historialData as any) ?? [])
@@ -104,6 +111,9 @@ export default function AsignarPlanPage() {
       ? planSeleccionado.cantidad
       : planSeleccionado.cantidad * 30
 
+    const precioAlActivar = planSeleccionado.es_invitado ? 0 : precioDia
+    const costoTotal      = precioAlActivar * dias
+
     const { error: err } = await supabase.from('alumno_planes').insert({
       alumno_id:    id!,
       plan_id:      planSeleccionado.id,
@@ -111,8 +121,8 @@ export default function AsignarPlanPage() {
       fecha_inicio: fechaInicio,
       fecha_fin:    fechaFin,
       dias_plan:    dias,
-      precio_dia:   0,
-      costo_total:  0,
+      precio_dia:   precioAlActivar,
+      costo_total:  costoTotal,
       es_invitado:  planSeleccionado.es_invitado,
       activado_por: user?.id,
     })
@@ -221,6 +231,14 @@ export default function AsignarPlanPage() {
                   {planSeleccionado.tipo === 'dias' ? planSeleccionado.cantidad : planSeleccionado.cantidad * 30} días
                 </span>
               </div>
+              {!planSeleccionado.es_invitado && (
+                <div className="flex justify-between text-xs border-t border-df-purple/20 pt-2 mt-2">
+                  <span className="text-df-muted">Costo del plan</span>
+                  <span className="text-df-violet font-black">
+                    ${(precioDia * (planSeleccionado.tipo === 'dias' ? planSeleccionado.cantidad : planSeleccionado.cantidad * 30)).toLocaleString('es-CO')}
+                  </span>
+                </div>
+              )}
             </div>
           </div>
         )}

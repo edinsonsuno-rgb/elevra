@@ -11,7 +11,10 @@ const NAV_ADMIN_BASE = [
   { to: '/planes',       icon: 'fa-solid fa-clipboard-list',   label: 'Planes' },
   { to: '/configuracion',icon: 'fa-solid fa-gear',             label: 'Configuración' },
 ]
-const NAV_SUPERADMIN = { to: '/mi-marca', icon: 'fa-solid fa-palette', label: 'Mi marca' }
+const NAV_SUPERADMIN = [
+  { to: '/instructores', icon: 'fa-solid fa-users-gear', label: 'Instructores' },
+  { to: '/mi-marca',     icon: 'fa-solid fa-palette',    label: 'Mi marca'     },
+]
 
 export default function AppLayout() {
   const { displayName, role, signOut, superadmin } = useAuth()
@@ -67,7 +70,7 @@ export default function AppLayout() {
               <p className="hidden lg:block text-[10px] text-df-muted uppercase tracking-widest px-3 mb-1">
                 Administración
               </p>
-              {[...NAV_ADMIN_BASE, ...(superadmin ? [NAV_SUPERADMIN] : [])].map(item => (
+              {[...NAV_ADMIN_BASE, ...(superadmin ? NAV_SUPERADMIN : [])].map(item => (
                 <NavLink key={item.to} to={item.to}
                   className={({ isActive }) =>
                     `flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200

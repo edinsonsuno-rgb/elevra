@@ -34,6 +34,7 @@ export default function ProfesoresPage() {
   const [saving,       setSaving]       = useState(false)
   const [error,        setError]        = useState<string | null>(null)
   const [copiado,      setCopiado]      = useState<string | null>(null)
+  const [refrescando,  setRefrescando]  = useState<string | null>(null)
 
   const [form, setForm] = useState({ nombre: '', email: '' })
 
@@ -96,6 +97,23 @@ export default function ProfesoresPage() {
     setTimeout(() => setCopiado(null), 2000)
   }
 
+  async function refrescarInvitacion(id: string) {
+    setRefrescando(id)
+    const nuevoToken = crypto.randomUUID()
+    const { error: err } = await supabase
+      .from('invitaciones')
+      .update({ token: nuevoToken, usado: false })
+      .eq('id', id)
+    if (!err) {
+      setInvitaciones(prev => prev.map(i => i.id === id ? { ...i, token: nuevoToken, usado: false } : i))
+      const link = `${window.location.origin}/registro?token=${nuevoToken}`
+      navigator.clipboard.writeText(link)
+      setCopiado(id)
+      setTimeout(() => setCopiado(null), 2500)
+    }
+    setRefrescando(null)
+  }
+
   if (loading) return <Spinner />
 
   return (
@@ -153,11 +171,11 @@ export default function ProfesoresPage() {
       )}
 
       {/* Invitaciones pendientes */}
-      {invitaciones.length > 0 && (
+      {invitaciones.filter(i => !i.usado).length > 0 && (
         <div>
-          <h2 className="text-sm font-bold text-white mb-3">Invitaciones</h2>
+          <h2 className="text-sm font-bold text-white mb-3">Invitaciones pendientes</h2>
           <div className="space-y-2">
-            {invitaciones.map(inv => (
+            {invitaciones.filter(i => !i.usado).map(inv => (
               <div key={inv.id} className="df-surface p-4 rounded-xl flex flex-col gap-4 group">
                 {/* Fila superior */}
                 <div className="flex items-center gap-4">
@@ -184,15 +202,29 @@ export default function ProfesoresPage() {
                   </button>
                 </div>
 
-                {/* Botón copiar */}
+                {/* Botones copiar y refrescar */}
                 {!inv.usado && (
-                  <button onClick={() => copiarLink(inv.token, inv.id)}
-                    className={`w-full text-xs px-3 py-2 rounded-lg transition-all flex items-center justify-center gap-2 ${
-                      copiado === inv.id ? 'bg-green-900/30 text-green-400' : 'df-surface text-df-muted hover:text-white'
-                    }`}>
-                    <i className={`fa-solid ${copiado === inv.id ? 'fa-check' : 'fa-copy'} text-xs`} />
-                    {copiado === inv.id ? '¡Copiado!' : 'Copiar link de registro'}
-                  </button>
+                  <div className="flex gap-2">
+                    <button onClick={() => copiarLink(inv.token, inv.id)}
+                      className={`flex-1 text-xs px-3 py-2 rounded-lg transition-all flex items-center justify-center gap-2 ${
+                        copiado === inv.id ? 'bg-green-900/30 text-green-400' : 'df-surface text-df-muted hover:text-white'
+                      }`}>
+                      <i className={`fa-solid ${copiado === inv.id ? 'fa-check' : 'fa-copy'} text-xs`} />
+                      {copiado === inv.id ? '¡Copiado!' : 'Copiar link'}
+                    </button>
+                    <button
+                      onClick={() => refrescarInvitacion(inv.id)}
+                      disabled={refrescando === inv.id}
+                      title="Genera un nuevo link y lo copia al portapapeles"
+                      className="text-xs px-3 py-2 rounded-lg df-surface text-df-muted hover:text-amber-400 transition-all flex items-center gap-1.5"
+                    >
+                      {refrescando === inv.id
+                        ? <div className="w-3 h-3 border-2 border-df-muted/30 border-t-df-muted rounded-full animate-spin" />
+                        : <i className="fa-solid fa-rotate-right text-xs" />
+                      }
+                      Nuevo link
+                    </button>
+                  </div>
                 )}
               </div>
             ))}

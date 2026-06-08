@@ -35,6 +35,8 @@ import ProfesoresPage            from '@/pages/admin/ProfesoresPage'
 import PlanesPage                from '@/pages/admin/PlanesPage'
 import ConfiguracionPage         from '@/pages/admin/ConfiguracionPage'
 import BrandingPage              from '@/pages/admin/BrandingPage'
+import InstructoresPage          from '@/pages/admin/InstructoresPage'
+import InstructorDetallePage     from '@/pages/admin/InstructorDetallePage'
 
 // Alumno
 import AlumnoDashboard           from '@/pages/alumno/AlumnoDashboard'
@@ -138,7 +140,9 @@ export default function App() {
             <Route path="/profesores"    element={<AdminRoute><ProfesoresPage /></AdminRoute>} />
             <Route path="/planes"        element={<AdminRoute><PlanesPage /></AdminRoute>} />
             <Route path="/configuracion" element={<AdminRoute><ConfiguracionPage /></AdminRoute>} />
-            <Route path="/mi-marca"      element={<SuperAdminRoute><BrandingPage /></SuperAdminRoute>} />
+            <Route path="/mi-marca"          element={<SuperAdminRoute><BrandingPage /></SuperAdminRoute>} />
+            <Route path="/instructores"      element={<SuperAdminRoute><InstructoresPage /></SuperAdminRoute>} />
+            <Route path="/instructores/:tenantId" element={<SuperAdminRoute><InstructorDetallePage /></SuperAdminRoute>} />
           </Route>
 
           <Route path="*" element={<Navigate to="/" replace />} />
