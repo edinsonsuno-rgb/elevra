@@ -123,8 +123,10 @@ export default function InstructoresPage() {
   async function crearInstructor(e: FormEvent) {
     e.preventDefault()
     setSaving(true); setError(null)
+    console.log('[crearInstructor] inicio', { form, userId: user?.id })
 
     // 1. Crear tenant con branding
+    console.log('[crearInstructor] paso 1 — insertando tenant...')
     const { data: tenant, error: tenantErr } = await supabase
       .from('tenants')
       .insert({
@@ -139,6 +141,8 @@ export default function InstructoresPage() {
       .select('id')
       .single()
 
+    console.log('[crearInstructor] paso 1 resultado', { tenant, tenantErr })
+
     if (tenantErr || !tenant) {
       setError(tenantErr?.message ?? 'Error al crear el espacio')
       setSaving(false)
@@ -146,6 +150,7 @@ export default function InstructoresPage() {
     }
 
     // 2. Crear invitación ligada al tenant
+    console.log('[crearInstructor] paso 2 — insertando invitación...', { tenantId: tenant.id })
     const { data: inv, error: invErr } = await supabase
       .from('invitaciones')
       .insert({
@@ -157,12 +162,15 @@ export default function InstructoresPage() {
       .select('token')
       .single()
 
+    console.log('[crearInstructor] paso 2 resultado', { inv, invErr })
+
     if (invErr || !inv) {
       setError(invErr?.message ?? 'Error al crear la invitación')
       setSaving(false)
       return
     }
 
+    console.log('[crearInstructor] éxito — generando link...')
     const link = `${window.location.origin}/registro?token=${inv.token}`
     setLinkGenerado(link)
     setSaving(false)
