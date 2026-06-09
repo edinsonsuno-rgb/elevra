@@ -72,6 +72,14 @@ export default function InstructorDetallePage() {
     color_primario:   '#9b30ff',
     color_secundario: '#7c3aed',
   })
+  const [colorTexto, setColorTexto] = useState({ color_primario: '#9b30ff', color_secundario: '#7c3aed' })
+
+  function isValidHex(v: string) { return /^#[0-9a-fA-F]{6}$/.test(v) }
+
+  function onColorTexto(key: 'color_primario' | 'color_secundario', val: string) {
+    setColorTexto(p => ({ ...p, [key]: val }))
+    if (isValidHex(val)) setForm(f => ({ ...f, [key]: val }))
+  }
 
   useEffect(() => { if (tenantId) cargar() }, [tenantId])
 
@@ -106,14 +114,17 @@ export default function InstructorDetallePage() {
     if (t) {
       const datos = t as TenantData
       setTenant(datos)
+      const cp = datos.color_primario   ?? '#9b30ff'
+      const cs = datos.color_secundario ?? '#7c3aed'
       setForm({
         nombre:           datos.nombre,
         display_name:     (p as AdminProfile | null)?.display_name ?? '',
         al_dia:           datos.al_dia ?? true,
         logo_url:         datos.logo_url ?? '',
-        color_primario:   datos.color_primario ?? '#9b30ff',
-        color_secundario: datos.color_secundario ?? '#7c3aed',
+        color_primario:   cp,
+        color_secundario: cs,
       })
+      setColorTexto({ color_primario: cp, color_secundario: cs })
     }
     if (p) setAdmin(p as AdminProfile)
     setAlumnos(a ?? [])
@@ -291,12 +302,12 @@ export default function InstructorDetallePage() {
                       <div className="flex items-center gap-2">
                         <label className="cursor-pointer">
                           <input type="color" value={form[key]}
-                            onChange={e => setForm(f => ({ ...f, [key]: e.target.value }))}
+                            onChange={e => { setForm(f => ({ ...f, [key]: e.target.value })); setColorTexto(p => ({ ...p, [key]: e.target.value })) }}
                             className="sr-only" />
                           <div className="w-9 h-9 rounded-xl border border-df-border" style={{ background: form[key] }} />
                         </label>
-                        <input value={form[key]}
-                          onChange={e => setForm(f => ({ ...f, [key]: e.target.value }))}
+                        <input value={colorTexto[key]}
+                          onChange={e => onColorTexto(key, e.target.value)}
                           maxLength={7} className="df-input font-mono text-xs" />
                       </div>
                     </div>
