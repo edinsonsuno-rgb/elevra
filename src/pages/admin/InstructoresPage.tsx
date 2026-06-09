@@ -128,19 +128,40 @@ export default function InstructoresPage() {
     // 1. Crear tenant con branding
     const newTenantId = crypto.randomUUID()
 
-    const { data: rpc, error: rpcErr } = await supabase.rpc('admin_crear_instructor', {
-      p_tenant_id:        newTenantId,
-      p_nombre_gym:       form.gym.trim(),
-      p_subdominio:       form.subdominio.trim().toLowerCase(),
-      p_logo_url:         form.logo_url || '',
-      p_color_primario:   form.color_primario,
-      p_color_secundario: form.color_secundario,
-      p_nombre:           form.nombre.trim(),
-      p_email:            form.email.trim(),
-      p_creado_por:       user?.id,
-    })
+    console.log('[crearInstructor] llamando RPC...', { newTenantId })
+    const rpcStart = Date.now()
+
+    let rpc: any = null
+    let rpcErr: any = null
+    try {
+      const res = await Promise.race([
+        supabase.rpc('admin_crear_instructor', {
+          p_tenant_id:        newTenantId,
+          p_nombre_gym:       form.gym.trim(),
+          p_subdominio:       form.subdominio.trim().toLowerCase(),
+          p_logo_url:         form.logo_url || '',
+          p_color_primario:   form.color_primario,
+          p_color_secundario: form.color_secundario,
+          p_nombre:           form.nombre.trim(),
+          p_email:            form.email.trim(),
+          p_creado_por:       user?.id,
+        }),
+        new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error('RPC sin respuesta después de 30s')), 30_000)
+        ),
+      ]) as any
+      rpc    = res.data
+      rpcErr = res.error
+      console.log('[crearInstructor] RPC respondió en', Date.now() - rpcStart, 'ms', { rpc, rpcErr })
+    } catch (err: any) {
+      console.error('[crearInstructor] RPC excepción:', err.message, 'después de', Date.now() - rpcStart, 'ms')
+      setError(err.message)
+      setSaving(false)
+      return
+    }
 
     if (rpcErr || !rpc?.token) {
+      console.error('[crearInstructor] RPC error:', rpcErr)
       setError(rpcErr?.message ?? 'Error al crear el instructor')
       setSaving(false)
       return
