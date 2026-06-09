@@ -137,18 +137,21 @@ export default function InstructorDetallePage() {
     if (!tenant) return
     setSaving(true)
 
-    await supabase.from('tenants').update({
-      nombre:           form.nombre,
-      al_dia:           form.al_dia,
-      logo_url:         form.logo_url.trim() || null,
-      color_primario:   form.color_primario,
-      color_secundario: form.color_secundario,
-    }).eq('id', tenant.id)
+    const { error } = await supabase.rpc('admin_actualizar_tenant', {
+      p_tenant_id:        tenant.id,
+      p_nombre:           form.nombre,
+      p_al_dia:           form.al_dia,
+      p_logo_url:         form.logo_url.trim(),
+      p_color_primario:   form.color_primario,
+      p_color_secundario: form.color_secundario,
+      p_display_name:     form.display_name,
+      p_profile_id:       admin?.id ?? null,
+    })
 
-    if (admin && form.display_name !== (admin.display_name ?? '')) {
-      await supabase.from('profiles')
-        .update({ display_name: form.display_name })
-        .eq('id', admin.id)
+    if (error) {
+      console.error('[guardar] RPC error:', error.message)
+      setSaving(false)
+      return
     }
 
     setTenant(prev => prev ? {
