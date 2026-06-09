@@ -2,7 +2,6 @@ import { useEffect, useState, FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
 import { Avatar, Spinner, EmptyState, Modal } from '@/components/ui/index'
-import ImageUpload from '@/components/ui/ImageUpload'
 import { useAuth } from '@/hooks/useAuth'
 import { getCache, setCache, invalidateCache } from '@/lib/queryCache'
 
@@ -26,28 +25,17 @@ export default function InstructoresPage() {
   const [instructores,  setInstructores]  = useState<InstructorItem[]>([])
   const [loading,       setLoading]       = useState(true)
   const [precioMensual, setPrecioMensual] = useState(10000)
-  const [modalOpen,      setModalOpen]      = useState(false)
-  const [paso,           setPaso]           = useState<1 | 2>(1)
-  const [saving,         setSaving]         = useState(false)
-  const [error,          setError]          = useState<string | null>(null)
-  const [linkGenerado,   setLinkGenerado]   = useState<string | null>(null)
-  const [copiado,        setCopiado]        = useState(false)
-  const [subDisponible,  setSubDisponible]  = useState<boolean | null>(null)
-  const [checkingSub,    setCheckingSub]    = useState(false)
+  const [modalOpen,     setModalOpen]     = useState(false)
+  const [saving,        setSaving]        = useState(false)
+  const [error,         setError]         = useState<string | null>(null)
+  const [linkGenerado,  setLinkGenerado]  = useState<string | null>(null)
+  const [copiado,       setCopiado]       = useState(false)
+  const [subDisponible, setSubDisponible] = useState<boolean | null>(null)
+  const [checkingSub,   setCheckingSub]   = useState(false)
 
   const [form, setForm] = useState({
-    nombre: '', email: '', gym: '', subdominio: '',
-    logo_url: '', color_primario: '#39D353', color_secundario: '#2ECC71',
+    nombre: '', telefono: '', cc: '', email: '', gym: '', subdominio: '',
   })
-  // Texto crudo de los inputs de color (puede ser hex incompleto mientras el usuario escribe)
-  const [colorTexto, setColorTexto] = useState({ color_primario: '#39D353', color_secundario: '#2ECC71' })
-
-  function isValidHex(v: string) { return /^#[0-9a-fA-F]{6}$/.test(v) }
-
-  function onColorTexto(key: 'color_primario' | 'color_secundario', val: string) {
-    setColorTexto(p => ({ ...p, [key]: val }))
-    if (isValidHex(val)) setForm(f => ({ ...f, [key]: val }))
-  }
 
   useEffect(() => { cargar() }, [])
 
@@ -139,10 +127,12 @@ export default function InstructoresPage() {
           p_tenant_id:        newTenantId,
           p_nombre_gym:       form.gym.trim(),
           p_subdominio:       form.subdominio.trim().toLowerCase(),
-          p_logo_url:         form.logo_url || '',
-          p_color_primario:   form.color_primario,
-          p_color_secundario: form.color_secundario,
+          p_logo_url:         '',
+          p_color_primario:   '#39D353',
+          p_color_secundario: '#2ECC71',
           p_nombre:           form.nombre.trim(),
+          p_telefono:         form.telefono.trim(),
+          p_cc:               form.cc.trim(),
           p_email:            form.email.trim(),
           p_creado_por:       user?.id,
         }),
@@ -201,9 +191,7 @@ export default function InstructoresPage() {
     setError(null)
     setLinkGenerado(null)
     setCopiado(false)
-    setPaso(1)
-    setForm({ nombre: '', email: '', gym: '', subdominio: '', logo_url: '', color_primario: '#39D353', color_secundario: '#2ECC71' })
-    setColorTexto({ color_primario: '#39D353', color_secundario: '#2ECC71' })
+    setForm({ nombre: '', telefono: '', cc: '', email: '', gym: '', subdominio: '' })
   }
 
   if (loading) return <Spinner />
@@ -285,7 +273,7 @@ export default function InstructoresPage() {
 
       {/* Modal nuevo instructor */}
       <Modal open={modalOpen} onClose={cerrarModal}
-        title={linkGenerado ? '¡Instructor creado!' : paso === 1 ? 'Nuevo instructor — Datos' : 'Nuevo instructor — Marca'}>
+        title={linkGenerado ? '¡Instructor creado!' : 'Nuevo instructor'}>
 
         {linkGenerado ? (
           <div className="space-y-4">
@@ -307,108 +295,54 @@ export default function InstructoresPage() {
             <button onClick={cerrarModal} className="df-btn w-full py-2.5 text-sm">Listo</button>
           </div>
 
-        ) : paso === 1 ? (
-          /* ── Paso 1: Datos básicos ── */
-          <form onSubmit={e => { e.preventDefault(); setPaso(2) }} className="space-y-4">
-            <div>
-              <label className="text-xs font-semibold text-df-muted uppercase tracking-wider mb-1.5 block">Nombre del instructor *</label>
-              <input value={form.nombre} onChange={e => setForm(f => ({ ...f, nombre: e.target.value }))}
-                placeholder="Ej: Laura Martínez" className="df-input" required />
-            </div>
-            <div>
-              <label className="text-xs font-semibold text-df-muted uppercase tracking-wider mb-1.5 block">Correo electrónico *</label>
-              <input type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
-                placeholder="laura@correo.com" className="df-input" required />
-            </div>
-            <div>
-              <label className="text-xs font-semibold text-df-muted uppercase tracking-wider mb-1.5 block">Nombre del negocio *</label>
-              <input value={form.gym} onChange={e => setForm(f => ({ ...f, gym: e.target.value }))}
-                placeholder="Ej: Laura Fit" className="df-input" required />
-            </div>
-            <div>
-              <label className="text-xs font-semibold text-df-muted uppercase tracking-wider mb-1.5 block">Subdominio *</label>
-              <div className="flex items-center gap-2">
-                <input value={form.subdominio}
-                  onChange={e => cambiarSubdominio(e.target.value)}
-                  placeholder="laurafit" className="df-input flex-1" required />
-                <span className="text-xs text-df-muted flex-shrink-0">.elevra.lat</span>
-              </div>
-              {form.subdominio.length >= 2 && (
-                <p className={`text-xs mt-1.5 flex items-center gap-1.5 ${
-                  checkingSub ? 'text-df-muted' :
-                  subDisponible === true ? 'text-green-400' :
-                  subDisponible === false ? 'text-red-400' : 'text-df-muted'
-                }`}>
-                  {checkingSub
-                    ? <><div className="w-3 h-3 border border-current border-t-transparent rounded-full animate-spin" /> Verificando...</>
-                    : subDisponible === true
-                      ? <><i className="fa-solid fa-circle-check" /> Disponible</>
-                      : subDisponible === false
-                        ? <><i className="fa-solid fa-circle-xmark" /> Ya está en uso</>
-                        : null
-                  }
-                </p>
-              )}
-            </div>
-            <div className="flex gap-3 pt-1">
-              <button type="button" onClick={cerrarModal}
-                className="df-btn-outline border border-df-border px-5 py-2.5 text-sm rounded-xl flex-1">Cancelar</button>
-              <button type="submit"
-                disabled={checkingSub || subDisponible === false || !form.subdominio}
-                className="df-btn px-5 py-2.5 text-sm flex-1 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
-                Siguiente <i className="fa-solid fa-arrow-right text-xs" />
-              </button>
-            </div>
-          </form>
-
         ) : (
-          /* ── Paso 2: Logo y colores ── */
-          <form onSubmit={crearInstructor} className="space-y-4">
-            <ImageUpload
-              label="Logo del negocio"
-              value={form.logo_url || null}
-              onChange={url => setForm(f => ({ ...f, logo_url: url }))}
-              bucket="ejercicios"
-              folder="logos"
-            />
-            <div>
-              <label className="text-xs font-semibold text-df-muted uppercase tracking-wider mb-2 block">Colores de la app</label>
-              <div className="grid grid-cols-2 gap-3">
-                {([
-                  { key: 'color_primario'   as const, label: 'Principal' },
-                  { key: 'color_secundario' as const, label: 'Secundario' },
-                ]).map(({ key, label }) => (
-                  <div key={key}>
-                    <p className="text-[11px] text-df-muted mb-1.5">{label}</p>
-                    <div className="flex items-center gap-2">
-                      <label className="cursor-pointer">
-                        <input type="color" value={form[key]}
-                          onChange={e => { setForm(f => ({ ...f, [key]: e.target.value })); setColorTexto(p => ({ ...p, [key]: e.target.value })) }}
-                          className="sr-only" />
-                        <div className="w-9 h-9 rounded-xl border border-df-border" style={{ background: form[key] }} />
-                      </label>
-                      <input value={colorTexto[key]}
-                        onChange={e => onColorTexto(key, e.target.value)}
-                        maxLength={7} className="df-input font-mono text-xs" />
-                    </div>
-                  </div>
-                ))}
+          <form onSubmit={crearInstructor} className="space-y-3">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="col-span-2">
+                <label className="text-xs font-semibold text-df-muted uppercase tracking-wider mb-1.5 block">Nombre completo *</label>
+                <input value={form.nombre} onChange={e => setForm(f => ({ ...f, nombre: e.target.value }))}
+                  placeholder="Ej: Laura Martínez" className="df-input" required />
               </div>
-            </div>
-
-            {/* Preview */}
-            <div className="rounded-xl p-3 flex items-center justify-between"
-              style={{ background: `linear-gradient(135deg, ${form.color_secundario}22, ${form.color_primario}22)`, border: `1px solid ${form.color_primario}44` }}>
-              <div className="flex items-center gap-2">
-                <div className="w-7 h-7 rounded-lg overflow-hidden bg-df-surface flex items-center justify-center">
-                  <img src={form.logo_url || '/logo.png'} alt="" className="w-full h-full object-contain"
-                    onError={e => { (e.currentTarget as HTMLImageElement).src = '/logo.png' }} />
+              <div>
+                <label className="text-xs font-semibold text-df-muted uppercase tracking-wider mb-1.5 block">Teléfono</label>
+                <input type="tel" value={form.telefono} onChange={e => setForm(f => ({ ...f, telefono: e.target.value }))}
+                  placeholder="300 000 0000" className="df-input" />
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-df-muted uppercase tracking-wider mb-1.5 block">Cédula</label>
+                <input value={form.cc} onChange={e => setForm(f => ({ ...f, cc: e.target.value }))}
+                  placeholder="1234567890" className="df-input" />
+              </div>
+              <div className="col-span-2">
+                <label className="text-xs font-semibold text-df-muted uppercase tracking-wider mb-1.5 block">Correo electrónico *</label>
+                <input type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
+                  placeholder="laura@correo.com" className="df-input" required />
+              </div>
+              <div className="col-span-2">
+                <label className="text-xs font-semibold text-df-muted uppercase tracking-wider mb-1.5 block">Nombre del negocio *</label>
+                <input value={form.gym} onChange={e => setForm(f => ({ ...f, gym: e.target.value }))}
+                  placeholder="Ej: Laura Fit" className="df-input" required />
+              </div>
+              <div className="col-span-2">
+                <label className="text-xs font-semibold text-df-muted uppercase tracking-wider mb-1.5 block">Subdominio *</label>
+                <div className="flex items-center gap-2">
+                  <input value={form.subdominio} onChange={e => cambiarSubdominio(e.target.value)}
+                    placeholder="laurafit" className="df-input flex-1" required />
+                  <span className="text-xs text-df-muted flex-shrink-0">.elevra.lat</span>
                 </div>
-                <span className="text-sm font-bold text-white">{form.gym || 'Sin nombre'}</span>
-              </div>
-              <div className="px-3 py-1.5 rounded-lg text-white text-xs font-bold"
-                style={{ background: `linear-gradient(135deg, ${form.color_secundario}, ${form.color_primario})` }}>
-                Vista previa
+                {form.subdominio.length >= 2 && (
+                  <p className={`text-xs mt-1.5 flex items-center gap-1.5 ${
+                    checkingSub ? 'text-df-muted' :
+                    subDisponible === true ? 'text-green-400' :
+                    subDisponible === false ? 'text-red-400' : 'text-df-muted'
+                  }`}>
+                    {checkingSub
+                      ? <><div className="w-3 h-3 border border-current border-t-transparent rounded-full animate-spin" /> Verificando...</>
+                      : subDisponible === true ? <><i className="fa-solid fa-circle-check" /> Disponible</>
+                      : subDisponible === false ? <><i className="fa-solid fa-circle-xmark" /> Ya está en uso</>
+                      : null}
+                  </p>
+                )}
               </div>
             </div>
 
@@ -418,16 +352,13 @@ export default function InstructoresPage() {
               </div>
             )}
             <div className="flex gap-3 pt-1">
-              <button type="button" onClick={() => setPaso(1)}
-                className="df-btn-outline border border-df-border px-5 py-2.5 text-sm rounded-xl flex-1 flex items-center justify-center gap-2">
-                <i className="fa-solid fa-arrow-left text-xs" /> Atrás
-              </button>
-              <button type="submit" disabled={saving}
-                className="df-btn px-5 py-2.5 text-sm flex-1 flex items-center justify-center gap-2">
+              <button type="button" onClick={cerrarModal}
+                className="df-btn-outline border border-df-border px-5 py-2.5 text-sm rounded-xl flex-1">Cancelar</button>
+              <button type="submit" disabled={saving || checkingSub || subDisponible === false || !form.subdominio}
+                className="df-btn px-5 py-2.5 text-sm flex-1 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
                 {saving
                   ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  : <><i className="fa-solid fa-paper-plane" /> Crear y generar link</>
-                }
+                  : <><i className="fa-solid fa-paper-plane" /> Crear y generar link</>}
               </button>
             </div>
           </form>
