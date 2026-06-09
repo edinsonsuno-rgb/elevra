@@ -126,10 +126,13 @@ export default function InstructoresPage() {
     console.log('[crearInstructor] inicio', { form, userId: user?.id })
 
     // 1. Crear tenant con branding
-    console.log('[crearInstructor] paso 1 — insertando tenant...')
-    const { data: tenant, error: tenantErr } = await supabase
+    const newTenantId = crypto.randomUUID()
+    console.log('[crearInstructor] paso 1 — insertando tenant...', { newTenantId })
+
+    const tenantInsert = supabase
       .from('tenants')
       .insert({
+        id:               newTenantId,
         nombre:           form.gym.trim(),
         subdominio:       form.subdominio.trim().toLowerCase(),
         activo:           true,
@@ -141,10 +144,26 @@ export default function InstructoresPage() {
       .select('id')
       .single()
 
+    const timeout15s = new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error('Timeout: la inserción tardó más de 15s')), 15_000)
+    )
+
+    let tenant: { id: string } | null = null
+    let tenantErr: any = null
+    try {
+      const res = await Promise.race([tenantInsert, timeout15s]) as any
+      tenant    = res.data
+      tenantErr = res.error
+    } catch (err: any) {
+      tenantErr = err
+    }
+
     console.log('[crearInstructor] paso 1 resultado', { tenant, tenantErr })
 
     if (tenantErr || !tenant) {
-      setError(tenantErr?.message ?? 'Error al crear el espacio')
+      const msg = tenantErr?.message ?? 'Error al crear el espacio'
+      console.error('[crearInstructor] fallo en tenant:', msg)
+      setError(msg)
       setSaving(false)
       return
     }
