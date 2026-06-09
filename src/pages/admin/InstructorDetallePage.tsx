@@ -137,7 +137,7 @@ export default function InstructorDetallePage() {
     if (!tenant) return
     setSaving(true)
 
-    const { error } = await supabase.rpc('admin_actualizar_tenant', {
+    const params = {
       p_tenant_id:        tenant.id,
       p_nombre:           form.nombre,
       p_al_dia:           form.al_dia,
@@ -146,10 +146,27 @@ export default function InstructorDetallePage() {
       p_color_secundario: form.color_secundario,
       p_display_name:     form.display_name,
       p_profile_id:       admin?.id ?? null,
-    })
+    }
+    console.log('[guardar] llamando RPC...', params)
+    const t0 = Date.now()
+
+    let error: any = null
+    try {
+      const res = await Promise.race([
+        supabase.rpc('admin_actualizar_tenant', params),
+        new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error('Timeout 20s')), 20_000)
+        ),
+      ]) as any
+      error = res.error
+      console.log('[guardar] RPC respondió en', Date.now() - t0, 'ms — error:', error)
+    } catch (err: any) {
+      console.error('[guardar] excepción:', err.message)
+      error = err
+    }
 
     if (error) {
-      console.error('[guardar] RPC error:', error.message)
+      console.error('[guardar] fallo:', error.message)
       setSaving(false)
       return
     }
