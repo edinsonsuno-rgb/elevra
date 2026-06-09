@@ -127,76 +127,32 @@ export default function InstructoresPage() {
 
     // 1. Crear tenant con branding
     const newTenantId = crypto.randomUUID()
-    console.log('[crearInstructor] paso 1 — insertando tenant...', { newTenantId })
 
-    const tenantInsert = supabase
-      .from('tenants')
-      .insert({
-        id:               newTenantId,
-        nombre:           form.gym.trim(),
-        subdominio:       form.subdominio.trim().toLowerCase(),
-        activo:           true,
-        al_dia:           true,
-        logo_url:         form.logo_url || null,
-        color_primario:   form.color_primario,
-        color_secundario: form.color_secundario,
-      })
-      .select('id')
-      .single()
+    const { data: rpc, error: rpcErr } = await supabase.rpc('admin_crear_instructor', {
+      p_tenant_id:        newTenantId,
+      p_nombre_gym:       form.gym.trim(),
+      p_subdominio:       form.subdominio.trim().toLowerCase(),
+      p_logo_url:         form.logo_url || '',
+      p_color_primario:   form.color_primario,
+      p_color_secundario: form.color_secundario,
+      p_nombre:           form.nombre.trim(),
+      p_email:            form.email.trim(),
+      p_creado_por:       user?.id,
+    })
 
-    const timeout15s = new Promise<never>((_, reject) =>
-      setTimeout(() => reject(new Error('Timeout: la inserción tardó más de 15s')), 15_000)
-    )
-
-    let tenant: { id: string } | null = null
-    let tenantErr: any = null
-    try {
-      const res = await Promise.race([tenantInsert, timeout15s]) as any
-      tenant    = res.data
-      tenantErr = res.error
-    } catch (err: any) {
-      tenantErr = err
-    }
-
-    console.log('[crearInstructor] paso 1 resultado', { tenant, tenantErr })
-
-    if (tenantErr || !tenant) {
-      const msg = tenantErr?.message ?? 'Error al crear el espacio'
-      console.error('[crearInstructor] fallo en tenant:', msg)
-      setError(msg)
+    if (rpcErr || !rpc?.token) {
+      setError(rpcErr?.message ?? 'Error al crear el instructor')
       setSaving(false)
       return
     }
 
-    // 2. Crear invitación ligada al tenant
-    console.log('[crearInstructor] paso 2 — insertando invitación...', { tenantId: tenant.id })
-    const { data: inv, error: invErr } = await supabase
-      .from('invitaciones')
-      .insert({
-        nombre:     form.nombre.trim(),
-        email:      form.email.trim(),
-        tenant_id:  tenant.id,
-        creado_por: user?.id,
-      })
-      .select('token')
-      .single()
-
-    console.log('[crearInstructor] paso 2 resultado', { inv, invErr })
-
-    if (invErr || !inv) {
-      setError(invErr?.message ?? 'Error al crear la invitación')
-      setSaving(false)
-      return
-    }
-
-    console.log('[crearInstructor] éxito — generando link...')
-    const link = `${window.location.origin}/registro?token=${inv.token}`
+    const link = `${window.location.origin}/registro?token=${rpc.token}`
     setLinkGenerado(link)
     setSaving(false)
 
     // Update optimista: agrega el nuevo instructor al estado local sin recargar
     const nuevoItem: InstructorItem = {
-      tenant_id:     tenant.id,
+      tenant_id:     newTenantId,
       tenant_nombre: form.gym.trim(),
       subdominio:    form.subdominio.trim().toLowerCase(),
       al_dia:        true,
