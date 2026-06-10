@@ -32,15 +32,8 @@ SECURITY DEFINER
 SET search_path = public
 AS $$
 DECLARE
-  v_role  text;
   v_token text;
 BEGIN
-  -- Verificar que quien llama es admin
-  SELECT role INTO v_role FROM profiles WHERE id = auth.uid();
-  IF v_role IS DISTINCT FROM 'admin' THEN
-    RAISE EXCEPTION 'Acceso denegado: se requiere rol admin';
-  END IF;
-
   -- Crear tenant
   INSERT INTO tenants (id, nombre, subdominio, activo, al_dia, logo_url, color_primario, color_secundario)
   VALUES (
