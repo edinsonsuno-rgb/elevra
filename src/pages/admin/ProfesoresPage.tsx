@@ -37,6 +37,7 @@ export default function ProfesoresPage() {
   const [refrescando,  setRefrescando]  = useState<string | null>(null)
 
   const [form, setForm] = useState({ nombre: '', email: '' })
+  const [nuevaInv, setNuevaInv] = useState<{ nombre: string; email: string; token: string; id: string } | null>(null)
 
   // Solo admin puede ver esta página
   useEffect(() => {
@@ -65,17 +66,23 @@ export default function ProfesoresPage() {
     e.preventDefault()
     if (!form.nombre.trim() || !form.email.trim()) return
     setSaving(true); setError(null)
-    const { error: err } = await supabase.from('invitaciones').insert({
+    const { data, error: err } = await supabase.from('invitaciones').insert({
       nombre:     form.nombre,
       email:      form.email,
       tenant_id:  tenantId!,
       creado_por: user?.id,
-    })
-    if (err) { setError(err.message); setSaving(false); return }
-    setForm({ nombre: '', email: '' })
-    setModalOpen(false)
+    }).select('id, nombre, email, token').single()
+    if (err || !data) { setError(err?.message ?? 'Error al crear invitación'); setSaving(false); return }
+    setNuevaInv(data)
     setSaving(false)
     cargar()
+  }
+
+  function cerrarModal() {
+    setModalOpen(false)
+    setNuevaInv(null)
+    setForm({ nombre: '', email: '' })
+    setError(null)
   }
 
   async function eliminarInvitacion(id: string) {
@@ -90,11 +97,20 @@ export default function ProfesoresPage() {
     cargar()
   }
 
+  function buildLink(token: string) {
+    return `${window.location.origin}/registro?token=${token}`
+  }
+
   function copiarLink(token: string, id: string) {
-    const link = `${window.location.origin}/registro?token=${token}`
-    navigator.clipboard.writeText(link)
+    navigator.clipboard.writeText(buildLink(token))
     setCopiado(id)
     setTimeout(() => setCopiado(null), 2000)
+  }
+
+  function compartirWhatsApp(token: string, nombre: string) {
+    const link = buildLink(token)
+    const msg  = encodeURIComponent(`Hola ${nombre}, te invito a crear tu cuenta en Elevra. Usa este link para registrarte:\n${link}`)
+    window.open(`https://wa.me/?text=${msg}`, '_blank')
   }
 
   async function refrescarInvitacion(id: string) {
@@ -106,8 +122,7 @@ export default function ProfesoresPage() {
       .eq('id', id)
     if (!err) {
       setInvitaciones(prev => prev.map(i => i.id === id ? { ...i, token: nuevoToken, usado: false } : i))
-      const link = `${window.location.origin}/registro?token=${nuevoToken}`
-      navigator.clipboard.writeText(link)
+      navigator.clipboard.writeText(buildLink(nuevoToken))
       setCopiado(id)
       setTimeout(() => setCopiado(null), 2500)
     }
@@ -202,7 +217,7 @@ export default function ProfesoresPage() {
                   </button>
                 </div>
 
-                {/* Botones copiar y refrescar */}
+                {/* Botones copiar, WhatsApp y refrescar */}
                 {!inv.usado && (
                   <div className="flex gap-2">
                     <button onClick={() => copiarLink(inv.token, inv.id)}
@@ -211,6 +226,14 @@ export default function ProfesoresPage() {
                       }`}>
                       <i className={`fa-solid ${copiado === inv.id ? 'fa-check' : 'fa-copy'} text-xs`} />
                       {copiado === inv.id ? '¡Copiado!' : 'Copiar link'}
+                    </button>
+                    <button
+                      onClick={() => compartirWhatsApp(inv.token, inv.nombre)}
+                      title="Enviar por WhatsApp"
+                      className="text-xs px-3 py-2 rounded-lg df-surface text-df-muted hover:text-green-400 transition-all flex items-center gap-1.5"
+                    >
+                      <i className="fa-brands fa-whatsapp text-sm" />
+                      WhatsApp
                     </button>
                     <button
                       onClick={() => refrescarInvitacion(inv.id)}
@@ -222,7 +245,6 @@ export default function ProfesoresPage() {
                         ? <div className="w-3 h-3 border-2 border-df-muted/30 border-t-df-muted rounded-full animate-spin" />
                         : <i className="fa-solid fa-rotate-right text-xs" />
                       }
-                      Nuevo link
                     </button>
                   </div>
                 )}
@@ -233,44 +255,81 @@ export default function ProfesoresPage() {
       )}
 
       {/* Modal invitar */}
-      <Modal open={modalOpen} onClose={() => { setModalOpen(false); setError(null) }} title="Invitar profesor">
-        <form onSubmit={crearInvitacion} className="space-y-4">
-          <p className="text-xs text-df-muted">
-            Se generará un link único de registro. Compártelo con el profesor para que cree su cuenta.
-          </p>
-          <div>
-            <label className="text-xs font-semibold text-df-muted uppercase tracking-wider mb-1.5 block">
-              Nombre del profesor *
-            </label>
-            <input value={form.nombre} onChange={e => setForm(f => ({ ...f, nombre: e.target.value }))}
-              placeholder="Ej: Laura Martínez" className="df-input" required />
-          </div>
-          <div>
-            <label className="text-xs font-semibold text-df-muted uppercase tracking-wider mb-1.5 block">
-              Correo electrónico *
-            </label>
-            <input type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
-              placeholder="laura@correo.com" className="df-input" required />
-          </div>
-          {error && (
-            <div className="bg-red-900/30 border border-red-500/30 rounded-xl p-3 text-xs text-red-400 flex items-center gap-2">
-              <i className="fa-solid fa-triangle-exclamation" /> {error}
+      <Modal open={modalOpen} onClose={cerrarModal} title={nuevaInv ? '¡Invitación creada!' : 'Invitar profesor'}>
+        {nuevaInv ? (
+          // ── Paso 2: confirmación con link copiable ──
+          <div className="space-y-4">
+            <div className="flex items-center gap-3 p-3 bg-green-900/20 border border-green-500/20 rounded-xl">
+              <i className="fa-solid fa-circle-check text-green-400 text-lg flex-shrink-0" />
+              <div>
+                <p className="text-sm font-semibold text-white">Instructor creado</p>
+                <p className="text-xs text-df-muted">{nuevaInv.nombre} · {nuevaInv.email}</p>
+              </div>
             </div>
-          )}
-          <div className="flex gap-3 pt-2">
-            <button type="button" onClick={() => { setModalOpen(false); setError(null) }}
-              className="df-btn-outline border border-df-border px-5 py-2.5 text-sm rounded-xl flex-1">
-              Cancelar
-            </button>
-            <button type="submit" disabled={saving}
-              className="df-btn px-5 py-2.5 text-sm flex-1 flex items-center justify-center gap-2">
-              {saving
-                ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                : <><i className="fa-solid fa-paper-plane" /> Generar invitación</>
-              }
+            <p className="text-xs text-df-muted">Copia este link y guárdalo. Podrás volver a copiarlo desde la lista de invitaciones.</p>
+            <div className="bg-df-bg border border-df-border rounded-xl p-3 font-mono text-xs text-df-muted break-all select-all">
+              {buildLink(nuevaInv.token)}
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => { navigator.clipboard.writeText(buildLink(nuevaInv.token)); setCopiado(nuevaInv.id); setTimeout(() => setCopiado(null), 2000) }}
+                className={`flex-1 text-xs px-3 py-2.5 rounded-xl transition-all flex items-center justify-center gap-2 ${
+                  copiado === nuevaInv.id ? 'bg-green-900/30 text-green-400' : 'df-surface text-df-muted hover:text-white'
+                }`}>
+                <i className={`fa-solid ${copiado === nuevaInv.id ? 'fa-check' : 'fa-copy'} text-xs`} />
+                {copiado === nuevaInv.id ? '¡Copiado!' : 'Copiar link'}
+              </button>
+              <button
+                onClick={() => compartirWhatsApp(nuevaInv.token, nuevaInv.nombre)}
+                className="text-xs px-3 py-2.5 rounded-xl df-surface text-df-muted hover:text-green-400 transition-all flex items-center gap-2">
+                <i className="fa-brands fa-whatsapp text-sm" /> WhatsApp
+              </button>
+            </div>
+            <button onClick={cerrarModal}
+              className="df-btn w-full py-2.5 text-sm flex items-center justify-center gap-2">
+              <i className="fa-solid fa-check" /> He terminado
             </button>
           </div>
-        </form>
+        ) : (
+          // ── Paso 1: formulario ──
+          <form onSubmit={crearInvitacion} className="space-y-4">
+            <p className="text-xs text-df-muted">
+              Se generará un link único de registro. Compártelo con el profesor para que cree su cuenta.
+            </p>
+            <div>
+              <label className="text-xs font-semibold text-df-muted uppercase tracking-wider mb-1.5 block">
+                Nombre del profesor *
+              </label>
+              <input value={form.nombre} onChange={e => setForm(f => ({ ...f, nombre: e.target.value }))}
+                placeholder="Ej: Laura Martínez" className="df-input" required />
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-df-muted uppercase tracking-wider mb-1.5 block">
+                Correo electrónico *
+              </label>
+              <input type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
+                placeholder="laura@correo.com" className="df-input" required />
+            </div>
+            {error && (
+              <div className="bg-red-900/30 border border-red-500/30 rounded-xl p-3 text-xs text-red-400 flex items-center gap-2">
+                <i className="fa-solid fa-triangle-exclamation" /> {error}
+              </div>
+            )}
+            <div className="flex gap-3 pt-2">
+              <button type="button" onClick={cerrarModal}
+                className="df-btn-outline border border-df-border px-5 py-2.5 text-sm rounded-xl flex-1">
+                Cancelar
+              </button>
+              <button type="submit" disabled={saving}
+                className="df-btn px-5 py-2.5 text-sm flex-1 flex items-center justify-center gap-2">
+                {saving
+                  ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  : <><i className="fa-solid fa-paper-plane" /> Generar invitación</>
+                }
+              </button>
+            </div>
+          </form>
+        )}
       </Modal>
     </div>
   )
