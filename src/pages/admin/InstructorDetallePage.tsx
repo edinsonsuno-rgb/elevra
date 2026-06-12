@@ -144,8 +144,6 @@ export default function InstructorDetallePage() {
       p_logo_url:         form.logo_url.trim(),
       p_color_primario:   form.color_primario,
       p_color_secundario: form.color_secundario,
-      p_display_name:     form.display_name,
-      p_profile_id:       admin?.id ?? null,
     }
     console.log('[guardar] llamando RPC...', params)
     const t0 = Date.now()
@@ -163,6 +161,25 @@ export default function InstructorDetallePage() {
     } catch (err: any) {
       console.error('[guardar] excepción:', err.message)
       error = err
+    }
+
+    if (!error && admin?.id && form.display_name) {
+      try {
+        const res2 = await Promise.race([
+          supabase.rpc('admin_actualizar_display_name', {
+            p_profile_id:   admin.id,
+            p_display_name: form.display_name,
+          }),
+          new Promise<never>((_, reject) =>
+            setTimeout(() => reject(new Error('Timeout 20s')), 20_000)
+          ),
+        ]) as any
+        error = res2.error
+        if (error) console.error('[guardar] admin_actualizar_display_name fallo:', error.message)
+      } catch (err: any) {
+        console.error('[guardar] admin_actualizar_display_name excepción:', err.message)
+        error = err
+      }
     }
 
     if (error) {
