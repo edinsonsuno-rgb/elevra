@@ -18,6 +18,8 @@ interface InstructorItem {
   display_name:  string | null
   avatar_url:    string | null
   alumnos_count: number
+  inv_token:     string | null
+  inv_pendiente: boolean
 }
 
 export default function InstructoresPage() {
@@ -30,6 +32,7 @@ export default function InstructoresPage() {
   const [error,         setError]         = useState<string | null>(null)
   const [linkGenerado,  setLinkGenerado]  = useState<string | null>(null)
   const [copiado,       setCopiado]       = useState(false)
+  const [copiadoCard,   setCopiadoCard]   = useState<string | null>(null)
   const [subDisponible, setSubDisponible] = useState<boolean | null>(null)
   const [checkingSub,   setCheckingSub]   = useState(false)
 
@@ -54,10 +57,11 @@ export default function InstructoresPage() {
       if (precioCached !== null) return  // todo en cache, sin consultas
     }
 
-    const [{ data: tenants }, { data: admins }, { data: alumnos }] = await Promise.all([
+    const [{ data: tenants }, { data: admins }, { data: alumnos }, { data: invs }] = await Promise.all([
       supabase.from('tenants').select('id, nombre, subdominio, al_dia').eq('activo', true).order('nombre'),
       supabase.from('profiles').select('id, display_name, avatar_url, tenant_id').eq('role', 'instructor'),
       supabase.from('alumnos').select('tenant_id').eq('activo', true),
+      supabase.from('invitaciones').select('tenant_id, token, usado').eq('usado', false),
     ])
 
     if (precioCached === null) {
@@ -76,6 +80,7 @@ export default function InstructoresPage() {
 
     const lista: InstructorItem[] = (tenants ?? []).map((t: any) => {
       const admin = (admins ?? []).find((a: any) => a.tenant_id === t.id)
+      const inv   = (invs   ?? []).find((i: any) => i.tenant_id === t.id)
       return {
         tenant_id:     t.id,
         tenant_nombre: t.nombre,
@@ -84,6 +89,8 @@ export default function InstructoresPage() {
         display_name:  admin?.display_name ?? null,
         avatar_url:    admin?.avatar_url ?? null,
         alumnos_count: conteo[t.id] ?? 0,
+        inv_token:     inv?.token ?? null,
+        inv_pendiente: !!inv,
       }
     })
 
@@ -170,6 +177,8 @@ export default function InstructoresPage() {
       display_name:  form.nombre.trim(),
       avatar_url:    null,
       alumnos_count: 0,
+      inv_token:     rpc.token,
+      inv_pendiente: true,
     }
     setInstructores(prev => {
       const nueva = [...prev, nuevoItem].sort((a, b) => a.tenant_nombre.localeCompare(b.tenant_nombre))
@@ -179,11 +188,27 @@ export default function InstructoresPage() {
     invalidateCache(CACHE_INSTRUCTORES) // fuerza recarga real en próxima visita
   }
 
+  function buildLink(token: string) {
+    return `${window.location.origin}/registro?token=${token}`
+  }
+
   function copiarLink() {
     if (!linkGenerado) return
     navigator.clipboard.writeText(linkGenerado)
     setCopiado(true)
     setTimeout(() => setCopiado(false), 2000)
+  }
+
+  function copiarLinkCard(token: string, tenantId: string) {
+    navigator.clipboard.writeText(buildLink(token))
+    setCopiadoCard(tenantId)
+    setTimeout(() => setCopiadoCard(null), 2000)
+  }
+
+  function abrirWhatsApp(token: string, nombre: string) {
+    const link = buildLink(token)
+    const msg  = encodeURIComponent(`Hola ${nombre}, te invito a activar tu cuenta en Elevra. Usa este link:\n${link}`)
+    window.open(`https://wa.me/?text=${msg}`, '_blank')
   }
 
   function cerrarModal() {
@@ -255,16 +280,43 @@ export default function InstructoresPage() {
 
                 <div className="flex items-center justify-between">
                   <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full ${
-                    ins.al_dia
-                      ? 'bg-green-900/40 text-green-400'
-                      : 'bg-red-900/40 text-red-400'
+                    ins.inv_pendiente
+                      ? 'bg-amber-900/40 text-amber-400'
+                      : ins.al_dia
+                        ? 'bg-green-900/40 text-green-400'
+                        : 'bg-red-900/40 text-red-400'
                   }`}>
-                    {ins.al_dia ? '✓ Al día' : '⚠ Pendiente'}
+                    {ins.inv_pendiente
+                      ? '⏳ Invitación pendiente'
+                      : ins.al_dia ? '✓ Al día' : '⚠ Pendiente'}
                   </span>
-                  <span className="text-[10px] text-df-muted group-hover:text-df-violet transition-colors">
-                    Ver perfil →
-                  </span>
+                  {!ins.inv_pendiente && (
+                    <span className="text-[10px] text-df-muted group-hover:text-df-violet transition-colors">
+                      Ver perfil →
+                    </span>
+                  )}
                 </div>
+
+                {ins.inv_pendiente && ins.inv_token && (
+                  <div className="flex gap-2" onClick={e => e.preventDefault()}>
+                    <button
+                      onClick={() => copiarLinkCard(ins.inv_token!, ins.tenant_id)}
+                      className={`flex-1 text-xs px-3 py-2 rounded-lg transition-all flex items-center justify-center gap-1.5 ${
+                        copiadoCard === ins.tenant_id
+                          ? 'bg-green-900/30 text-green-400'
+                          : 'df-surface text-df-muted hover:text-white'
+                      }`}>
+                      <i className={`fa-solid ${copiadoCard === ins.tenant_id ? 'fa-check' : 'fa-copy'} text-xs`} />
+                      {copiadoCard === ins.tenant_id ? '¡Copiado!' : 'Copiar link'}
+                    </button>
+                    <button
+                      onClick={() => abrirWhatsApp(ins.inv_token!, ins.display_name ?? ins.tenant_nombre)}
+                      className="text-xs px-3 py-2 rounded-lg df-surface text-df-muted hover:text-green-400 transition-all flex items-center gap-1.5">
+                      <i className="fa-brands fa-whatsapp text-sm" />
+                      WhatsApp
+                    </button>
+                  </div>
+                )}
               </Link>
             )
           })}
@@ -282,17 +334,26 @@ export default function InstructoresPage() {
               <p className="text-sm font-bold text-white">{form.gym}</p>
               <p className="text-xs text-df-muted">Comparte este link para que el instructor active su cuenta</p>
             </div>
-            <div className="df-surface rounded-xl p-3 flex items-center gap-2">
-              <p className="text-xs text-df-muted flex-1 truncate">{linkGenerado}</p>
+            <div className="bg-df-bg border border-df-border rounded-xl p-3 font-mono text-xs text-df-muted break-all select-all">
+              {linkGenerado}
+            </div>
+            <div className="flex gap-2">
               <button onClick={copiarLink}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold flex-shrink-0 transition-all flex items-center gap-1.5 ${
-                  copiado ? 'bg-green-900/30 text-green-400' : 'df-btn'
+                className={`flex-1 px-3 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
+                  copiado ? 'bg-green-900/30 text-green-400' : 'df-surface text-df-muted hover:text-white'
                 }`}>
                 <i className={`fa-solid ${copiado ? 'fa-check' : 'fa-copy'} text-xs`} />
-                {copiado ? 'Copiado' : 'Copiar'}
+                {copiado ? '¡Copiado!' : 'Copiar link'}
+              </button>
+              <button
+                onClick={() => linkGenerado && abrirWhatsApp(linkGenerado.split('token=')[1], form.nombre)}
+                className="text-xs px-3 py-2.5 rounded-xl df-surface text-df-muted hover:text-green-400 transition-all flex items-center gap-2">
+                <i className="fa-brands fa-whatsapp text-sm" /> WhatsApp
               </button>
             </div>
-            <button onClick={cerrarModal} className="df-btn w-full py-2.5 text-sm">Listo</button>
+            <button onClick={cerrarModal} className="df-btn w-full py-2.5 text-sm flex items-center justify-center gap-2">
+              <i className="fa-solid fa-check" /> He terminado
+            </button>
           </div>
 
         ) : (
