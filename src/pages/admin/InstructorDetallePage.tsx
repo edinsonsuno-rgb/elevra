@@ -136,6 +136,7 @@ export default function InstructorDetallePage() {
     e.preventDefault()
     if (!tenant) return
     setSaving(true)
+    console.log('ELEVRA DEBUG VERSION 12-06-2026')
 
     const params = {
       p_tenant_id:        tenant.id,
@@ -164,6 +165,8 @@ export default function InstructorDetallePage() {
     }
 
     if (!error && admin?.id && form.display_name) {
+      const t1 = Date.now()
+      console.log('[guardar] llamando RPC display_name...', { p_profile_id: admin.id, p_display_name: form.display_name })
       try {
         const res2 = await Promise.race([
           supabase.rpc('admin_actualizar_display_name', {
@@ -175,6 +178,7 @@ export default function InstructorDetallePage() {
           ),
         ]) as any
         error = res2.error
+        console.log('[guardar] RPC display_name respondió en', Date.now() - t1, 'ms — error:', error)
         if (error) console.error('[guardar] admin_actualizar_display_name fallo:', error.message)
       } catch (err: any) {
         console.error('[guardar] admin_actualizar_display_name excepción:', err.message)
