@@ -136,9 +136,20 @@ export default function InstructorDetallePage() {
     e.preventDefault()
     if (!tenant) return
     setSaving(true)
-    console.log('VERSION DEBUG 19-07-2026 01:00')
-    alert('VERSION NUEVA')
-    console.log('ELEVRA DEBUG VERSION 12-06-2026')
+
+    console.log('1')
+
+    try {
+      console.log('2')
+
+      const user = await supabase.auth.getUser()
+
+      console.log('3', user)
+    } catch (e) {
+      console.error('ERROR EN GETUSER', e)
+    }
+
+    console.log('4')
 
     const params = {
       p_tenant_id:        tenant.id,
@@ -148,23 +159,25 @@ export default function InstructorDetallePage() {
       p_color_primario:   form.color_primario,
       p_color_secundario: form.color_secundario,
     }
-    console.log('[guardar] llamando RPC...', params)
+
+    console.log('A')
 
     const { data: authData, error: authError } = await supabase.auth.getUser()
-    console.log('[guardar] supabase.auth.getUser()', {
-      userId: authData?.user?.id,
-      authError,
-    })
 
-    const { data: esAdminGlobalData, error: esAdminGlobalError } = await supabase.rpc('es_admin_global')
-    console.log('[guardar] es_admin_global', {
-      data: esAdminGlobalData,
-      error: esAdminGlobalError,
-    })
+    console.log('B', authData, authError)
+
+    const { data: esAdminGlobalData, error: esAdminGlobalError } =
+      await supabase.rpc('es_admin_global')
+
+    console.log('C', esAdminGlobalData, esAdminGlobalError)
+
+    const { data: rpcData, error: rpcError } =
+      await supabase.rpc('admin_actualizar_tenant', params)
+
+    console.log('D', rpcData, rpcError)
 
     let error: any = null
     try {
-      const { data: rpcData, error: rpcError } = await supabase.rpc('admin_actualizar_tenant', params) as any
       console.log('[guardar] RPC resultado:', rpcData)
       console.log('[guardar] RPC error:', rpcError)
       error = rpcError
