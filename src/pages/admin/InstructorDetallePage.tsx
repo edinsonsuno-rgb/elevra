@@ -147,18 +147,25 @@ export default function InstructorDetallePage() {
       p_color_secundario: form.color_secundario,
     }
     console.log('[guardar] llamando RPC...', params)
-    const t0 = Date.now()
+
+    const { data: authData, error: authError } = await supabase.auth.getUser()
+    console.log('[guardar] supabase.auth.getUser()', {
+      userId: authData?.user?.id,
+      authError,
+    })
+
+    const { data: esAdminGlobalData, error: esAdminGlobalError } = await supabase.rpc('es_admin_global')
+    console.log('[guardar] es_admin_global', {
+      data: esAdminGlobalData,
+      error: esAdminGlobalError,
+    })
 
     let error: any = null
     try {
-      const res = await Promise.race([
-        supabase.rpc('admin_actualizar_tenant', params),
-        new Promise<never>((_, reject) =>
-          setTimeout(() => reject(new Error('Timeout 20s')), 20_000)
-        ),
-      ]) as any
-      error = res.error
-      console.log('[guardar] RPC respondió en', Date.now() - t0, 'ms — error:', error)
+      const { data: rpcData, error: rpcError } = await supabase.rpc('admin_actualizar_tenant', params) as any
+      console.log('[guardar] RPC resultado:', rpcData)
+      console.log('[guardar] RPC error:', rpcError)
+      error = rpcError
     } catch (err: any) {
       console.error('[guardar] excepción:', err.message)
       error = err
