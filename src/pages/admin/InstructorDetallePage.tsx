@@ -153,12 +153,26 @@ export default function InstructorDetallePage() {
 
     console.log('C', esAdminGlobalData, esAdminGlobalError)
 
-    const { data: rpcData, error: rpcError } =
-      await supabase.rpc('admin_actualizar_tenant', params)
-
-    console.log('D', rpcData, rpcError)
-
     let error: any = null
+    let rpcData: any = null
+    let rpcError: any = null
+
+    try {
+      const res = await Promise.race([
+        supabase.rpc('admin_actualizar_tenant', params),
+        new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error('Timeout admin_actualizar_tenant')), 20_000)
+        ),
+      ]) as any
+
+      rpcData = res.data
+      rpcError = res.error
+      console.log('D', rpcData, rpcError)
+    } catch (err: any) {
+      console.error('ERROR EN admin_actualizar_tenant', err)
+      error = err
+    }
+
     try {
       console.log('[guardar] RPC resultado:', rpcData)
       console.log('[guardar] RPC error:', rpcError)
