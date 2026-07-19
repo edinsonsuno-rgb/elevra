@@ -42,11 +42,14 @@ BEGIN
   );
 
   -- Crear invitación con datos completos
-  INSERT INTO invitaciones (nombre, telefono, cc, email, tenant_id, creado_por)
-  VALUES (p_nombre, NULLIF(p_telefono, ''), NULLIF(p_cc, ''), p_email, p_tenant_id, p_creado_por)
-  RETURNING token INTO v_token;
+  -- INSERT INTO invitaciones (nombre, telefono, cc, email, tenant_id, creado_por)
+  -- VALUES (p_nombre, NULLIF(p_telefono, ''), NULLIF(p_cc, ''), p_email, p_tenant_id, p_creado_por)
+  -- RETURNING token INTO v_token;
 
-  RETURN jsonb_build_object('token', v_token, 'tenant_id', p_tenant_id);
+  RETURN jsonb_build_object(
+    'ok', true,
+    'paso', 'tenant'
+  );
 END;
 $$;
 
