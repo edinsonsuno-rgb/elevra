@@ -50,5 +50,20 @@ BEGIN
 END;
 $$;
 
+CREATE OR REPLACE FUNCTION public.test_admin_global()
+RETURNS json
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  RETURN json_build_object(
+    'uid', auth.uid(),
+    'es_admin', public.es_admin_global()
+  );
+END;
+$$;
+
 -- Verificar:
 -- SELECT proname, prosecdef FROM pg_proc WHERE proname = 'admin_crear_instructor';
+-- SELECT proname, prosecdef FROM pg_proc WHERE proname = 'test_admin_global';
