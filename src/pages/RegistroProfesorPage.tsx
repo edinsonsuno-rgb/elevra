@@ -75,12 +75,16 @@ export default function RegistroProfesorPage() {
 
     if (profileError) { setError(profileError.message); setSaving(false); return }
 
+    // Marcar invitación como usada — awaited para detectar errores de RLS.
+    // Si falla, la cuenta ya está creada; solo logueamos y continuamos.
+    const { error: invError } = await supabase
+      .from('invitaciones')
+      .update({ usado: true })
+      .eq('id', invitacion.id)
+    if (invError) console.error('[registro] no se pudo marcar invitación como usada:', invError.message, invError)
+
     setStep('listo')
     setSaving(false)
-
-    // Fire-and-forget: marcar invitación como usada en segundo plano.
-    // La cuenta ya está creada; no hay razón para bloquear la confirmación.
-    supabase.from('invitaciones').update({ usado: true }).eq('id', invitacion.id)
   }
 
   // ── Pantalla validando ──

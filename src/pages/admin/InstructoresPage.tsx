@@ -100,11 +100,22 @@ export default function InstructoresPage() {
   }
 
   async function verificarSubdominio(sub: string) {
-    if (!sub || sub.length < 2) { setSubDisponible(null); return }
+    if (!sub || sub.length < 2) { setSubDisponible(null); setCheckingSub(false); return }
     setCheckingSub(true)
-    const { data } = await supabase.from('tenants').select('id').eq('subdominio', sub).maybeSingle()
-    setSubDisponible(!data)
-    setCheckingSub(false)
+    try {
+      const { data, error } = await supabase.from('tenants').select('id').eq('subdominio', sub).maybeSingle()
+      if (error) {
+        console.error('[verificarSubdominio] error', error)
+        setSubDisponible(null)
+      } else {
+        setSubDisponible(!data)
+      }
+    } catch (err) {
+      console.error('[verificarSubdominio] excepción', err)
+      setSubDisponible(null)
+    } finally {
+      setCheckingSub(false)
+    }
   }
 
   function cambiarSubdominio(val: string) {
