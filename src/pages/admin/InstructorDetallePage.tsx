@@ -162,9 +162,7 @@ export default function InstructorDetallePage() {
 
     console.log('A')
 
-    const { data: authData, error: authError } = await supabase.auth.getUser()
-
-    console.log('B', authData, authError)
+    console.log('B usando el user anterior', user)
 
     const { data: esAdminGlobalData, error: esAdminGlobalError } =
       await supabase.rpc('es_admin_global')
