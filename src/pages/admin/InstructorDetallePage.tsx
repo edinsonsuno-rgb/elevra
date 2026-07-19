@@ -54,6 +54,24 @@ function calcularMesActual(planes: PlanActivo[]): number {
   return Math.round(total)
 }
 
+type RpcResponse<T = any> = {
+  data: T
+  error: any
+}
+
+async function rpcConTimeout<T = any>(
+  nombre: string,
+  params?: Record<string, any>,
+  timeout = 20_000
+): Promise<T> {
+  return await Promise.race([
+    supabase.rpc(nombre, params),
+    new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error(`Timeout ${nombre}`)), timeout)
+    ),
+  ]) as T
+}
+
 export default function InstructorDetallePage() {
   const { tenantId } = useParams<{ tenantId: string }>()
 
@@ -64,6 +82,7 @@ export default function InstructorDetallePage() {
   const [loading,    setLoading]    = useState(true)
   const [editing,    setEditing]    = useState(false)
   const [saving,     setSaving]     = useState(false)
+  const [notification, setNotification] = useState<{ message: string; type: 'error' | 'success' } | null>(null)
   const [form, setForm] = useState({
     nombre:           '',
     display_name:     '',
@@ -82,6 +101,13 @@ export default function InstructorDetallePage() {
   }
 
   useEffect(() => { if (tenantId) cargar() }, [tenantId])
+
+  useEffect(() => {
+    if (!notification) return
+
+    const timeout = window.setTimeout(() => setNotification(null), 4000)
+    return () => window.clearTimeout(timeout)
+  }, [notification])
 
   async function cargar() {
     const hoy          = new Date().toISOString().split('T')[0]
@@ -134,93 +160,64 @@ export default function InstructorDetallePage() {
 
   async function guardar(e: FormEvent) {
     e.preventDefault()
+
     if (!tenant) return
+
     setSaving(true)
 
-    const params = {
-      p_tenant_id:        tenant.id,
-      p_nombre:           form.nombre,
-      p_al_dia:           form.al_dia,
-      p_logo_url:         form.logo_url.trim(),
-      p_color_primario:   form.color_primario,
-      p_color_secundario: form.color_secundario,
-    }
-
-    console.log('A')
-
-    const { data: esAdminGlobalData, error: esAdminGlobalError } =
-      await supabase.rpc('es_admin_global')
-
-    console.log('C', esAdminGlobalData, esAdminGlobalError)
-
-    let error: any = null
-    let rpcData: any = null
-    let rpcError: any = null
-
     try {
-      const res = await Promise.race([
-        supabase.rpc('admin_actualizar_tenant', params),
-        new Promise<never>((_, reject) =>
-          setTimeout(() => reject(new Error('Timeout admin_actualizar_tenant')), 20_000)
-        ),
-      ]) as any
-
-      rpcData = res.data
-      rpcError = res.error
-      console.log('D', rpcData, rpcError)
-    } catch (err: any) {
-      console.error('ERROR EN admin_actualizar_tenant', err)
-      error = err
-    }
-
-    try {
-      console.log('[guardar] RPC resultado:', rpcData)
-      console.log('[guardar] RPC error:', rpcError)
-      error = rpcError
-    } catch (err: any) {
-      console.error('[guardar] excepción:', err.message)
-      error = err
-    }
-
-    if (!error && admin?.id && form.display_name) {
-      const t1 = Date.now()
-      console.log('[guardar] llamando RPC display_name...', { p_profile_id: admin.id, p_display_name: form.display_name })
-      try {
-        const res2 = await Promise.race([
-          supabase.rpc('admin_actualizar_display_name', {
-            p_profile_id:   admin.id,
-            p_display_name: form.display_name,
-          }),
-          new Promise<never>((_, reject) =>
-            setTimeout(() => reject(new Error('Timeout 20s')), 20_000)
-          ),
-        ]) as any
-        error = res2.error
-        console.log('[guardar] RPC display_name respondió en', Date.now() - t1, 'ms — error:', error)
-        if (error) console.error('[guardar] admin_actualizar_display_name fallo:', error.message)
-      } catch (err: any) {
-        console.error('[guardar] admin_actualizar_display_name excepción:', err.message)
-        error = err
+      const { error: tenantError } = await rpcConTimeout<RpcResponse>(
+        'admin_actualizar_tenant',
+        {
+        p_tenant_id: tenant.id,
+        p_nombre: form.nombre,
+        p_al_dia: form.al_dia,
+        p_logo_url: form.logo_url.trim(),
+        p_color_primario: form.color_primario,
+        p_color_secundario: form.color_secundario,
       }
-    }
+      )
 
-    if (error) {
-      console.error('[guardar] fallo:', error.message)
+      if (tenantError) {
+        throw tenantError
+      }
+
+      if (admin?.id && form.display_name) {
+        const { error: profileError } = await rpcConTimeout<RpcResponse>(
+          'admin_actualizar_display_name',
+          {
+          p_profile_id: admin.id,
+          p_display_name: form.display_name,
+        }
+        )
+
+        if (profileError) {
+          throw profileError
+        }
+      }
+
+      setTenant(prev => prev ? {
+        ...prev,
+        nombre: form.nombre,
+        al_dia: form.al_dia,
+        logo_url: form.logo_url || null,
+        color_primario: form.color_primario,
+        color_secundario: form.color_secundario,
+      } : prev)
+
+      setAdmin(prev => prev ? {
+        ...prev,
+        display_name: form.display_name || prev.display_name,
+      } : prev)
+
+      setNotification({ message: 'Cambios guardados correctamente.', type: 'success' })
+      setEditing(false)
+    } catch (err: any) {
+      console.error('[guardar]', err)
+      setNotification({ message: err?.message ?? 'Ocurrió un error al guardar los cambios.', type: 'error' })
+    } finally {
       setSaving(false)
-      return
     }
-
-    setTenant(prev => prev ? {
-      ...prev,
-      nombre:           form.nombre,
-      al_dia:           form.al_dia,
-      logo_url:         form.logo_url || null,
-      color_primario:   form.color_primario,
-      color_secundario: form.color_secundario,
-    } : prev)
-    setAdmin(prev => prev ? { ...prev, display_name: form.display_name || prev.display_name } : prev)
-    setSaving(false)
-    setEditing(false)
   }
 
   function cancelarEdicion() {
@@ -267,6 +264,13 @@ export default function InstructorDetallePage() {
 
   return (
     <div className="space-y-6 max-w-4xl">
+      {notification && (
+        <div className={`rounded-xl border px-4 py-3 text-sm ${notification.type === 'error'
+          ? 'border-red-500/30 bg-red-950/40 text-red-300'
+          : 'border-green-500/30 bg-green-950/40 text-green-300'}`}>
+          {notification.message}
+        </div>
+      )}
 
       {/* Header */}
       <div className="flex items-center gap-3">
