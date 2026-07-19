@@ -162,6 +162,14 @@ export default function InstructorDetallePage() {
 
     console.log('A')
 
+    let user: any = null
+    try {
+      const userResponse = await supabase.auth.getUser()
+      user = userResponse.data
+    } catch (e) {
+      console.error('ERROR EN GETUSER', e)
+    }
+
     console.log('B usando el user anterior', user)
 
     const { data: esAdminGlobalData, error: esAdminGlobalError } =
