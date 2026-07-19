@@ -54,24 +54,6 @@ function calcularMesActual(planes: PlanActivo[]): number {
   return Math.round(total)
 }
 
-type RpcResponse<T = any> = {
-  data: T
-  error: any
-}
-
-async function rpcConTimeout<T = any>(
-  nombre: string,
-  params?: Record<string, any>,
-  timeout = 20_000
-): Promise<T> {
-  return await Promise.race([
-    supabase.rpc(nombre, params),
-    new Promise<never>((_, reject) =>
-      setTimeout(() => reject(new Error(`Timeout ${nombre}`)), timeout)
-    ),
-  ]) as T
-}
-
 export default function InstructorDetallePage() {
   const { tenantId } = useParams<{ tenantId: string }>()
 
@@ -166,16 +148,16 @@ export default function InstructorDetallePage() {
     setSaving(true)
 
     try {
-      const { error: tenantError } = await rpcConTimeout<RpcResponse>(
+      const { error: tenantError } = await supabase.rpc(
         'admin_actualizar_tenant',
         {
-        p_tenant_id: tenant.id,
-        p_nombre: form.nombre,
-        p_al_dia: form.al_dia,
-        p_logo_url: form.logo_url.trim(),
-        p_color_primario: form.color_primario,
-        p_color_secundario: form.color_secundario,
-      }
+          p_tenant_id: tenant.id,
+          p_nombre: form.nombre,
+          p_logo_url: form.logo_url.trim(),
+          p_color_primario: form.color_primario,
+          p_color_secundario: form.color_secundario,
+          p_al_dia: form.al_dia,
+        }
       )
 
       if (tenantError) {
@@ -183,12 +165,12 @@ export default function InstructorDetallePage() {
       }
 
       if (admin?.id && form.display_name) {
-        const { error: profileError } = await rpcConTimeout<RpcResponse>(
+        const { error: profileError } = await supabase.rpc(
           'admin_actualizar_display_name',
           {
-          p_profile_id: admin.id,
-          p_display_name: form.display_name,
-        }
+            p_profile_id: admin.id,
+            p_display_name: form.display_name,
+          }
         )
 
         if (profileError) {
