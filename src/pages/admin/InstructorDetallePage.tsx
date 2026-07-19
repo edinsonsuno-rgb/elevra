@@ -137,20 +137,6 @@ export default function InstructorDetallePage() {
     if (!tenant) return
     setSaving(true)
 
-    console.log('1')
-
-    try {
-      console.log('2')
-
-      const user = await supabase.auth.getUser()
-
-      console.log('3', user)
-    } catch (e) {
-      console.error('ERROR EN GETUSER', e)
-    }
-
-    console.log('4')
-
     const params = {
       p_tenant_id:        tenant.id,
       p_nombre:           form.nombre,
@@ -161,16 +147,6 @@ export default function InstructorDetallePage() {
     }
 
     console.log('A')
-
-    let user: any = null
-    try {
-      const userResponse = await supabase.auth.getUser()
-      user = userResponse.data
-    } catch (e) {
-      console.error('ERROR EN GETUSER', e)
-    }
-
-    console.log('B usando el user anterior', user)
 
     const { data: esAdminGlobalData, error: esAdminGlobalError } =
       await supabase.rpc('es_admin_global')
