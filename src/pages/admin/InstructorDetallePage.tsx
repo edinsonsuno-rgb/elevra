@@ -136,6 +136,8 @@ export default function InstructorDetallePage() {
     e.preventDefault()
     if (!tenant) return
     setSaving(true)
+    console.log('VERSION DEBUG 19-07-2026 01:00')
+    alert('VERSION NUEVA')
     console.log('ELEVRA DEBUG VERSION 12-06-2026')
 
     const params = {
