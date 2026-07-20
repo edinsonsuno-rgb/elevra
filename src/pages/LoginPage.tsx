@@ -40,8 +40,11 @@ export default function LoginPage() {
       />
       <div className="relative w-full max-w-sm mx-auto">
         <div
-          className="overflow-hidden rounded-[40px] border border-white/10 bg-[#0D1117]/95"
-          style={{ boxShadow: `0 30px 90px ${tenant.color_primario}26` }}
+          className="overflow-hidden rounded-[40px] border border-white/10"
+          style={{
+            background: `linear-gradient(180deg, color-mix(in srgb, ${tenant.color_primario} 12%, #0D1117) 0%, #0D1117 60%)`,
+            boxShadow: `0 30px 90px ${tenant.color_primario}26`,
+          }}
         >
           <div className="px-8 py-10 text-center">
             <div className="w-40 mx-auto mb-6">
