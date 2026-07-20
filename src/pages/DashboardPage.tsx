@@ -4,6 +4,7 @@ import { supabase, Alumno, Sesion, Pago } from '@/lib/supabase'
 import { Avatar, ProgresBar, EstadoSesionBadge, EstadoPagoBadge, Spinner } from '@/components/ui/index'
 import { useAuth } from '@/hooks/useAuth'
 import { useProfesional } from '@/hooks/useProfesional'
+import { useTenant } from '@/contexts/TenantContext'
 import { getCache, setCache } from '@/lib/queryCache'
 
 const TTL_FRASE        = 10 * 60 * 1000   // 10 min
@@ -29,6 +30,7 @@ export default function DashboardPage() {
 
   const { displayName, user, role, superadmin } = useAuth()
   const { profesional } = useProfesional()
+  const { tenant } = useTenant()
 
   const hora = new Date().getHours()
   const saludo = hora < 12 ? 'Buenos días' : hora < 18 ? 'Buenas tardes' : 'Buenas noches'
@@ -132,7 +134,7 @@ export default function DashboardPage() {
       {!superadmin && <div className="df-card p-4 border-df-purple/40 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-df-purple/10 to-transparent pointer-events-none" />
         <div className="flex items-center justify-between mb-2">
-          <img src="/logo.png" alt="Logo" className="h-10" />
+          <img src={tenant.logo_url ?? '/logo.png'} alt="Logo" className="h-10" />
           {(role === 'admin' || role === 'instructor') && (
             <i className="fa-solid fa-pen text-[10px] text-df-muted cursor-pointer"
                onClick={() => setEditandoFrase(true)} />

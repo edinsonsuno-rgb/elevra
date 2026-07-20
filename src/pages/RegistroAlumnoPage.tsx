@@ -1,6 +1,7 @@
 import { useEffect, useState, FormEvent } from 'react'
 import { useSearchParams, useNavigate } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
+import { useTenant } from '@/contexts/TenantContext'
 
 const TIPO_DOCUMENTO = ['CC', 'CE', 'TI', 'PA'] as const
 
@@ -29,6 +30,7 @@ export default function RegistroAlumnoPage() {
     confirmar:  '',
     showPass:   false,
   })
+  const { tenant } = useTenant()
 
   useEffect(() => { validarToken() }, [token])
 
@@ -139,7 +141,7 @@ export default function RegistroAlumnoPage() {
       <div className="w-full max-w-md relative space-y-6">
         {/* Logo */}
         <div className="flex flex-col items-center gap-3">
-          <img src="/logo.png" alt="Logo"
+          <img src={tenant.logo_url ?? '/logo.png'} alt="Logo"
             className="h-12 w-auto max-w-[160px] object-contain drop-shadow-[0_0_18px_rgba(139,92,246,0.6)]" />
           <div className="text-center">
             <h1 className="font-display text-2xl text-white tracking-widest">CREAR CUENTA</h1>
