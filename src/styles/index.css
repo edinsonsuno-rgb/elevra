@@ -15,6 +15,11 @@
   --color-texto:      #E6EDF3;
   --color-muted:      #8B949E;
   --color-border:     #30363D;
+
+  /* Canales RGB para las clases dinámicas de Tailwind (df-purple, df-violet, df-pink) */
+  --df-purple-rgb: 57 211 83;
+  --df-violet-rgb: 46 204 113;
+  --df-pink-rgb: 236 72 153;
 }
 
 @layer base {
@@ -60,25 +65,20 @@
   .df-badge-done    { @apply bg-green-900/50  text-green-400  text-xs font-semibold px-2 py-0.5 rounded-full; }
   .df-badge-cancel  { @apply bg-zinc-900/50   text-zinc-400   text-xs font-semibold px-2 py-0.5 rounded-full; }
 
-  /* Efectos */
-  .glow-purple  { box-shadow: 0 0 30px rgba(57,211,83,0.25); }
-  .glow-pink    { box-shadow: 0 0 30px rgba(236,72,153,0.2); }
+  /* Efectos — ahora siguen el color del tenant en vez de estar quemados en verde */
+  .glow-purple  { box-shadow: 0 0 30px rgb(var(--df-purple-rgb) / 0.25); }
+  .glow-pink    { box-shadow: 0 0 30px rgb(var(--df-pink-rgb) / 0.2); }
   .circuit-bg {
     background-image:
-      linear-gradient(rgba(57,211,83,.05) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(57,211,83,.05) 1px, transparent 1px);
+      linear-gradient(rgb(var(--df-purple-rgb) / .05) 1px, transparent 1px),
+      linear-gradient(90deg, rgb(var(--df-purple-rgb) / .05) 1px, transparent 1px);
     background-size: 32px 32px;
   }
 
-  /* Compatibilidad legacy */
+  /* Compatibilidad legacy (solo clases que NO chocan con las de Tailwind arriba) */
   .bg-primario          { background-color: var(--color-primario); }
   .text-primario        { color: var(--color-primario); }
   .border-primario      { border-color: var(--color-primario); }
-  .bg-df-violet         { background-color: var(--color-primario); }
-  .text-df-violet       { color: var(--color-primario); }
-  .border-df-violet     { border-color: var(--color-primario); }
-  .bg-df-pink           { background-color: var(--color-secundario); }
-  .text-df-pink         { color: var(--color-secundario); }
   .hover\:bg-primario:hover   { background-color: var(--color-primario); }
   .hover\:text-primario:hover { color: var(--color-primario); }
 }

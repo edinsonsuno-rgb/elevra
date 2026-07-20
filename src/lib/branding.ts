@@ -22,6 +22,15 @@ export function buildBrand(tenant?: Partial<TenantBrand> | null): TenantBrand {
   }
 }
 
+function hexToRgbChannels(hex: string): string {
+  const clean = hex.replace('#', '')
+  const bigint = parseInt(clean, 16)
+  const r = (bigint >> 16) & 255
+  const g = (bigint >> 8) & 255
+  const b = bigint & 255
+  return `${r} ${g} ${b}`
+}
+
 export function applyBrand(brand: TenantBrand) {
   const root = document.documentElement
 
@@ -29,6 +38,10 @@ export function applyBrand(brand: TenantBrand) {
   root.style.setProperty('--brand-secondary', brand.color_secundario)
   root.style.setProperty('--color-primario', brand.color_primario)
   root.style.setProperty('--color-secundario', brand.color_secundario)
+
+  root.style.setProperty('--df-purple-rgb', hexToRgbChannels(brand.color_primario))
+  root.style.setProperty('--df-violet-rgb', hexToRgbChannels(brand.color_primario))
+  root.style.setProperty('--df-pink-rgb', hexToRgbChannels(brand.color_secundario))
 
   document.title = brand.nombre
 
