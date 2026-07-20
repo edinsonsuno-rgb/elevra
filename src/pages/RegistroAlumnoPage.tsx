@@ -4,13 +4,23 @@ import { supabase } from '@/lib/supabase'
 
 const TIPO_DOCUMENTO = ['CC', 'CE', 'TI', 'PA'] as const
 
+interface AlumnoInvitado {
+  id:               string
+  nombre:           string
+  email:            string | null
+  documento:        string | null
+  tipo_documento:   string | null
+  invitacion_usada: boolean
+  tenant_id:        string
+}
+
 export default function RegistroAlumnoPage() {
   const [params]  = useSearchParams()
   const navigate  = useNavigate()
   const token     = params.get('token')
 
   const [step,      setStep]      = useState<'validando'|'formulario'|'error'|'listo'>('validando')
-  const [alumno,    setAlumno]    = useState<{ id: string; nombre: string; email: string | null; documento: string | null; tipo_documento: string | null } | null>(null)
+  const [alumno,    setAlumno]    = useState<AlumnoInvitado | null>(null)
   const [saving,    setSaving]    = useState(false)
   const [error,     setError]     = useState<string | null>(null)
 
@@ -26,10 +36,8 @@ export default function RegistroAlumnoPage() {
     if (!token) { setStep('error'); return }
 
     const { data, error } = await supabase
-      .from('alumnos')
-      .select('id, nombre, email, documento, tipo_documento, invitacion_usada')
-      .eq('invitacion_token', token)
-      .single()
+      .rpc('validar_alumno_invitacion', { p_token: token })
+      .maybeSingle() as { data: AlumnoInvitado | null; error: any }
 
     if (error || !data)        { setStep('error'); return }
     if (data.invitacion_usada) { setStep('error'); return }
@@ -58,22 +66,24 @@ export default function RegistroAlumnoPage() {
     if (authError) { setError(authError.message); setSaving(false); return }
     if (!authData.user) { setError('Error al crear cuenta'); setSaving(false); return }
 
-    // Crear perfil como alumno (bloqueante: el rol se necesita en el primer login)
-    await supabase.from('profiles').upsert({
-      id:           authData.user.id,
-      display_name: alumno.nombre,
-      role:         'alumno',
+    // Vincula perfil (tenant_id + rol) y el registro de alumno (user_id + invitación usada)
+    // en una sola operación confiable del lado del servidor.
+    const { error: linkError } = await supabase.rpc('completar_registro_alumno', {
+      p_alumno_id: alumno.id,
+      p_user_id:   authData.user.id,
+      p_tenant_id: alumno.tenant_id,
+      p_nombre:    alumno.nombre,
     })
+
+    if (linkError) {
+      console.error('[registro-alumno] completar_registro_alumno falló:', linkError.message)
+      setError('Tu cuenta fue creada, pero hubo un problema al vincularla. Contacta a tu instructor.')
+      setSaving(false)
+      return
+    }
 
     setStep('listo')
     setSaving(false)
-
-    // Fire-and-forget: vincular user_id y cerrar invitación en segundo plano.
-    // El usuario aún tiene que pulsar "Ir al login", hay tiempo de sobra.
-    supabase.from('alumnos').update({
-      user_id:          authData.user.id,
-      invitacion_usada: true,
-    }).eq('id', alumno.id)
   }
 
   // ── Validando ──
