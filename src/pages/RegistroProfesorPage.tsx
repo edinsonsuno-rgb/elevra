@@ -29,10 +29,8 @@ export default function RegistroProfesorPage() {
     if (!token) { setStep('error'); return }
 
     const { data, error } = await supabase
-      .from('invitaciones')
-      .select('id, nombre, email, tenant_id, usado')
-      .eq('token', token)
-      .single()
+      .rpc('validar_invitacion', { p_token: token })
+      .maybeSingle()
 
     if (error || !data) { setStep('error'); return }
     if (data.usado) { setStep('error'); return }
