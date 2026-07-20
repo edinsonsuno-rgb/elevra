@@ -54,6 +54,24 @@ function calcularMesActual(planes: PlanActivo[]): number {
   return Math.round(total)
 }
 
+type RpcResponse<T = any> = {
+  data: T
+  error: any
+}
+
+async function rpcConTimeout<T = any>(
+  nombre: string,
+  params?: Record<string, any>,
+  timeout = 20_000
+): Promise<T> {
+  return await Promise.race([
+    supabase.rpc(nombre, params),
+    new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error(`La conexión está tardando más de lo normal. Intenta de nuevo.`)), timeout)
+    ),
+  ]) as T
+}
+
 export default function InstructorDetallePage() {
   const { tenantId } = useParams<{ tenantId: string }>()
 
@@ -148,7 +166,7 @@ export default function InstructorDetallePage() {
     setSaving(true)
 
     try {
-      const { error: tenantError } = await supabase.rpc(
+      const { error: tenantError } = await rpcConTimeout<RpcResponse>(
         'admin_actualizar_tenant',
         {
           p_tenant_id: tenant.id,
@@ -165,7 +183,7 @@ export default function InstructorDetallePage() {
       }
 
       if (admin?.id && form.display_name) {
-        const { error: profileError } = await supabase.rpc(
+        const { error: profileError } = await rpcConTimeout<RpcResponse>(
           'admin_actualizar_display_name',
           {
             p_profile_id: admin.id,
