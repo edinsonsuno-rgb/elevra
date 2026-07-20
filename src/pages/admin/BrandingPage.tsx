@@ -50,10 +50,11 @@ export default function BrandingPage() {
     setSaving(true); setError(null)
 
     const { error: err } = await supabase.from('tenants').update({
-      nombre:           form.nombre.trim(),
-      logo_url:         form.logo_url.trim() || null,
-      color_primario:   form.color_primario,
-      color_secundario: form.color_secundario,
+      nombre:             form.nombre.trim(),
+      logo_url:           form.logo_url.trim() || null,
+      color_primario:     form.color_primario,
+      color_secundario:   form.color_secundario,
+      usar_marca_elevra:  false,
     }).eq('id', editando.id)
 
     if (err) {
@@ -63,7 +64,8 @@ export default function BrandingPage() {
       setTenants(prev => prev.map(t =>
         t.id === editando.id
           ? { ...t, nombre: form.nombre, logo_url: form.logo_url || null,
-              color_primario: form.color_primario, color_secundario: form.color_secundario }
+              color_primario: form.color_primario, color_secundario: form.color_secundario,
+              usar_marca_elevra: false }
           : t
       ))
       // Si es el tenant activo del subdominio actual, aplicar colores en vivo
