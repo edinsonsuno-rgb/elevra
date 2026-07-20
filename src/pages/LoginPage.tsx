@@ -31,15 +31,25 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen bg-df-bg circuit-bg flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(57,211,83,0.10),_transparent_45%)] pointer-events-none" />
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background: `radial-gradient(circle at top, ${tenant.color_primario}33, transparent 55%),
+                       radial-gradient(circle at bottom, ${tenant.color_secundario}22, transparent 60%)`,
+        }}
+      />
       <div className="relative w-full max-w-sm mx-auto">
-        <div className="overflow-hidden rounded-[40px] border border-white/10 bg-[#0D1117]/95 shadow-[0_30px_90px_rgba(57,211,83,0.15)]">
+        <div
+          className="overflow-hidden rounded-[40px] border border-white/10 bg-[#0D1117]/95"
+          style={{ boxShadow: `0 30px 90px ${tenant.color_primario}26` }}
+        >
           <div className="px-8 py-10 text-center">
             <div className="w-40 mx-auto mb-6">
               <img
                 src={tenant.logo_url ?? '/logo.png'}
                 alt={tenant.nombre}
-                className="mx-auto h-12 w-full object-contain drop-shadow-[0_0_18px_rgba(57,211,83,0.5)]"
+                className="mx-auto h-12 w-full object-contain"
+                style={{ filter: `drop-shadow(0 0 18px ${tenant.color_primario}80)` }}
               />
             </div>
             <p className="text-[11px] uppercase tracking-[0.35em] text-df-muted mb-3">
