@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, useRef, ReactNode } from 'react'
 import { User } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase'
+import { useTenant } from '@/contexts/TenantContext'
 
 interface AuthCtx {
   user: User | null
@@ -35,6 +36,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [tenantId, setTenantId]       = useState<string | null>(null)
   const [superadmin, setSuperadmin]   = useState(false)
   const initialLoadDone               = useRef(false)
+  const { loadByTenantId }            = useTenant()
 
   async function applySession(u: User) {
     const data = await fetchProfile(u.id)
@@ -48,6 +50,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setActivo(a?.activo ?? null)
     } else {
       setActivo(true)
+    }
+    // El subdominio puede no coincidir con el tenant real del usuario
+    // (ej. entra por el dominio principal). Los colores deben reflejar
+    // siempre el tenant_id real del usuario, no solo la URL.
+    if (data?.tenant_id) {
+      await loadByTenantId(data.tenant_id)
     }
   }
 

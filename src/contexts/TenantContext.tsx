@@ -21,9 +21,10 @@ interface TenantCtx {
   tenant:  TenantBrand
   loading: boolean
   refetch: () => void
+  loadByTenantId: (tenantId: string) => Promise<void>
 }
 
-const Ctx = createContext<TenantCtx>({ tenant: DEFAULT, loading: true, refetch: () => {} })
+const Ctx = createContext<TenantCtx>({ tenant: DEFAULT, loading: true, refetch: () => {}, loadByTenantId: async () => {} })
 
 function getSubdomain(): string | null {
   const hostname = window.location.hostname          // "dorita.elevra.lat" | "elevra.lat" | "localhost"
@@ -86,9 +87,44 @@ export function TenantProvider({ children }: { children: ReactNode }) {
     setLoading(false)
   }
 
+  async function loadByTenantId(tenantId: string, forceRefresh = false) {
+    const cacheKey = `tenant:id:${tenantId}`
+
+    if (!forceRefresh) {
+      const cached = getCache<TenantBrand>(cacheKey)
+      if (cached) {
+        setTenant(cached)
+        applyBrand(cached)
+        return
+      }
+    }
+
+    const { data } = await supabase
+      .from('tenants')
+      .select(`
+        id,
+        nombre,
+        subdominio,
+        logo_url,
+        color_primario,
+        color_secundario,
+        usar_marca_elevra
+      `)
+      .eq('id', tenantId)
+      .eq('activo', true)
+      .maybeSingle()
+
+    if (data) {
+      const brand = buildBrand(data as TenantBrand)
+      setCache(cacheKey, brand, TTL_TENANT)
+      setTenant(brand)
+      applyBrand(brand)
+    }
+  }
+
   useEffect(() => { load() }, [])
 
-  return <Ctx.Provider value={{ tenant, loading, refetch: () => load(true) }}>{children}</Ctx.Provider>
+  return <Ctx.Provider value={{ tenant, loading, refetch: () => load(true), loadByTenantId }}>{children}</Ctx.Provider>
 }
 
 export function useTenant() { return useContext(Ctx) }
