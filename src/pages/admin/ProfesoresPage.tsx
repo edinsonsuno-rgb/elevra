@@ -136,21 +136,21 @@ export default function ProfesoresPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-black text-white">Equipo de profesores</h1>
+          <h1 className="text-xl font-black text-white">Equipo de instructores</h1>
           <p className="text-df-muted text-sm mt-0.5">
             {profesores.length} activos · {invitaciones.filter(i => !i.usado).length} invitaciones pendientes
           </p>
         </div>
         <button onClick={() => setModalOpen(true)}
           className="df-btn px-4 py-2.5 text-sm flex items-center gap-2">
-          <i className="fa-solid fa-user-plus" /> Invitar profesor
+          <i className="fa-solid fa-user-plus" /> Invitar instructor
         </button>
       </div>
 
       {/* Profesores activos */}
       {profesores.length > 0 && (
         <div>
-          <h2 className="text-sm font-bold text-white mb-3">Profesores activos</h2>
+          <h2 className="text-sm font-bold text-white mb-3">Instructores activos</h2>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {profesores.map(p => (
               <div key={p.id} className="df-card p-4 group hover:border-df-violet/40 transition-all">
@@ -180,8 +180,8 @@ export default function ProfesoresPage() {
       {profesores.length === 0 && invitaciones.length === 0 && (
         <EmptyState
           icon="fa-solid fa-users"
-          title="Sin profesores aún"
-          desc="Invita al primer profesor para que pueda acceder a la plataforma"
+          title="Sin instructores aún"
+          desc="Invita al primer instructor para que pueda acceder a la plataforma"
         />
       )}
 
@@ -255,7 +255,7 @@ export default function ProfesoresPage() {
       )}
 
       {/* Modal invitar */}
-      <Modal open={modalOpen} onClose={cerrarModal} title={nuevaInv ? '¡Invitación creada!' : 'Invitar profesor'}>
+      <Modal open={modalOpen} onClose={cerrarModal} title={nuevaInv ? '¡Invitación creada!' : 'Invitar instructor'}>
         {nuevaInv ? (
           // ── Paso 2: confirmación con link copiable ──
           <div className="space-y-4">
@@ -294,11 +294,11 @@ export default function ProfesoresPage() {
           // ── Paso 1: formulario ──
           <form onSubmit={crearInvitacion} className="space-y-4">
             <p className="text-xs text-df-muted">
-              Se generará un link único de registro. Compártelo con el profesor para que cree su cuenta.
+              Se generará un link único de registro. Compártelo con el instructor para que cree su cuenta.
             </p>
             <div>
               <label className="text-xs font-semibold text-df-muted uppercase tracking-wider mb-1.5 block">
-                Nombre del profesor *
+                Nombre del instructor *
               </label>
               <input value={form.nombre} onChange={e => setForm(f => ({ ...f, nombre: e.target.value }))}
                 placeholder="Ej: Laura Martínez" className="df-input" required />
