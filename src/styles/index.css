@@ -26,9 +26,13 @@
   * { box-sizing: border-box; }
   html { background: #0D1117; }
   body {
-    @apply bg-df-bg text-df-text font-sans antialiased;
+    @apply text-df-text font-sans antialiased;
     min-height: 100dvh;
     font-family: 'DM Sans', sans-serif;
+    background:
+      radial-gradient(circle at top, rgb(var(--df-purple-rgb) / 0.10), transparent 55%),
+      #0D1117;
+    background-attachment: fixed;
   }
   ::-webkit-scrollbar { width: 4px; height: 4px; }
   ::-webkit-scrollbar-track { background: #161B22; }
