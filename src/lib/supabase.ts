@@ -5,6 +5,19 @@ const ANON = import.meta.env.VITE_SUPABASE_ANON_KEY as string
 
 export const supabase = createClient(URL, ANON)
 
+// Evita que las peticiones se queden colgadas cuando la pestaña estuvo en
+// segundo plano: supabase-js puede desincronizar su refresh de sesión al
+// volver al foco. Pausamos el auto-refresh al salir y lo retomamos al volver.
+if (typeof document !== 'undefined') {
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') {
+      supabase.auth.startAutoRefresh()
+    } else {
+      supabase.auth.stopAutoRefresh()
+    }
+  })
+}
+
 /* ── Tipos ── */
 
 export interface Profile {
