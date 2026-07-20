@@ -4,6 +4,14 @@ import { supabase } from '@/lib/supabase'
 
 const TIPO_DOCUMENTO = ['CC', 'CE', 'PA'] as const
 
+interface InvitacionValidada {
+  id:        string
+  nombre:    string
+  email:     string
+  tenant_id: string
+  usado:     boolean
+}
+
 export default function RegistroProfesorPage() {
   const [params]   = useSearchParams()
   const navigate   = useNavigate()
@@ -30,7 +38,7 @@ export default function RegistroProfesorPage() {
 
     const { data, error } = await supabase
       .rpc('validar_invitacion', { p_token: token })
-      .maybeSingle()
+      .maybeSingle() as { data: InvitacionValidada | null; error: any }
 
     if (error || !data) { setStep('error'); return }
     if (data.usado) { setStep('error'); return }
