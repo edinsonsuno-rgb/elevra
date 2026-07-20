@@ -41,7 +41,10 @@
 
 @layer utilities {
   /* Superficies */
-  .df-card    { @apply bg-df-card border border-df-border rounded-2xl; }
+  .df-card {
+    @apply border border-df-border rounded-2xl;
+    background: color-mix(in srgb, rgb(var(--df-purple-rgb)) 6%, #161B22);
+  }
   .df-surface { @apply bg-df-surface border border-df-border rounded-xl; }
 
   /* Botones */
