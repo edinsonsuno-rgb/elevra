@@ -7,7 +7,7 @@ import WhatsAppFloat from '@/components/ui/WhatsAppFloat'
 
 
 const NAV_ADMIN_BASE = [
-  { to: '/profesores',   icon: 'fa-solid fa-chalkboard-user',  label: 'Instructores' },
+
   { to: '/planes',       icon: 'fa-solid fa-clipboard-list',   label: 'Planes' },
   { to: '/configuracion',icon: 'fa-solid fa-gear',             label: 'Configuración' },
 ]
