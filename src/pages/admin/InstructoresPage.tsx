@@ -165,7 +165,7 @@ export default function InstructoresPage() {
       return
     }
 
-    const link = `${window.location.origin}/registro?token=${rpc.token}`
+    const link = `https://${form.subdominio.trim().toLowerCase()}.elevra.lat/registro?token=${rpc.token}`
     setLinkGenerado(link)
     setSaving(false)
 
@@ -189,8 +189,8 @@ export default function InstructoresPage() {
     invalidateCache(CACHE_INSTRUCTORES) // fuerza recarga real en próxima visita
   }
 
-  function buildLink(token: string) {
-    return `${window.location.origin}/registro?token=${token}`
+  function buildLink(token: string, subdominio: string) {
+    return `https://${subdominio}.elevra.lat/registro?token=${token}`
   }
 
   function copiarLink() {
@@ -200,14 +200,14 @@ export default function InstructoresPage() {
     setTimeout(() => setCopiado(false), 2000)
   }
 
-  function copiarLinkCard(token: string, tenantId: string) {
-    navigator.clipboard.writeText(buildLink(token))
+  function copiarLinkCard(token: string, tenantId: string, subdominio: string) {
+    navigator.clipboard.writeText(buildLink(token, subdominio))
     setCopiadoCard(tenantId)
     setTimeout(() => setCopiadoCard(null), 2000)
   }
 
-  function abrirWhatsApp(token: string, nombre: string) {
-    const link = buildLink(token)
+  function abrirWhatsApp(token: string, nombre: string, subdominio: string) {
+    const link = buildLink(token, subdominio)
     const msg  = encodeURIComponent(`Hola ${nombre}, te invito a activar tu cuenta en Elevra. Usa este link:\n${link}`)
     window.open(`https://wa.me/?text=${msg}`, '_blank')
   }
@@ -301,7 +301,7 @@ export default function InstructoresPage() {
                 {ins.inv_pendiente && ins.inv_token && (
                   <div className="flex gap-2" onClick={e => e.preventDefault()}>
                     <button
-                      onClick={() => copiarLinkCard(ins.inv_token!, ins.tenant_id)}
+                      onClick={() => copiarLinkCard(ins.inv_token!, ins.tenant_id, ins.subdominio)}
                       className={`flex-1 text-xs px-3 py-2 rounded-lg transition-all flex items-center justify-center gap-1.5 ${
                         copiadoCard === ins.tenant_id
                           ? 'bg-green-900/30 text-green-400'
@@ -311,7 +311,7 @@ export default function InstructoresPage() {
                       {copiadoCard === ins.tenant_id ? '¡Copiado!' : 'Copiar link'}
                     </button>
                     <button
-                      onClick={() => abrirWhatsApp(ins.inv_token!, ins.display_name ?? ins.tenant_nombre)}
+                      onClick={() => abrirWhatsApp(ins.inv_token!, ins.display_name ?? ins.tenant_nombre, ins.subdominio)}
                       className="text-xs px-3 py-2 rounded-lg df-surface text-df-muted hover:text-green-400 transition-all flex items-center gap-1.5">
                       <i className="fa-brands fa-whatsapp text-sm" />
                       WhatsApp
@@ -347,7 +347,7 @@ export default function InstructoresPage() {
                 {copiado ? '¡Copiado!' : 'Copiar link'}
               </button>
               <button
-                onClick={() => linkGenerado && abrirWhatsApp(linkGenerado.split('token=')[1], form.nombre)}
+                onClick={() => linkGenerado && abrirWhatsApp(linkGenerado.split('token=')[1], form.nombre, form.subdominio.trim().toLowerCase())}
                 className="text-xs px-3 py-2.5 rounded-xl df-surface text-df-muted hover:text-green-400 transition-all flex items-center gap-2">
                 <i className="fa-brands fa-whatsapp text-sm" /> WhatsApp
               </button>
