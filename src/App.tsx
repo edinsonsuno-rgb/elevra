@@ -1,8 +1,10 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from '@/hooks/useAuth'
-import { TenantProvider } from '@/contexts/TenantContext'
+import { TenantProvider, useTenant } from '@/contexts/TenantContext'
 import AppLayout        from '@/components/layout/AppLayout'
 import AlumnoLayout     from '@/components/layout/AlumnoLayout'
+import Lottie           from 'lottie-react'
+import loadingAnim      from '@/assets/loading-dumbbell.json'
 
 import SplashPage                from '@/pages/SplashPage'
 import LoginPage                 from '@/pages/LoginPage'
@@ -65,12 +67,24 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>
 }
 
+function TenantGate({ children }: { children: React.ReactNode }) {
+  const { loading } = useTenant()
+  if (loading) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-df-bg">
+        <Lottie animationData={loadingAnim} loop style={{ width: 140, height: 140 }} />
+      </div>
+    )
+  }
+  return <>{children}</>
+}
+
 function PublicRoute({ children }: { children: React.ReactNode }) {
   const { user, role, loading } = useAuth()
   if (loading) return <Spinner />
   if (!role && user) return <Spinner />
   if (user) return <Navigate to={role === 'alumno' ? '/alumno' : '/dashboard'} replace />
-  return <>{children}</>
+  return <TenantGate>{children}</TenantGate>
 }
 
 function AdminRoute({ children }: { children: React.ReactNode }) {
