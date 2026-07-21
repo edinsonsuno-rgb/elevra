@@ -249,6 +249,35 @@ export default function InstructorDetallePage() {
       .catch(() => setNotification({ message: 'No se pudo copiar el subdominio', type: 'error' }))
   }
 
+  const [showShareMenu, setShowShareMenu] = useState(false)
+
+  function shareTo(platform: 'whatsapp' | 'telegram' | 'twitter' | 'facebook') {
+    if (!tenant) return
+    const url = `https://${tenant.subdominio}.elevra.lat`
+    const text = encodeURIComponent(`Visita ${tenant.nombre} en Elevra: ${url}`)
+    let shareUrl = ''
+    switch (platform) {
+      case 'whatsapp':
+        shareUrl = `https://api.whatsapp.com/send?text=${text}`
+        break
+      case 'telegram':
+        shareUrl = `https://t.me/share/url?url=${encodeURIComponent(url)}&text=${text}`
+        break
+      case 'twitter':
+        shareUrl = `https://twitter.com/intent/tweet?text=${text}`
+        break
+      case 'facebook':
+        shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`
+        break
+    }
+    try {
+      window.open(shareUrl, '_blank', 'noopener')
+      setShowShareMenu(false)
+    } catch (err) {
+      setNotification({ message: 'No se pudo abrir la opción de compartir', type: 'error' })
+    }
+  }
+
   if (loading) return <Spinner />
 
   if (!tenant) return (
@@ -436,7 +465,7 @@ export default function InstructorDetallePage() {
                 </div>
               </div>
 
-              <div className="df-surface rounded-xl p-3 flex items-center gap-3 justify-between">
+              <div className="df-surface rounded-xl p-3 flex items-center gap-3 justify-between relative">
                 <div className="flex items-center gap-3">
                   <i className="fa-solid fa-globe text-df-muted text-sm w-4 flex-shrink-0" />
                   <div>
@@ -444,10 +473,38 @@ export default function InstructorDetallePage() {
                     <p className="text-sm text-white truncate">{tenant.subdominio}.elevra.lat</p>
                   </div>
                 </div>
-                <button type="button" onClick={copiarSubdominio} title="Copiar subdominio"
-                  className="px-2 py-1 rounded-md bg-df-surface text-df-muted hover:bg-white/5 transition-colors flex items-center gap-2">
-                  <i className="fa-solid fa-pen text-xs" />
-                </button>
+                <div className="flex items-center gap-2">
+                  <button type="button" onClick={copiarSubdominio} title="Copiar subdominio"
+                    className="px-2 py-1 rounded-md bg-df-surface text-df-muted hover:bg-white/5 transition-colors flex items-center gap-2">
+                    <i className="fa-solid fa-copy text-xs" />
+                  </button>
+                  <div className="relative">
+                    <button type="button" onClick={() => setShowShareMenu(s => !s)} title="Compartir"
+                      className="px-2 py-1 rounded-md bg-df-surface text-df-muted hover:bg-white/5 transition-colors flex items-center gap-2">
+                      <i className="fa-solid fa-share-nodes text-xs" />
+                    </button>
+                    {showShareMenu && (
+                      <div className="absolute right-0 mt-2 w-44 bg-df-surface border border-df-border rounded-md p-2 shadow-lg z-30">
+                        <button onClick={() => shareTo('whatsapp')}
+                          className="w-full text-left px-2 py-1 rounded hover:bg-white/5 flex items-center gap-2">
+                          <i className="fa-brands fa-whatsapp text-green-400 w-5" /> WhatsApp
+                        </button>
+                        <button onClick={() => shareTo('telegram')}
+                          className="w-full text-left px-2 py-1 rounded hover:bg-white/5 flex items-center gap-2">
+                          <i className="fa-brands fa-telegram text-sky-400 w-5" /> Telegram
+                        </button>
+                        <button onClick={() => shareTo('twitter')}
+                          className="w-full text-left px-2 py-1 rounded hover:bg-white/5 flex items-center gap-2">
+                          <i className="fa-brands fa-twitter text-sky-300 w-5" /> Twitter
+                        </button>
+                        <button onClick={() => shareTo('facebook')}
+                          className="w-full text-left px-2 py-1 rounded hover:bg-white/5 flex items-center gap-2">
+                          <i className="fa-brands fa-facebook text-blue-600 w-5" /> Facebook
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
               <div className="df-surface rounded-xl p-3 flex items-center gap-3">
                 <i className="fa-solid fa-chart-line text-df-muted text-sm w-4 flex-shrink-0" />
