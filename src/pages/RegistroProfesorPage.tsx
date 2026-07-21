@@ -1,6 +1,7 @@
 import { useEffect, useState, FormEvent } from 'react'
 import { useSearchParams, useNavigate } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
+import { invalidateCache } from '@/lib/queryCache'
 import { useTenant } from '@/contexts/TenantContext'
 
 const TIPO_DOCUMENTO = ['CC', 'CE', 'PA'] as const
@@ -90,6 +91,17 @@ export default function RegistroProfesorPage() {
       .update({ usado: true })
       .eq('id', invitacion.id)
     if (invError) console.error('[registro] no se pudo marcar invitación como usada:', invError.message, invError)
+    else {
+      invalidateCache('admin:instructores')
+      try {
+          const bc = new BroadcastChannel('elevra-invitaciones')
+          bc.postMessage({ type: 'invitacion_usada', tenantId: invitacion.tenant_id })
+        bc.close()
+      } catch (err) {
+        // BroadcastChannel puede no estar disponible en todos los entornos; silencioso
+        console.warn('BroadcastChannel no disponible', err)
+      }
+    }
 
     setStep('listo')
     setSaving(false)

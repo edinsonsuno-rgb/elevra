@@ -42,6 +42,32 @@ export default function InstructoresPage() {
 
   useEffect(() => { cargar() }, [])
 
+  useEffect(() => {
+    // Escucha eventos de invitaciones usadas desde otras pestañas
+    try {
+      const bc = new BroadcastChannel('elevra-invitaciones')
+      bc.onmessage = (ev) => {
+        if (ev.data?.type === 'invitacion_usada') {
+          const tid = ev.data?.tenantId
+          if (tid) {
+            setInstructores(prev => {
+              const updated = prev.map(i => i.tenant_id === tid ? { ...i, inv_pendiente: false, inv_token: null } : i)
+              setCache(CACHE_INSTRUCTORES, updated, TTL_INSTRUCTORES)
+              return updated
+            })
+          } else {
+            invalidateCache(CACHE_INSTRUCTORES)
+            cargar()
+          }
+        }
+      }
+      return () => bc.close()
+    } catch (err) {
+      // BroadcastChannel no disponible; nada que hacer
+      return () => {}
+    }
+  }, [])
+
   async function cargar() {
     // Precio: cache 24h (casi nunca cambia)
     const precioCached = getCache<number>(CACHE_PRECIO)

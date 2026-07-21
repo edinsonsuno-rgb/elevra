@@ -1,6 +1,7 @@
 import { useEffect, useState, FormEvent } from 'react'
 import { useSearchParams, useNavigate } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
+import { invalidateCache } from '@/lib/queryCache'
 import { useTenant } from '@/contexts/TenantContext'
 
 const TIPO_DOCUMENTO = ['CC', 'CE', 'TI', 'PA'] as const
@@ -86,6 +87,15 @@ export default function RegistroAlumnoPage() {
 
     setStep('listo')
     setSaving(false)
+    // Invalidate cache and notify other tabs so instructors list updates
+    invalidateCache('admin:instructores')
+    try {
+      const bc = new BroadcastChannel('elevra-invitaciones')
+      bc.postMessage({ type: 'invitacion_usada', tenantId: alumno.tenant_id })
+      bc.close()
+    } catch (err) {
+      console.warn('BroadcastChannel no disponible', err)
+    }
   }
 
   // ── Validando ──
