@@ -241,6 +241,14 @@ export default function InstructorDetallePage() {
     setTenant(prev => prev ? { ...prev, al_dia: nuevo } : prev)
   }
 
+  function copiarSubdominio() {
+    if (!tenant) return
+    const texto = `${tenant.subdominio}.elevra.lat`
+    navigator.clipboard.writeText(texto)
+      .then(() => setNotification({ message: 'Subdominio copiado al portapapeles', type: 'success' }))
+      .catch(() => setNotification({ message: 'No se pudo copiar el subdominio', type: 'error' }))
+  }
+
   if (loading) return <Spinner />
 
   if (!tenant) return (
@@ -428,12 +436,18 @@ export default function InstructorDetallePage() {
                 </div>
               </div>
 
-              <div className="df-surface rounded-xl p-3 flex items-center gap-3">
-                <i className="fa-solid fa-globe text-df-muted text-sm w-4 flex-shrink-0" />
-                <div>
-                  <p className="text-[10px] text-df-muted uppercase tracking-wider">Subdominio</p>
-                  <p className="text-sm text-white">{tenant.subdominio}.elevra.lat</p>
+              <div className="df-surface rounded-xl p-3 flex items-center gap-3 justify-between">
+                <div className="flex items-center gap-3">
+                  <i className="fa-solid fa-globe text-df-muted text-sm w-4 flex-shrink-0" />
+                  <div>
+                    <p className="text-[10px] text-df-muted uppercase tracking-wider">Subdominio</p>
+                    <p className="text-sm text-white truncate">{tenant.subdominio}.elevra.lat</p>
+                  </div>
                 </div>
+                <button type="button" onClick={copiarSubdominio} title="Copiar subdominio"
+                  className="px-2 py-1 rounded-md bg-df-surface text-df-muted hover:bg-white/5 transition-colors flex items-center gap-2">
+                  <i className="fa-solid fa-pen text-xs" />
+                </button>
               </div>
               <div className="df-surface rounded-xl p-3 flex items-center gap-3">
                 <i className="fa-solid fa-chart-line text-df-muted text-sm w-4 flex-shrink-0" />
