@@ -22,6 +22,7 @@ export default function AppLayout() {
   const { displayName, role, signOut, superadmin } = useAuth()
   const { tenant, loading: tenantLoading } = useTenant()
   const navigate = useNavigate()
+  const location = useLocation()
 
   if (role === 'alumno') return <Navigate to="/alumno" replace />
 
@@ -33,7 +34,6 @@ export default function AppLayout() {
     )
   }
 
-  const location = useLocation()
   const isAdmin  = role === 'admin'
   const esInicio = location.pathname === '/dashboard' || location.pathname === '/alumno'
 
