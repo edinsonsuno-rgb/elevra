@@ -21,7 +21,6 @@ const NAV_SUPERADMIN = [
 export default function AppLayout() {
   const { displayName, role, signOut, superadmin } = useAuth()
   const { tenant, loading: tenantLoading } = useTenant()
-  console.log('[AppLayout] tenantLoading:', tenantLoading, '| tenant:', tenant.nombre, tenant.color_primario)
   const navigate = useNavigate()
   const location = useLocation()
 

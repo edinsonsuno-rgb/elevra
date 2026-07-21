@@ -4,6 +4,8 @@ import { useTenant } from '@/contexts/TenantContext'
 import { supabase } from '@/lib/supabase'
 import { Spinner } from '@/components/ui/index'
 import WhatsAppFloat from '@/components/ui/WhatsAppFloat'
+import Lottie from 'lottie-react'
+import loadingAnim from '@/assets/loading-dumbbell.json'
 
 const NAV = [
   { to: '/alumno',           icon: 'fa-solid fa-house',        label: 'Inicio'    },
@@ -18,7 +20,7 @@ const NAV = [
 
 export default function AlumnoLayout() {
   const { role, loading, activa, displayName, signOut } = useAuth() as any
-  const { tenant } = useTenant()
+  const { tenant, loading: tenantLoading } = useTenant()
   const navigate = useNavigate()
   const location = useLocation()
   const esInicio = location.pathname === '/dashboard' || location.pathname === '/alumno'
@@ -28,7 +30,11 @@ export default function AlumnoLayout() {
     navigate('/login')
   }
 
-  if (loading) return <Spinner />
+  if (loading || tenantLoading) return (
+    <div className="flex h-screen items-center justify-center bg-df-bg">
+      <Lottie animationData={loadingAnim} loop style={{ width: 140, height: 140 }} />
+    </div>
+  )
   if (role !== 'alumno') return <Navigate to="/dashboard" replace />
 
   if (activa === false || activa === null) return (

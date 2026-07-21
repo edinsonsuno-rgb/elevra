@@ -89,12 +89,14 @@ export function TenantProvider({ children }: { children: ReactNode }) {
 
   async function loadByTenantId(tenantId: string, forceRefresh = false) {
     const cacheKey = `tenant:id:${tenantId}`
+    setLoading(true)
 
     if (!forceRefresh) {
       const cached = getCache<TenantBrand>(cacheKey)
       if (cached) {
         setTenant(cached)
         applyBrand(cached)
+        setLoading(false)
         return
       }
     }
@@ -120,6 +122,7 @@ export function TenantProvider({ children }: { children: ReactNode }) {
       setTenant(brand)
       applyBrand(brand)
     }
+    setLoading(false)
   }
 
   useEffect(() => { load() }, [])
