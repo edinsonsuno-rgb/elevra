@@ -4,6 +4,8 @@ import { useTenant } from '@/contexts/TenantContext'
 import { Avatar } from '@/components/ui/index'
 import InstalarAppButton from '@/components/ui/InstalarAppButton'
 import WhatsAppFloat from '@/components/ui/WhatsAppFloat'
+import Lottie from 'lottie-react'
+import loadingAnim from '@/assets/loading-dumbbell.json'
 
 
 const NAV_ADMIN_BASE = [
@@ -18,10 +20,18 @@ const NAV_SUPERADMIN = [
 
 export default function AppLayout() {
   const { displayName, role, signOut, superadmin } = useAuth()
-  const { tenant } = useTenant()
+  const { tenant, loading: tenantLoading } = useTenant()
   const navigate = useNavigate()
 
   if (role === 'alumno') return <Navigate to="/alumno" replace />
+
+  if (tenantLoading) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-df-bg">
+        <Lottie animationData={loadingAnim} loop style={{ width: 140, height: 140 }} />
+      </div>
+    )
+  }
 
   const location = useLocation()
   const isAdmin  = role === 'admin'
