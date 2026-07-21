@@ -21,7 +21,13 @@ const Ctx = createContext<AuthCtx | null>(null)
 async function fetchProfile(userId: string) {
   const { data } = await supabase
     .from('profiles')
-    .select('display_name, role, tenant_id')
+    .select(`
+      display_name, role, tenant_id,
+      tenants (
+        id, nombre, subdominio, logo_url,
+        color_primario, color_secundario, usar_marca_elevra
+      )
+    `)
     .eq('id', userId)
     .maybeSingle()
   return data
@@ -36,7 +42,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [tenantId, setTenantId]       = useState<string | null>(null)
   const [superadmin, setSuperadmin]   = useState(false)
   const initialLoadDone               = useRef(false)
-  const { loadByTenantId }            = useTenant()
+  const { setTenantFromProfile, clearUserTenant } = useTenant()
 
   async function applySession(u: User) {
     const data = await fetchProfile(u.id)
@@ -51,12 +57,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } else {
       setActivo(true)
     }
-    // El subdominio puede no coincidir con el tenant real del usuario
-    // (ej. entra por el dominio principal). Los colores deben reflejar
-    // siempre el tenant_id real del usuario, no solo la URL.
-    if (data?.tenant_id) {
-      await loadByTenantId(data.tenant_id)
-    }
+    // El tenant viene embebido en el mismo query del perfil (join) —
+    // se aplica directo, sin otra llamada a la red ni depender del subdominio.
+    const tenantData = (data as any)?.tenants ?? null
+    setTenantFromProfile(tenantData)
   }
 
   useEffect(() => {
@@ -75,6 +79,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } else if (event === 'SIGNED_OUT') {
         setUser(null); setDisplayName(null); setRole(null)
         setTenantId(null); setActivo(null); setSuperadmin(false)
+        clearUserTenant()
       }
     })
     return () => subscription.unsubscribe()
