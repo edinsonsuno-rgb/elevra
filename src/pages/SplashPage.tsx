@@ -46,7 +46,7 @@ export default function SplashPage() {
       {/* Card */}
       <div style={{
         width: '100%', maxWidth: 360,
-        background: `linear-gradient(160deg, color-mix(in srgb, ${p} 16%, #161B22) 0%, #12161C 55%, #0D1117 100%)`,
+        background: `color-mix(in srgb, ${p} 14%, #0D1117)`,
         border: `1px solid ${p}44`,
         borderRadius: 32,
         boxShadow: `0 0 0 1px ${p}18, 0 24px 80px rgba(0,0,0,0.6), 0 0 60px ${p}18`,
