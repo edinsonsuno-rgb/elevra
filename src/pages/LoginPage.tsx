@@ -40,9 +40,10 @@ export default function LoginPage() {
       />
       <div className="relative w-full max-w-sm mx-auto">
         <div
-          className="overflow-hidden rounded-[40px] border border-white/10"
+          className="overflow-hidden rounded-[40px]"
           style={{
-            background: '#0D1117',
+            background: `${tenant.color_primario}33`,
+            border: `1px solid ${tenant.color_primario}4D`,
             boxShadow: `0 30px 90px ${tenant.color_primario}26`,
           }}
         >

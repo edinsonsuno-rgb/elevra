@@ -46,8 +46,8 @@ export default function SplashPage() {
       {/* Card */}
       <div style={{
         width: '100%', maxWidth: 360,
-        background: '#0D1117',
-        border: `1px solid ${p}44`,
+        background: `${p}33`,
+        border: `1px solid ${p}4D`,
         borderRadius: 32,
         boxShadow: `0 0 0 1px ${p}18, 0 24px 80px rgba(0,0,0,0.6), 0 0 60px ${p}18`,
         padding: '40px 32px 36px',
