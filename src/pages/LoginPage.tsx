@@ -42,7 +42,7 @@ export default function LoginPage() {
         <div
           className="overflow-hidden rounded-[40px] border border-white/10"
           style={{
-            background: `linear-gradient(180deg, color-mix(in srgb, ${tenant.color_primario} 12%, #0D1117) 0%, #0D1117 60%)`,
+            background: '#0D1117',
             boxShadow: `0 30px 90px ${tenant.color_primario}26`,
           }}
         >
