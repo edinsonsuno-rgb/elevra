@@ -7,6 +7,9 @@ export const DEFAULT_BRAND: TenantBrand = {
   logo_url: null,
   color_primario: '#39D353',
   color_secundario: '#2ECC71',
+  color_terciario: '#000000',
+  color_texto1: '#FFFFFF',
+  color_texto2: '#FFFFFF',
   usar_marca_elevra: true,
 }
 

@@ -11,6 +11,9 @@ interface TenantData {
   logo_url:         string | null
   color_primario:   string
   color_secundario: string
+  color_terciario:  string
+  color_texto1:     string
+  color_texto2:     string
   al_dia:           boolean
   activo:           boolean
 }
@@ -90,12 +93,21 @@ export default function InstructorDetallePage() {
     logo_url:         '',
     color_primario:   '#9b30ff',
     color_secundario: '#7c3aed',
+    color_terciario:  '#000000',
+    color_texto1:     '#FFFFFF',
+    color_texto2:     '#FFFFFF',
   })
-  const [colorTexto, setColorTexto] = useState({ color_primario: '#9b30ff', color_secundario: '#7c3aed' })
+  const [colorTexto, setColorTexto] = useState({
+    color_primario:   '#9b30ff',
+    color_secundario: '#7c3aed',
+    color_terciario:  '#000000',
+    color_texto1:     '#FFFFFF',
+    color_texto2:     '#FFFFFF',
+  })
 
   function isValidHex(v: string) { return /^#[0-9a-fA-F]{6}$/.test(v) }
 
-  function onColorTexto(key: 'color_primario' | 'color_secundario', val: string) {
+  function onColorTexto(key: 'color_primario' | 'color_secundario' | 'color_terciario' | 'color_texto1' | 'color_texto2', val: string) {
     setColorTexto(p => ({ ...p, [key]: val }))
     if (isValidHex(val)) setForm(f => ({ ...f, [key]: val }))
   }
@@ -116,7 +128,7 @@ export default function InstructorDetallePage() {
 
     const [{ data: t }, { data: p }, { data: a }, { data: pl }] = await Promise.all([
       supabase.from('tenants')
-        .select('id, nombre, subdominio, logo_url, color_primario, color_secundario, al_dia, activo')
+        .select('id, nombre, subdominio, logo_url, color_primario, color_secundario, color_terciario, color_texto1, color_texto2, al_dia, activo')
         .eq('id', tenantId!)
         .maybeSingle(),
       supabase.from('profiles')
@@ -142,6 +154,9 @@ export default function InstructorDetallePage() {
       setTenant(datos)
       const cp = datos.color_primario   ?? '#9b30ff'
       const cs = datos.color_secundario ?? '#7c3aed'
+      const ct = datos.color_terciario  ?? '#000000'
+      const t1 = datos.color_texto1     ?? '#FFFFFF'
+      const t2 = datos.color_texto2     ?? '#FFFFFF'
       setForm({
         nombre:           datos.nombre,
         display_name:     (p as AdminProfile | null)?.display_name ?? '',
@@ -149,8 +164,11 @@ export default function InstructorDetallePage() {
         logo_url:         datos.logo_url ?? '',
         color_primario:   cp,
         color_secundario: cs,
+        color_terciario:  ct,
+        color_texto1:     t1,
+        color_texto2:     t2,
       })
-      setColorTexto({ color_primario: cp, color_secundario: cs })
+      setColorTexto({ color_primario: cp, color_secundario: cs, color_terciario: ct, color_texto1: t1, color_texto2: t2 })
     }
     if (p) setAdmin(p as AdminProfile)
     setAlumnos(a ?? [])
@@ -175,6 +193,9 @@ export default function InstructorDetallePage() {
           p_color_primario: form.color_primario,
           p_color_secundario: form.color_secundario,
           p_al_dia: form.al_dia,
+          p_color_terciario: form.color_terciario,
+          p_color_texto1: form.color_texto1,
+          p_color_texto2: form.color_texto2,
         }
       )
 
@@ -203,6 +224,9 @@ export default function InstructorDetallePage() {
         logo_url: form.logo_url || null,
         color_primario: form.color_primario,
         color_secundario: form.color_secundario,
+        color_terciario: form.color_terciario,
+        color_texto1: form.color_texto1,
+        color_texto2: form.color_texto2,
       } : prev)
 
       setAdmin(prev => prev ? {
@@ -229,6 +253,16 @@ export default function InstructorDetallePage() {
         logo_url:         tenant.logo_url ?? '',
         color_primario:   tenant.color_primario ?? '#9b30ff',
         color_secundario: tenant.color_secundario ?? '#7c3aed',
+        color_terciario:  tenant.color_terciario ?? '#000000',
+        color_texto1:     tenant.color_texto1 ?? '#FFFFFF',
+        color_texto2:     tenant.color_texto2 ?? '#FFFFFF',
+      })
+      setColorTexto({
+        color_primario:   tenant.color_primario ?? '#9b30ff',
+        color_secundario: tenant.color_secundario ?? '#7c3aed',
+        color_terciario:  tenant.color_terciario ?? '#000000',
+        color_texto1:     tenant.color_texto1 ?? '#FFFFFF',
+        color_texto2:     tenant.color_texto2 ?? '#FFFFFF',
       })
     }
     setEditing(false)
@@ -396,6 +430,9 @@ export default function InstructorDetallePage() {
                   {([
                     { key: 'color_primario'   as const, label: 'Principal' },
                     { key: 'color_secundario' as const, label: 'Secundario' },
+                    { key: 'color_terciario'  as const, label: 'Terciario' },
+                    { key: 'color_texto1'     as const, label: 'Texto 1' },
+                    { key: 'color_texto2'     as const, label: 'Texto 2' },
                   ]).map(({ key, label }) => (
                     <div key={key}>
                       <p className="text-[11px] text-df-muted mb-1.5">{label}</p>
