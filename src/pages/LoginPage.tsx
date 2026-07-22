@@ -40,10 +40,9 @@ export default function LoginPage() {
       />
       <div className="relative w-full max-w-sm mx-auto">
         <div
-          className="overflow-hidden rounded-[40px]"
+          className="overflow-hidden rounded-[40px] border border-white/10"
           style={{
-            background: `${tenant.color_primario}33`,
-            border: `1px solid ${tenant.color_primario}4D`,
+            background: `linear-gradient(180deg, color-mix(in srgb, ${tenant.color_primario} 12%, #0D1117) 0%, #0D1117 60%)`,
             boxShadow: `0 30px 90px ${tenant.color_primario}26`,
           }}
         >
@@ -53,7 +52,7 @@ export default function LoginPage() {
                 src={tenant.logo_url ?? '/logo.png'}
                 alt={tenant.nombre}
                 className="mx-auto h-12 w-full object-contain"
-                style={{ filter: tenant.usar_marca_elevra ? `drop-shadow(0 0 18px ${tenant.color_primario}80)` : 'none' }}
+                style={{ filter: `drop-shadow(0 0 18px ${tenant.color_primario}80)` }}
               />
             </div>
             <p className="text-[11px] uppercase tracking-[0.35em] text-df-muted mb-3">
@@ -83,9 +82,8 @@ export default function LoginPage() {
                   onClick={() => setStarted(true)}
                   className="w-3/4 py-3 rounded-2xl text-white font-bold text-lg"
                   style={{
-                    background: 'linear-gradient(160deg, color-mix(in srgb, var(--brand-primary) 100%, white 30%) 0%, var(--brand-primary) 45%, color-mix(in srgb, var(--brand-primary) 100%, black 25%) 100%)',
-                    border: '1px solid color-mix(in srgb, var(--brand-primary) 100%, white 40%)',
-                    boxShadow: `0 8px 32px ${tenant.color_primario}70, 0 2px 8px ${tenant.color_primario}50, inset 0 1px 0 rgba(255,255,255,0.35)`,
+                    background: 'linear-gradient(135deg, var(--brand-secondary) 0%, var(--brand-primary) 100%)',
+                    boxShadow: `0 4px 16px ${tenant.color_primario}40`,
                   }}
                 >
                   COMENZAR
