@@ -52,7 +52,7 @@ export default function LoginPage() {
                 src={tenant.logo_url ?? '/logo.png'}
                 alt={tenant.nombre}
                 className="mx-auto h-12 w-full object-contain"
-                style={{ filter: `drop-shadow(0 0 18px ${tenant.color_primario}80)` }}
+                style={{ filter: tenant.usar_marca_elevra ? `drop-shadow(0 0 18px ${tenant.color_primario}80)` : 'none' }}
               />
             </div>
             <p className="text-[11px] uppercase tracking-[0.35em] text-df-muted mb-3">

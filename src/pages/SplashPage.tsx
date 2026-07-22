@@ -63,7 +63,7 @@ export default function SplashPage() {
           opacity: visible ? 1 : 0,
           transform: visible ? 'translateY(0)' : 'translateY(-12px)',
           transition: 'opacity 0.6s ease 0.1s, transform 0.6s ease 0.1s',
-          filter: `drop-shadow(0 0 20px ${p}55)`,
+          filter: tenant.usar_marca_elevra ? `drop-shadow(0 0 20px ${p}55)` : 'none',
         }}>
           <img
             src={tenant.logo_url ?? '/logo.png'}
