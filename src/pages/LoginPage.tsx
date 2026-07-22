@@ -56,13 +56,13 @@ export default function LoginPage() {
                 style={{ filter: tenant.usar_marca_elevra ? `drop-shadow(0 0 18px ${tenant.color_primario}80)` : 'none' }}
               />
             </div>
-            <p className="text-[11px] uppercase tracking-[0.35em] text-df-muted mb-3">
+            <p className="text-[11px] uppercase tracking-[0.35em] text-white/65 mb-3">
               tu mejor versión
             </p>
             <h1 className="font-display text-3xl text-white font-black mb-4">
               empieza hoy
             </h1>
-            <p className="mx-auto max-w-[300px] text-sm text-df-muted leading-6">
+            <p className="mx-auto max-w-[300px] text-sm text-white/65 leading-6">
               Entrenamientos personalizados, seguimiento de progreso y motivación para lograr tus objetivos.
             </p>
           </div>
@@ -94,11 +94,11 @@ export default function LoginPage() {
             ) : (
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                  <label className="text-[11px] font-semibold text-df-muted uppercase tracking-[0.3em] mb-2 block">
+                  <label className="text-[11px] font-semibold text-white/65 uppercase tracking-[0.3em] mb-2 block">
                     correo electrónico
                   </label>
                   <div className="relative">
-                    <i className="fa-solid fa-envelope absolute left-4 top-1/2 -translate-y-1/2 text-df-muted text-sm" />
+                    <i className="fa-solid fa-envelope absolute left-4 top-1/2 -translate-y-1/2 text-white/65 text-sm" />
                     <input
                       type="email"
                       required
@@ -111,11 +111,11 @@ export default function LoginPage() {
                 </div>
 
                 <div>
-                  <label className="text-[11px] font-semibold text-df-muted uppercase tracking-[0.3em] mb-2 block">
+                  <label className="text-[11px] font-semibold text-white/65 uppercase tracking-[0.3em] mb-2 block">
                     contraseña
                   </label>
                   <div className="relative">
-                    <i className="fa-solid fa-lock absolute left-4 top-1/2 -translate-y-1/2 z-20 text-df-muted text-sm" />
+                    <i className="fa-solid fa-lock absolute left-4 top-1/2 -translate-y-1/2 z-20 text-white/65 text-sm" />
                     <input
                       type={showPass ? 'text' : 'password'}
                       required
@@ -127,7 +127,7 @@ export default function LoginPage() {
                     <button
                       type="button"
                       onClick={() => setShowPass(v => !v)}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 z-30 text-df-muted hover:text-white transition-colors"
+                      className="absolute right-4 top-1/2 -translate-y-1/2 z-30 text-white/65 hover:text-white transition-colors"
                     >
                       <i className={`fa-solid ${showPass ? 'fa-eye-slash' : 'fa-eye'} text-sm`} />
                     </button>
@@ -159,7 +159,7 @@ export default function LoginPage() {
                   )}
                 </button>
 
-                <div className="mt-6 text-center text-xs text-df-muted">
+                <div className="mt-6 text-center text-xs text-white/65">
                   <a href="/reset-password" className="underline underline-offset-2 decoration-df-purple/30 hover:text-white">
                     ¿Olvidaste tu contraseña?
                   </a>
