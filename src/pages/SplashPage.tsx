@@ -15,7 +15,6 @@ export default function SplashPage() {
   }, [])
 
   const p  = tenant.color_primario
-  const s  = tenant.color_secundario
 
   return (
     <div style={{
@@ -124,7 +123,7 @@ export default function SplashPage() {
           onClick={() => navigate('/login?start=1')}
           style={{
             width: '550%', padding: '6px 0',
-            background: `linear-gradient(135deg, ${s} 0%, ${p} 100%)`,
+            background: p,
             border: 'none', borderRadius: 14,
             fontFamily: "'Bebas Neue', sans-serif",
             fontSize: 18, letterSpacing: '0.2em', color: '#ffffff',
