@@ -47,6 +47,12 @@
   }
   .df-surface { @apply bg-df-surface border border-df-border rounded-xl; }
 
+  /* TEST: vidrio translúcido — solo para probar en una tarjeta antes de aplicar a toda la app */
+  .df-glass-test {
+    background: rgb(var(--df-purple-rgb) / 0.20) !important;
+    border: 1px solid rgb(var(--df-purple-rgb) / 0.30) !important;
+  }
+
   /* Botones */
   .df-btn {
     @apply text-white font-bold rounded-full transition-all duration-200 active:scale-95;

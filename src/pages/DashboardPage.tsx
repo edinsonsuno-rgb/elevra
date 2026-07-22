@@ -171,7 +171,7 @@ export default function DashboardPage() {
           { icon: 'fa-solid fa-triangle-exclamation', label: 'Cobros pendientes',    value: pendientesCobro,                      color: 'text-amber-400' },
           { icon: 'fa-solid fa-dollar-sign',          label: 'Ingresos del mes',     value: `$${ingresosMes.toLocaleString()}`,   color: 'text-df-pink' },
         ]).map((s, i) => (
-          <div key={i} className="df-surface p-4 rounded-2xl">
+          <div key={i} className={`df-surface p-4 rounded-2xl ${s.label === 'Alumnos activos' ? 'df-glass-test' : ''}`}>
             <div className={`text-xl mb-2 ${s.color}`}><i className={s.icon} /></div>
             <div className="text-2xl font-black text-white">{s.value}</div>
             <div className="text-xs text-df-muted mt-1">{s.label}</div>
