@@ -80,7 +80,7 @@ export default function SplashPage() {
           transition: 'opacity 0.6s ease 0.2s, transform 0.6s ease 0.2s',
         }}>
           <p style={{
-            fontSize: 11, letterSpacing: '0.25em', color: p,
+            fontSize: 11, letterSpacing: '0.25em', color: 'rgba(255,255,255,0.65)',
             textTransform: 'uppercase', fontWeight: 600, marginBottom: 8,
           }}>
             TU MEJOR VERSIÓN
@@ -122,7 +122,7 @@ export default function SplashPage() {
         <button
           onClick={() => navigate('/login?start=1')}
           style={{
-            width: '100%', padding: '14px 0',
+            width: '550%', padding: '6px 0',
             background: `linear-gradient(160deg, color-mix(in srgb, ${p} 100%, white 30%) 0%, ${p} 45%, color-mix(in srgb, ${p} 100%, black 25%) 100%)`,
             border: `1px solid color-mix(in srgb, ${p} 100%, white 40%)`, borderRadius: 14,
             fontFamily: "'Bebas Neue', sans-serif",

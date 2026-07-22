@@ -56,7 +56,7 @@ export default function LoginPage() {
                 style={{ filter: tenant.usar_marca_elevra ? `drop-shadow(0 0 18px ${tenant.color_primario}80)` : 'none' }}
               />
             </div>
-            <p className="text-[11px] uppercase tracking-[0.35em] mb-3" style={{ color: tenant.color_primario }}>
+            <p className="text-[11px] uppercase tracking-[0.35em] text-white/65 mb-3">
               tu mejor versión
             </p>
             <h1 className="font-display text-3xl text-white font-black mb-4">
