@@ -82,8 +82,9 @@ export default function LoginPage() {
                   onClick={() => setStarted(true)}
                   className="w-3/4 py-3 rounded-2xl text-white font-bold text-lg"
                   style={{
-                    background: 'var(--brand-primary)',
-                    boxShadow: `0 6px 32px ${tenant.color_primario}88`,
+                    background: 'linear-gradient(160deg, color-mix(in srgb, var(--brand-primary) 100%, white 30%) 0%, var(--brand-primary) 45%, color-mix(in srgb, var(--brand-primary) 100%, black 25%) 100%)',
+                    border: '1px solid color-mix(in srgb, var(--brand-primary) 100%, white 40%)',
+                    boxShadow: `0 8px 32px ${tenant.color_primario}70, 0 2px 8px ${tenant.color_primario}50, inset 0 1px 0 rgba(255,255,255,0.35)`,
                   }}
                 >
                   COMENZAR

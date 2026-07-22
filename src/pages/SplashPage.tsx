@@ -123,22 +123,22 @@ export default function SplashPage() {
           onClick={() => navigate('/login?start=1')}
           style={{
             width: '550%', padding: '6px 0',
-            background: p,
-            border: 'none', borderRadius: 14,
+            background: `linear-gradient(160deg, color-mix(in srgb, ${p} 100%, white 30%) 0%, ${p} 45%, color-mix(in srgb, ${p} 100%, black 25%) 100%)`,
+            border: `1px solid color-mix(in srgb, ${p} 100%, white 40%)`, borderRadius: 14,
             fontFamily: "'Bebas Neue', sans-serif",
             fontSize: 18, letterSpacing: '0.2em', color: '#ffffff',
             cursor: 'pointer',
-            boxShadow: `0 4px 24px ${p}55`,
+            boxShadow: `0 8px 32px ${p}70, 0 2px 8px ${p}50, inset 0 1px 0 rgba(255,255,255,0.35)`,
             opacity: visible ? 1 : 0,
             transform: visible ? 'translateY(0)' : 'translateY(8px)',
             transition: 'opacity 0.6s ease 0.45s, transform 0.6s ease 0.45s, box-shadow 0.2s ease, transform 0.1s ease',
           }}
           onMouseEnter={e => {
-            e.currentTarget.style.boxShadow = `0 6px 32px ${p}88`
+            e.currentTarget.style.boxShadow = `0 10px 40px ${p}90, 0 4px 12px ${p}70, inset 0 1px 0 rgba(255,255,255,0.45)`
             e.currentTarget.style.transform = 'translateY(-1px)'
           }}
           onMouseLeave={e => {
-            e.currentTarget.style.boxShadow = `0 4px 24px ${p}55`
+            e.currentTarget.style.boxShadow = `0 8px 32px ${p}70, 0 2px 8px ${p}50, inset 0 1px 0 rgba(255,255,255,0.35)`
             e.currentTarget.style.transform = 'translateY(0)'
           }}
         >
