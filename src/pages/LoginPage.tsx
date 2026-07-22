@@ -85,7 +85,7 @@ export default function LoginPage() {
                   style={{
                     background: 'linear-gradient(160deg, color-mix(in srgb, var(--brand-primary) 100%, white 30%) 0%, var(--brand-primary) 45%, color-mix(in srgb, var(--brand-primary) 100%, black 25%) 100%)',
                     border: '1px solid color-mix(in srgb, var(--brand-primary) 100%, white 40%)',
-                    boxShadow: `0 8px 32px ${tenant.color_primario}70, 0 2px 8px ${tenant.color_primario}50, inset 0 1px 0 rgba(255,255,255,0.35)`,
+                    boxShadow: `0 4px 16px ${tenant.color_primario}35, 0 1px 4px ${tenant.color_primario}25, inset 0 1px 0 rgba(255,255,255,0.35)`,
                   }}
                 >
                   COMENZAR
