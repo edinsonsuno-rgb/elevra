@@ -122,7 +122,7 @@ export default function SplashPage() {
         <button
           onClick={() => navigate('/login?start=1')}
           style={{
-            width: '550%', padding: '6px 0',
+            width: '100%', padding: '14px 0',
             background: `linear-gradient(160deg, color-mix(in srgb, ${p} 100%, white 30%) 0%, ${p} 45%, color-mix(in srgb, ${p} 100%, black 25%) 100%)`,
             border: `1px solid color-mix(in srgb, ${p} 100%, white 40%)`, borderRadius: 14,
             fontFamily: "'Bebas Neue', sans-serif",
