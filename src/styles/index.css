@@ -50,6 +50,11 @@
   /* Sidebar — el color de fondo lo controla "Terciario" en el admin del
      tenant (--brand-tertiary), y lleva un borde de acento con el color
      principal de marca para conectarlo con el resto de la UI. */
+  /* Fondo principal del dashboard del instructor — mismo control que
+     el sidebar (--brand-tertiary), para que ambos se muevan juntos. */
+  .df-page-bg {
+    background: var(--brand-tertiary, #0F172A);
+  }
   .df-sidebar {
     background: var(--brand-tertiary, #161B22);
     border-right: 2px solid rgb(var(--df-purple-rgb) / 0.45);
