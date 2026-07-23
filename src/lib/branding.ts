@@ -40,6 +40,7 @@ export function applyBrand(brand: TenantBrand) {
 
   root.style.setProperty('--brand-primary', brand.color_primario)
   root.style.setProperty('--brand-secondary', brand.color_secundario)
+  root.style.setProperty('--brand-tertiary', brand.color_terciario)
   root.style.setProperty('--brand-text2', brand.color_texto2)
   root.style.setProperty('--card-alpha', String((brand.card_brillo ?? 26) / 100))
   root.style.setProperty('--color-primario', brand.color_primario)

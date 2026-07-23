@@ -47,12 +47,12 @@
     border: 1px solid rgb(var(--df-purple-rgb) / calc(var(--card-alpha, 0.26) + 0.14));
     box-shadow: 0 0 32px rgb(var(--df-purple-rgb) / calc(var(--card-alpha, 0.26) - 0.08));
   }
-  /* Sidebar — mismo fondo oscuro de siempre, con un tinte sutil del
-     color de marca del tenant para que no se sienta desconectado del
-     resto de la UI (tarjetas, botón activo, etc.) */
+  /* Sidebar — el color de fondo lo controla "Terciario" en el admin del
+     tenant (--brand-tertiary), y lleva un borde de acento con el color
+     principal de marca para conectarlo con el resto de la UI. */
   .df-sidebar {
-    background: color-mix(in srgb, rgb(var(--df-purple-rgb)) 6%, #161B22 94%);
-    border-right: 1px solid color-mix(in srgb, rgb(var(--df-purple-rgb)) 14%, #30363D 86%);
+    background: var(--brand-tertiary, #161B22);
+    border-right: 2px solid rgb(var(--df-purple-rgb) / 0.45);
   }
   .df-surface {
     @apply rounded-xl;
