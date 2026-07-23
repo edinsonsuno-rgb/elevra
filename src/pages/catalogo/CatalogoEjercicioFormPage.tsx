@@ -81,11 +81,32 @@ export default function CatalogoEjercicioFormPage() {
     if (!form.musculo)       { setError('Selecciona el músculo principal'); return }
     setSaving(true); setError(null)
 
+    // Chequeo de nombre duplicado (ignora mayúsculas/minúsculas y espacios)
+    let dupQuery = supabase
+      .from('catalogo_ejercicios')
+      .select('id')
+      .ilike('nombre', form.nombre.trim())
+    if (isEdit) dupQuery = dupQuery.neq('id', id!)
+    const { data: existentes } = await dupQuery
+    if (existentes && existentes.length > 0) {
+      setError(`Ya existe un ejercicio llamado "${form.nombre.trim()}". Usa otro nombre.`)
+      setSaving(false)
+      return
+    }
+
     const payload = { ...form, creado_por: user?.id }
     const { error: err } = isEdit
       ? await supabase.from('catalogo_ejercicios').update(payload).eq('id', id!)
       : await supabase.from('catalogo_ejercicios').insert(payload)
-    if (err) { setError(err.message); setSaving(false); return }
+    if (err) {
+      setError(
+        err.code === '23505'
+          ? `Ya existe un ejercicio llamado "${form.nombre.trim()}". Usa otro nombre.`
+          : err.message
+      )
+      setSaving(false)
+      return
+    }
     navigate('/catalogo')
   }
 
