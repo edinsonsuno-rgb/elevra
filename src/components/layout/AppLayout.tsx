@@ -55,7 +55,7 @@ export default function AppLayout() {
 
   return (
     <div className="flex h-screen bg-df-bg overflow-hidden">
-      <aside className="w-16 lg:w-56 flex-shrink-0 bg-df-card border-r border-df-border flex flex-col py-4">
+      <aside className="w-16 lg:w-56 flex-shrink-0 df-sidebar flex flex-col py-4">
         <div className="px-3 lg:px-4 mb-6 overflow-hidden">
           <img src={tenant.logo_url ?? '/logo.png'} alt={tenant.nombre} className="h-8 w-auto max-w-full object-contain" />
         </div>
