@@ -8,7 +8,7 @@ export default {
         display: ['Bebas Neue', 'sans-serif'],
       },
       colors: {
-        'df-bg': '#2E3133',
+        'df-bg': '#0F172A',
         'df-card': '#161B22',
         'df-surface': '#21262D',
         'df-border': '#30363D',
