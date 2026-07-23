@@ -1,6 +1,7 @@
 import { useEffect, useState, FormEvent } from 'react'
 import { useNavigate, useParams, Link } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
+import { invalidateCache } from '@/lib/queryCache'
 import { Spinner } from '@/components/ui/index'
 import ImageUpload from '@/components/ui/ImageUpload'
 import { useAuth } from '@/hooks/useAuth'
@@ -107,6 +108,7 @@ export default function CatalogoEjercicioFormPage() {
       setSaving(false)
       return
     }
+    invalidateCache('catalogo_ejercicios')
     navigate('/catalogo')
   }
 

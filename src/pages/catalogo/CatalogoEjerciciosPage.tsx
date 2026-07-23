@@ -3,6 +3,10 @@ import { Link } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
 import { Spinner, EmptyState } from '@/components/ui/index'
 import { useAuth } from '@/hooks/useAuth'
+import { getCache, setCache, invalidateCache } from '@/lib/queryCache'
+
+const CACHE_KEY = 'catalogo_ejercicios'
+const TTL_CATALOGO = 5 * 60 * 1000 // 5 minutos — cambia poco, no hace falta re-consultar en cada visita
 
 export interface CatalogoEjercicio {
   id: string
@@ -132,16 +136,26 @@ export default function CatalogoEjerciciosPage() {
 
   useEffect(() => { cargar() }, [])
 
-  async function cargar() {
+  async function cargar(forceRefresh = false) {
+    if (!forceRefresh) {
+      const cached = getCache<CatalogoEjercicio[]>(CACHE_KEY)
+      if (cached) {
+        setEjercicios(cached)
+        setLoading(false)
+        return
+      }
+    }
     const { data } = await supabase.from('catalogo_ejercicios').select('*').order('nombre')
     setEjercicios(data ?? [])
+    setCache(CACHE_KEY, data ?? [], TTL_CATALOGO)
     setLoading(false)
   }
 
   async function eliminar(id: string) {
     if (!confirm('¿Eliminar este ejercicio del catálogo?')) return
     await supabase.from('catalogo_ejercicios').delete().eq('id', id)
-    cargar()
+    invalidateCache(CACHE_KEY)
+    cargar(true)
   }
 
   function selectZona(zona: string) {
