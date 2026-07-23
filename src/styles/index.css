@@ -43,13 +43,13 @@
   /* Superficies — vidrio translúcido, siguen el color primario del tenant (--df-purple-rgb = color_primario) */
   .df-card {
     @apply rounded-2xl;
-    background: rgba(255, 255, 255, 0.04);
-    border: 1px solid rgb(var(--df-purple-rgb) / 0.25);
+    background: rgb(var(--df-purple-rgb) / 0.12);
+    border: 1px solid rgb(var(--df-purple-rgb) / 0.22);
   }
   .df-surface {
     @apply rounded-xl;
-    background: rgba(255, 255, 255, 0.04);
-    border: 1px solid rgb(var(--df-purple-rgb) / 0.25);
+    background: rgb(var(--df-purple-rgb) / 0.12);
+    border: 1px solid rgb(var(--df-purple-rgb) / 0.22);
   }
 
 
