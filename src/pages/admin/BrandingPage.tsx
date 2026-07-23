@@ -10,6 +10,7 @@ export const DEFAULT_BRAND: TenantBrand = {
   color_terciario: '#000000',
   color_texto1: '#FFFFFF',
   color_texto2: '#FFFFFF',
+  card_brillo: 26,
   usar_marca_elevra: true,
 }
 
@@ -40,6 +41,7 @@ export function applyBrand(brand: TenantBrand) {
   root.style.setProperty('--brand-primary', brand.color_primario)
   root.style.setProperty('--brand-secondary', brand.color_secundario)
   root.style.setProperty('--brand-text2', brand.color_texto2)
+  root.style.setProperty('--card-alpha', String((brand.card_brillo ?? 26) / 100))
   root.style.setProperty('--color-primario', brand.color_primario)
   root.style.setProperty('--color-secundario', brand.color_secundario)
 

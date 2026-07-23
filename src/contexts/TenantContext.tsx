@@ -15,6 +15,7 @@ export interface TenantBrand {
   color_terciario:    string
   color_texto1:       string
   color_texto2:       string
+  card_brillo:        number
   usar_marca_elevra:  boolean
 }
 
@@ -86,6 +87,7 @@ export function TenantProvider({ children }: { children: ReactNode }) {
         color_terciario,
         color_texto1,
         color_texto2,
+        card_brillo,
         usar_marca_elevra
       `)
       .eq('subdominio', subdomain)

@@ -43,15 +43,24 @@
   /* Superficies — vidrio translúcido, siguen el color primario del tenant (--df-purple-rgb = color_primario) */
   .df-card {
     @apply rounded-2xl;
-    background: rgb(var(--df-purple-rgb) / 0.26);
-    border: 1px solid rgb(var(--df-purple-rgb) / 0.40);
-    box-shadow: 0 0 32px rgb(var(--df-purple-rgb) / 0.18);
+    background: rgb(var(--df-purple-rgb) / var(--card-alpha, 0.26));
+    border: 1px solid rgb(var(--df-purple-rgb) / calc(var(--card-alpha, 0.26) + 0.14));
+    box-shadow: 0 0 32px rgb(var(--df-purple-rgb) / calc(var(--card-alpha, 0.26) - 0.08));
   }
   .df-surface {
     @apply rounded-xl;
-    background: rgb(var(--df-purple-rgb) / 0.26);
-    border: 1px solid rgb(var(--df-purple-rgb) / 0.40);
-    box-shadow: 0 0 32px rgb(var(--df-purple-rgb) / 0.18);
+    background: rgb(var(--df-purple-rgb) / var(--card-alpha, 0.26));
+    border: 1px solid rgb(var(--df-purple-rgb) / calc(var(--card-alpha, 0.26) + 0.14));
+    box-shadow: 0 0 32px rgb(var(--df-purple-rgb) / calc(var(--card-alpha, 0.26) - 0.08));
+  }
+
+  /* Superficie "elevada" — un nivel más clara que .df-surface, para
+     distinguir botones/tarjetas internas dentro de un .df-card contenedor
+     (ej. los accesos rápidos dentro de la tarjeta "Accesos rápidos") */
+  .df-surface-elevated {
+    @apply rounded-xl;
+    background: rgb(var(--df-purple-rgb) / calc(var(--card-alpha, 0.26) + 0.16));
+    border: 1px solid rgb(var(--df-purple-rgb) / calc(var(--card-alpha, 0.26) + 0.30));
   }
 
 

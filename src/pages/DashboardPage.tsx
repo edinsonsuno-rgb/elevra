@@ -327,7 +327,7 @@ export default function DashboardPage() {
           ) : (
             <div className="df-card p-4">
               <h3 className="text-sm font-bold text-white mb-3">Accesos rápidos</h3>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-2 gap-3">
                 {[
                   { to: '/alumnos/nuevo',  icon: 'fa-solid fa-user-plus',           label: 'Nuevo alumno',  color: 'text-df-violet' },
                   { to: '/rutinas/nueva',  icon: 'fa-solid fa-plus-circle',          label: 'Nueva rutina',  color: 'text-df-pink' },
@@ -335,7 +335,7 @@ export default function DashboardPage() {
                   { to: '/cobros/nuevo',   icon: 'fa-solid fa-file-invoice-dollar',  label: 'Nuevo cobro',   color: 'text-amber-400' },
                 ].map(q => (
                   <Link key={q.to} to={q.to}
-                    className="df-surface p-3 rounded-xl flex flex-col items-center gap-2 hover:border-df-violet/40 transition-all text-center">
+                    className="df-surface-elevated p-3 rounded-xl flex flex-col items-center gap-2 hover:border-df-violet/40 transition-all text-center">
                     <i className={`${q.icon} text-lg ${q.color}`} />
                     <span className="text-[10px] text-df-muted leading-tight">{q.label}</span>
                   </Link>

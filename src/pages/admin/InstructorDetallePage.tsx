@@ -14,6 +14,7 @@ interface TenantData {
   color_terciario:  string
   color_texto1:     string
   color_texto2:     string
+  card_brillo:      number
   al_dia:           boolean
   activo:           boolean
 }
@@ -96,6 +97,7 @@ export default function InstructorDetallePage() {
     color_terciario:  '#000000',
     color_texto1:     '#FFFFFF',
     color_texto2:     '#FFFFFF',
+    card_brillo:      26,
   })
   const [colorTexto, setColorTexto] = useState({
     color_primario:   '#9b30ff',
@@ -128,7 +130,7 @@ export default function InstructorDetallePage() {
 
     const [{ data: t }, { data: p }, { data: a }, { data: pl }] = await Promise.all([
       supabase.from('tenants')
-        .select('id, nombre, subdominio, logo_url, color_primario, color_secundario, color_terciario, color_texto1, color_texto2, al_dia, activo')
+        .select('id, nombre, subdominio, logo_url, color_primario, color_secundario, color_terciario, color_texto1, color_texto2, card_brillo, al_dia, activo')
         .eq('id', tenantId!)
         .maybeSingle(),
       supabase.from('profiles')
@@ -157,6 +159,7 @@ export default function InstructorDetallePage() {
       const ct = datos.color_terciario  ?? '#000000'
       const t1 = datos.color_texto1     ?? '#FFFFFF'
       const t2 = datos.color_texto2     ?? '#FFFFFF'
+      const cb = datos.card_brillo      ?? 26
       setForm({
         nombre:           datos.nombre,
         display_name:     (p as AdminProfile | null)?.display_name ?? '',
@@ -167,6 +170,7 @@ export default function InstructorDetallePage() {
         color_terciario:  ct,
         color_texto1:     t1,
         color_texto2:     t2,
+        card_brillo:      cb,
       })
       setColorTexto({ color_primario: cp, color_secundario: cs, color_terciario: ct, color_texto1: t1, color_texto2: t2 })
     }
@@ -203,6 +207,18 @@ export default function InstructorDetallePage() {
         throw tenantError
       }
 
+      const { error: brilloError } = await rpcConTimeout<RpcResponse>(
+        'admin_actualizar_card_brillo',
+        {
+          p_tenant_id: tenant.id,
+          p_card_brillo: form.card_brillo,
+        }
+      )
+
+      if (brilloError) {
+        throw brilloError
+      }
+
       if (admin?.id && form.display_name) {
         const { error: profileError } = await rpcConTimeout<RpcResponse>(
           'admin_actualizar_display_name',
@@ -227,6 +243,7 @@ export default function InstructorDetallePage() {
         color_terciario: form.color_terciario,
         color_texto1: form.color_texto1,
         color_texto2: form.color_texto2,
+        card_brillo: form.card_brillo,
       } : prev)
 
       setAdmin(prev => prev ? {
@@ -256,6 +273,7 @@ export default function InstructorDetallePage() {
         color_terciario:  tenant.color_terciario ?? '#000000',
         color_texto1:     tenant.color_texto1 ?? '#FFFFFF',
         color_texto2:     tenant.color_texto2 ?? '#FFFFFF',
+        card_brillo:      tenant.card_brillo ?? 26,
       })
       setColorTexto({
         color_primario:   tenant.color_primario ?? '#9b30ff',
@@ -450,6 +468,27 @@ export default function InstructorDetallePage() {
                     </div>
                   ))}
                 </div>
+              </div>
+
+              {/* Brillo de las tarjetas (solo dashboard, no afecta login) */}
+              <div>
+                <label className="text-xs font-semibold text-df-muted uppercase tracking-wider mb-2 block">
+                  Brillo de las tarjetas
+                </label>
+                <div className="flex items-center gap-3">
+                  <input
+                    type="range"
+                    min={0}
+                    max={100}
+                    value={form.card_brillo}
+                    onChange={e => setForm(f => ({ ...f, card_brillo: Number(e.target.value) }))}
+                    className="flex-1 accent-df-purple"
+                  />
+                  <span className="text-xs text-df-muted font-mono w-10 text-right">{form.card_brillo}%</span>
+                </div>
+                <p className="text-[11px] text-df-muted mt-1.5">
+                  Controla qué tan sólidas o translúcidas se ven las tarjetas del dashboard. Guarda y refresca en otro dispositivo para ver el cambio.
+                </p>
               </div>
 
               {/* Preview */}
