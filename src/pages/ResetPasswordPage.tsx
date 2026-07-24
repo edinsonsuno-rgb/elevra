@@ -43,9 +43,9 @@ export default function ResetPasswordPage() {
             <form onSubmit={handleSubmit} className="space-y-4">
               <p className="text-xs text-df-muted">Ingresa tu correo y te enviaremos un enlace para restablecer tu contraseña.</p>
               <div className="relative">
-                <i className="fa-solid fa-envelope absolute left-4 top-1/2 -translate-y-1/2 text-df-muted text-sm" />
+                <i className="fa-solid fa-envelope absolute left-4 top-1/2 -translate-y-1/2 text-white/65 text-sm" />
                 <input type="email" required value={email} onChange={e => setEmail(e.target.value)}
-                  placeholder="tu@correo.com" className="df-input pl-10" />
+                  placeholder="tu@correo.com" className="df-input !pl-10" />
               </div>
               {error && <p className="text-xs text-red-400 bg-red-900/20 border border-red-500/30 rounded-xl px-3 py-2">{error}</p>}
               <button type="submit" disabled={loading} className="df-btn w-full py-3 text-sm flex items-center justify-center gap-2">
