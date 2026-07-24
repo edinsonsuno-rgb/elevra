@@ -2,21 +2,29 @@ import { useState, FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
 import { useTenant } from '@/contexts/TenantContext'
+import Turnstile from '@/components/ui/Turnstile'
 
 export default function ResetPasswordPage() {
   const [email, setEmail]     = useState('')
   const [sent, setSent]       = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError]     = useState<string | null>(null)
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null)
+  const [captchaResetKey, setCaptchaResetKey] = useState(0)
   const { tenant } = useTenant()
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
     setLoading(true); setError(null)
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/update-password`
+      redirectTo: `${window.location.origin}/update-password`,
+      captchaToken: captchaToken ?? undefined,
     })
-    if (error) { setError(error.message); setLoading(false); return }
+    if (error) {
+      setError(error.message); setLoading(false)
+      setCaptchaResetKey(k => k + 1)
+      return
+    }
     setSent(true); setLoading(false)
   }
 
@@ -48,6 +56,7 @@ export default function ResetPasswordPage() {
                   placeholder="tu@correo.com" className="df-input !pl-10" />
               </div>
               {error && <p className="text-xs text-red-400 bg-red-900/20 border border-red-500/30 rounded-xl px-3 py-2">{error}</p>}
+              <Turnstile onVerify={setCaptchaToken} resetKey={captchaResetKey} />
               <button type="submit" disabled={loading} className="df-btn w-full py-3 text-sm flex items-center justify-center gap-2">
                 {loading ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <i className="fa-solid fa-paper-plane" />}
                 Enviar enlace

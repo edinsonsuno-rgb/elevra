@@ -2,6 +2,7 @@ import { useState, FormEvent } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '@/hooks/useAuth'
 import { useTenant } from '@/contexts/TenantContext'
+import Turnstile from '@/components/ui/Turnstile'
 
 export default function LoginPage() {
   const [email, setEmail]       = useState('')
@@ -9,6 +10,8 @@ export default function LoginPage() {
   const [error, setError]       = useState<string | null>(null)
   const [loading, setLoading]   = useState(false)
   const [showPass, setShowPass] = useState(false)
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null)
+  const [captchaResetKey, setCaptchaResetKey] = useState(0)
   const location = useLocation()
   const [started, setStarted]   = useState(() => new URLSearchParams(location.search).get('start') === '1')
   const { signIn } = useAuth()
@@ -20,10 +23,11 @@ export default function LoginPage() {
     setError(null)
     setLoading(true)
     try {
-      await signIn(email, pass)
+      await signIn(email, pass, captchaToken ?? undefined)
       navigate('/dashboard')
     } catch (err: any) {
       setError(err.message ?? 'Error al iniciar sesión')
+      setCaptchaResetKey(k => k + 1) // el token de Turnstile es de un solo uso
     } finally {
       setLoading(false)
     }
@@ -140,6 +144,8 @@ export default function LoginPage() {
                     {error}
                   </div>
                 )}
+
+                <Turnstile onVerify={setCaptchaToken} resetKey={captchaResetKey} />
 
                 <button
                   type="submit"

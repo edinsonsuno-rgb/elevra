@@ -3,6 +3,7 @@ import { useSearchParams, useNavigate } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
 import { invalidateCache } from '@/lib/queryCache'
 import { useTenant } from '@/contexts/TenantContext'
+import Turnstile from '@/components/ui/Turnstile'
 
 const TIPO_DOCUMENTO = ['CC', 'CE', 'TI', 'PA'] as const
 
@@ -25,6 +26,8 @@ export default function RegistroAlumnoPage() {
   const [alumno,    setAlumno]    = useState<AlumnoInvitado | null>(null)
   const [saving,    setSaving]    = useState(false)
   const [error,     setError]     = useState<string | null>(null)
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null)
+  const [captchaResetKey, setCaptchaResetKey] = useState(0)
 
   const [form, setForm] = useState({
     password:   '',
@@ -63,10 +66,14 @@ export default function RegistroAlumnoPage() {
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email:    alumno.email ?? `${alumno.documento}@elevra.app`,
       password: form.password,
-      options:  { data: { full_name: alumno.nombre } }
+      options:  { data: { full_name: alumno.nombre }, captchaToken: captchaToken ?? undefined }
     })
 
-    if (authError) { setError(authError.message); setSaving(false); return }
+    if (authError) {
+      setError(authError.message); setSaving(false)
+      setCaptchaResetKey(k => k + 1)
+      return
+    }
     if (!authData.user) { setError('Error al crear cuenta'); setSaving(false); return }
 
     // Vincula perfil (tenant_id + rol) y el registro de alumno (user_id + invitación usada)
@@ -231,6 +238,8 @@ export default function RegistroAlumnoPage() {
               <i className="fa-solid fa-triangle-exclamation" /> {error}
             </div>
           )}
+
+          <Turnstile onVerify={setCaptchaToken} resetKey={captchaResetKey} />
 
           <button type="submit" disabled={saving || form.password !== form.confirmar}
             className="df-btn w-full py-3 text-sm flex items-center justify-center gap-2 disabled:opacity-40">

@@ -3,6 +3,7 @@ import { useSearchParams, useNavigate } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
 import { invalidateCache } from '@/lib/queryCache'
 import { useTenant } from '@/contexts/TenantContext'
+import Turnstile from '@/components/ui/Turnstile'
 
 const TIPO_DOCUMENTO = ['CC', 'CE', 'PA'] as const
 
@@ -24,6 +25,8 @@ export default function RegistroProfesorPage() {
   const [saving,   setSaving]   = useState(false)
   const [error,    setError]    = useState<string | null>(null)
   const [invitacion, setInvitacion] = useState<{ id: string; nombre: string; email: string; tenant_id: string } | null>(null)
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null)
+  const [captchaResetKey, setCaptchaResetKey] = useState(0)
 
   const [form, setForm] = useState({
     nombre:         '',
@@ -67,11 +70,16 @@ export default function RegistroProfesorPage() {
       email:    invitacion.email,
       password: form.password,
       options: {
-        data: { full_name: form.nombre }
+        data: { full_name: form.nombre },
+        captchaToken: captchaToken ?? undefined,
       }
     })
 
-    if (authError) { setError(authError.message); setSaving(false); return }
+    if (authError) {
+      setError(authError.message); setSaving(false)
+      setCaptchaResetKey(k => k + 1)
+      return
+    }
     if (!authData.user) { setError('Error al crear usuario'); setSaving(false); return }
 
     // 2. Actualizar perfil con datos del instructor
@@ -254,6 +262,8 @@ export default function RegistroProfesorPage() {
               <i className="fa-solid fa-triangle-exclamation" /> {error}
             </div>
           )}
+
+          <Turnstile onVerify={setCaptchaToken} resetKey={captchaResetKey} />
 
           <button type="submit" disabled={saving || form.password !== form.confirmar}
             className="df-btn w-full py-3 text-sm flex items-center justify-center gap-2 disabled:opacity-40">

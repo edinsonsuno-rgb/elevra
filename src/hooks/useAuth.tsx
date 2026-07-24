@@ -12,7 +12,7 @@ interface AuthCtx {
   tenantId: string | null
   superadmin: boolean
   updateDisplayName: (name: string) => Promise<void>
-  signIn: (email: string, pass: string) => Promise<void>
+  signIn: (email: string, pass: string, captchaToken?: string) => Promise<void>
   signOut: () => Promise<void>
 }
 
@@ -86,8 +86,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => subscription.unsubscribe()
   }, [])
 
-  async function signIn(email: string, pass: string) {
-    const { error } = await supabase.auth.signInWithPassword({ email, password: pass })
+  async function signIn(email: string, pass: string, captchaToken?: string) {
+    const { error } = await supabase.auth.signInWithPassword({
+      email, password: pass,
+      options: captchaToken ? { captchaToken } : undefined,
+    })
     if (error) throw new Error(error.message)
   }
 
