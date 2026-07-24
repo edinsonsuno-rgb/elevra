@@ -52,6 +52,92 @@ const COLOR_MUSCULO: Record<string, string> = {
   'Pantorrillas':   '#85B7EB',
 }
 
+function EjercicioCard({ ej, isAdmin, onEliminar }: {
+  ej: CatalogoEjercicio
+  isAdmin: boolean
+  onEliminar: (id: string) => void
+}) {
+  const [showFin, setShowFin] = useState(false)
+  const tieneAnim = ej.foto_inicio_url && ej.foto_fin_url
+
+  useEffect(() => {
+    if (!tieneAnim) return
+    const interval = setInterval(() => setShowFin(v => !v), 2500)
+    return () => clearInterval(interval)
+  }, [tieneAnim])
+
+  return (
+    <div className="df-card overflow-hidden group hover:border-df-violet/40 transition-all">
+      <div className="h-48 bg-df-surface relative overflow-hidden flex items-center justify-center">
+        {tieneAnim ? (
+          <>
+            <img src={ej.foto_inicio_url!} alt="inicio"
+              className="absolute inset-0 w-full h-full object-contain"
+              style={{ opacity: showFin ? 0 : 1, transition: 'opacity 1.2s ease-in-out' }} />
+            <img src={ej.foto_fin_url!} alt="fin"
+              className="absolute inset-0 w-full h-full object-contain"
+              style={{ opacity: showFin ? 1 : 0, transition: 'opacity 1.2s ease-in-out' }} />
+          </>
+        ) : ej.foto_inicio_url ? (
+          <img src={ej.foto_inicio_url} alt={ej.nombre} className="w-full h-full object-contain" />
+        ) : (
+          <i className="fa-solid fa-dumbbell text-4xl text-df-purple/20" />
+        )}
+
+        {tieneAnim && (
+          <div className="absolute top-2 left-2 z-10">
+            <span className="text-[10px] font-bold bg-df-purple/70 text-white px-2 py-0.5 rounded-full flex items-center gap-1">
+              <i className="fa-solid fa-rotate text-[9px]" /> ANIM
+            </span>
+          </div>
+        )}
+
+        {ej.musculo && (
+          <div className="absolute bottom-2 left-2 z-10">
+            <span className="text-[10px] font-bold bg-black/60 text-white px-2 py-0.5 rounded-full">
+              {ej.musculo}
+            </span>
+          </div>
+        )}
+
+        {isAdmin && (
+          <div className="absolute top-2 right-2 z-10 flex gap-1.5 opacity-0 group-hover:opacity-100 transition-all">
+            <Link to={`/catalogo/${ej.id}/editar`}
+              className="w-7 h-7 bg-black/50 backdrop-blur-sm rounded-lg flex items-center justify-center text-white hover:bg-df-purple/80 transition-all">
+              <i className="fa-solid fa-pen text-xs" />
+            </Link>
+            <button onClick={() => onEliminar(ej.id)}
+              className="w-7 h-7 bg-black/50 backdrop-blur-sm rounded-lg flex items-center justify-center text-white hover:bg-red-600/80 transition-all">
+              <i className="fa-solid fa-trash text-xs" />
+            </button>
+          </div>
+        )}
+      </div>
+
+      <div className="p-4">
+        <h3 className="font-black text-white truncate mb-1">{ej.nombre}</h3>
+        {ej.descripcion && (
+          <p className="text-xs text-df-muted line-clamp-2 mb-3">{ej.descripcion}</p>
+        )}
+        <div className="grid grid-cols-3 gap-1.5">
+          <div className="bg-green-900/20 rounded-lg p-2 text-center">
+            <p className="text-xs font-black text-green-400">{ej.seg_principiante}s</p>
+            <p className="text-[9px] text-green-400/70 mt-0.5">Principiante</p>
+          </div>
+          <div className="bg-blue-900/20 rounded-lg p-2 text-center">
+            <p className="text-xs font-black text-blue-400">{ej.seg_intermedio}s</p>
+            <p className="text-[9px] text-blue-400/70 mt-0.5">Intermedio</p>
+          </div>
+          <div className="bg-amber-900/20 rounded-lg p-2 text-center">
+            <p className="text-xs font-black text-amber-400">{ej.seg_avanzado}s</p>
+            <p className="text-[9px] text-amber-400/70 mt-0.5">Avanzado</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function EjercicioRow({ ej, isAdmin, isOpen, onToggle, onEliminar }: {
   ej: CatalogoEjercicio
   isAdmin: boolean
@@ -267,10 +353,16 @@ export default function CatalogoEjerciciosPage() {
         </p>
       )}
 
-      {/* Lista */}
+      {/* Lista / Galería */}
       {filtrados.length === 0
         ? <EmptyState icon="fa-solid fa-dumbbell" title="Sin ejercicios" desc="No hay ejercicios que coincidan con los filtros" />
-        : (
+        : isAdmin ? (
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            {filtrados.map(ej => (
+              <EjercicioCard key={ej.id} ej={ej} isAdmin={isAdmin} onEliminar={eliminar} />
+            ))}
+          </div>
+        ) : (
           <div className="flex flex-col gap-2">
             {filtrados.map(ej => (
               <EjercicioRow
