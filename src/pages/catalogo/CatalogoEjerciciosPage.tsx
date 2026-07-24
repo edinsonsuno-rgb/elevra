@@ -37,90 +37,81 @@ const MUSCULOS: Record<string, string[]> = {
   inferior: ['Cuádriceps', 'Isquiotibiales', 'Glúteos', 'Pantorrillas'],
 }
 
-function EjercicioCard({ ej, isAdmin, onEliminar }: {
+const COLOR_MUSCULO: Record<string, string> = {
+  'Pecho':          '#F0997B',
+  'Espalda':        '#D4537E',
+  'Hombros':        '#EF9F27',
+  'Bíceps':         '#7F77DD',
+  'Tríceps':        '#378ADD',
+  'Abdomen':        '#5DCAA5',
+  'Oblicuos':       '#1D9E75',
+  'Lumbar':         '#B4B2A9',
+  'Cuádriceps':     '#639922',
+  'Isquiotibiales': '#97C459',
+  'Glúteos':        '#E24B4A',
+  'Pantorrillas':   '#85B7EB',
+}
+
+function EjercicioRow({ ej, isAdmin, isOpen, onToggle, onEliminar }: {
   ej: CatalogoEjercicio
   isAdmin: boolean
+  isOpen: boolean
+  onToggle: () => void
   onEliminar: (id: string) => void
 }) {
-  const [showFin, setShowFin] = useState(false)
-  const tieneAnim = ej.foto_inicio_url && ej.foto_fin_url
-  const fotoUrl   = showFin ? ej.foto_fin_url : ej.foto_inicio_url
-
-  useEffect(() => {
-    if (!tieneAnim) return
-    const interval = setInterval(() => setShowFin(v => !v), 2500)
-    return () => clearInterval(interval)
-  }, [tieneAnim])
+  const tieneFotos = !!(ej.foto_inicio_url && ej.foto_fin_url)
+  const color = (ej.musculo && COLOR_MUSCULO[ej.musculo]) || '#5F5E5A'
 
   return (
-    <div className="df-card overflow-hidden group hover:border-df-violet/40 transition-all">
-      <div className="h-48 bg-df-surface relative overflow-hidden flex items-center justify-center">
-        {tieneAnim ? (
-          <>
-            <img src={ej.foto_inicio_url!} alt="inicio"
-              className="absolute inset-0 w-full h-full object-contain"
-              style={{ opacity: showFin ? 0 : 1, transition: 'opacity 1.2s ease-in-out' }} />
-            <img src={ej.foto_fin_url!} alt="fin"
-              className="absolute inset-0 w-full h-full object-contain"
-              style={{ opacity: showFin ? 1 : 0, transition: 'opacity 1.2s ease-in-out' }} />
-          </>
-        ) : ej.foto_inicio_url ? (
-          <img src={ej.foto_inicio_url} alt={ej.nombre} className="w-full h-full object-contain" />
-        ) : (
-          <i className="fa-solid fa-dumbbell text-4xl text-df-purple/20" />
-        )}
-
-        {tieneAnim && (
-          <div className="absolute top-2 left-2 z-10">
-            <span className="text-[10px] font-bold bg-df-purple/70 text-white px-2 py-0.5 rounded-full flex items-center gap-1">
-              <i className="fa-solid fa-rotate text-[9px]" /> ANIM
-            </span>
-          </div>
-        )}
-
-        {/* Zona + músculo badge */}
-        {ej.musculo && (
-          <div className="absolute bottom-2 left-2 z-10">
-            <span className="text-[10px] font-bold bg-black/60 text-white px-2 py-0.5 rounded-full">
-              {ej.musculo}
-            </span>
-          </div>
-        )}
+    <div className="df-card overflow-hidden" style={{ borderLeft: `3px solid ${color}`, borderRadius: 8 }}>
+      <div
+        className={`flex items-center gap-3 px-3 py-2.5 ${tieneFotos ? 'cursor-pointer hover:bg-df-surface/40' : ''}`}
+        onClick={tieneFotos ? onToggle : undefined}
+      >
+        <i className="fa-solid fa-dumbbell text-sm flex-shrink-0" style={{ color }} />
+        <div className="flex-1 min-w-0">
+          <p className="text-white text-sm font-semibold truncate">{ej.nombre}</p>
+          <p className="text-df-muted text-[11px] mt-0.5">
+            {ej.musculo}{!tieneFotos && <span className="text-df-muted/70"> · sin fotos</span>}
+          </p>
+        </div>
+        <span className="hidden sm:inline text-green-400 text-[11px] flex-shrink-0">
+          {ej.seg_principiante}s / {ej.seg_intermedio}s / {ej.seg_avanzado}s
+        </span>
 
         {isAdmin && (
-          <div className="absolute top-2 right-2 z-10 flex gap-1.5 opacity-0 group-hover:opacity-100 transition-all">
+          <div className="flex gap-1 flex-shrink-0" onClick={e => e.stopPropagation()}>
             <Link to={`/catalogo/${ej.id}/editar`}
-              className="w-7 h-7 bg-black/50 backdrop-blur-sm rounded-lg flex items-center justify-center text-white hover:bg-df-purple/80 transition-all">
+              className="w-7 h-7 flex items-center justify-center text-df-muted hover:text-white transition-all">
               <i className="fa-solid fa-pen text-xs" />
             </Link>
             <button onClick={() => onEliminar(ej.id)}
-              className="w-7 h-7 bg-black/50 backdrop-blur-sm rounded-lg flex items-center justify-center text-white hover:bg-red-600/80 transition-all">
+              className="w-7 h-7 flex items-center justify-center text-df-muted hover:text-red-400 transition-all">
               <i className="fa-solid fa-trash text-xs" />
             </button>
           </div>
         )}
+
+        {tieneFotos && (
+          <i className={`fa-solid fa-chevron-down text-xs text-df-muted transition-transform flex-shrink-0 ${isOpen ? 'rotate-180' : ''}`} />
+        )}
       </div>
 
-      <div className="p-4">
-        <h3 className="font-black text-white truncate mb-1">{ej.nombre}</h3>
-        {ej.descripcion && (
-          <p className="text-xs text-df-muted line-clamp-2 mb-3">{ej.descripcion}</p>
-        )}
-        <div className="grid grid-cols-3 gap-1.5">
-          <div className="bg-green-900/20 rounded-lg p-2 text-center">
-            <p className="text-xs font-black text-green-400">{ej.seg_principiante}s</p>
-            <p className="text-[9px] text-green-400/70 mt-0.5">Principiante</p>
+      {isOpen && tieneFotos && (
+        <div className="px-3 pb-3 flex flex-col sm:flex-row gap-3">
+          <div className="flex gap-2 sm:w-1/2 flex-shrink-0">
+            <div className="flex-1 h-24 bg-df-surface rounded-lg overflow-hidden flex items-center justify-center">
+              <img src={ej.foto_inicio_url!} alt="Posición inicial" className="w-full h-full object-contain" />
+            </div>
+            <div className="flex-1 h-24 bg-df-surface rounded-lg overflow-hidden flex items-center justify-center">
+              <img src={ej.foto_fin_url!} alt="Posición final" className="w-full h-full object-contain" />
+            </div>
           </div>
-          <div className="bg-blue-900/20 rounded-lg p-2 text-center">
-            <p className="text-xs font-black text-blue-400">{ej.seg_intermedio}s</p>
-            <p className="text-[9px] text-blue-400/70 mt-0.5">Intermedio</p>
-          </div>
-          <div className="bg-amber-900/20 rounded-lg p-2 text-center">
-            <p className="text-xs font-black text-amber-400">{ej.seg_avanzado}s</p>
-            <p className="text-[9px] text-amber-400/70 mt-0.5">Avanzado</p>
-          </div>
+          {ej.descripcion && (
+            <p className="sm:w-1/2 text-df-muted text-xs leading-relaxed line-clamp-3">{ej.descripcion}</p>
+          )}
         </div>
-      </div>
+      )}
     </div>
   )
 }
@@ -131,6 +122,7 @@ export default function CatalogoEjerciciosPage() {
   const [busqueda,   setBusqueda]   = useState('')
   const [zonaFiltro,   setZonaFiltro]   = useState<string | null>(null)
   const [musculoFiltro, setMusculoFiltro] = useState<string | null>(null)
+  const [expandidoId, setExpandidoId] = useState<string | null>(null)
   const { role } = useAuth()
   const isAdmin = role === 'admin'
 
@@ -257,13 +249,20 @@ export default function CatalogoEjerciciosPage() {
         </p>
       )}
 
-      {/* Grid */}
+      {/* Lista */}
       {filtrados.length === 0
         ? <EmptyState icon="fa-solid fa-dumbbell" title="Sin ejercicios" desc="No hay ejercicios que coincidan con los filtros" />
         : (
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          <div className="flex flex-col gap-2">
             {filtrados.map(ej => (
-              <EjercicioCard key={ej.id} ej={ej} isAdmin={isAdmin} onEliminar={eliminar} />
+              <EjercicioRow
+                key={ej.id}
+                ej={ej}
+                isAdmin={isAdmin}
+                isOpen={expandidoId === ej.id}
+                onToggle={() => setExpandidoId(expandidoId === ej.id ? null : ej.id)}
+                onEliminar={eliminar}
+              />
             ))}
           </div>
         )
