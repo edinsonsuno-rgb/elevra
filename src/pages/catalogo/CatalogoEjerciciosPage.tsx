@@ -172,6 +172,18 @@ export default function CatalogoEjerciciosPage() {
     return coincide && porZona && porMusculo
   })
 
+  const conteoPorZona = ZONAS.reduce((acc, z) => {
+    acc[z.key] = ejercicios.filter(e => e.zona === z.key).length
+    return acc
+  }, {} as Record<string, number>)
+
+  const conteoPorMusculo = zonaFiltro
+    ? (MUSCULOS[zonaFiltro] ?? []).reduce((acc, m) => {
+        acc[m] = ejercicios.filter(e => e.zona === zonaFiltro && e.musculo === m).length
+        return acc
+      }, {} as Record<string, number>)
+    : {}
+
   if (loading) return <Spinner />
 
   return (
@@ -208,6 +220,9 @@ export default function CatalogoEjerciciosPage() {
                   : 'df-surface text-df-muted hover:text-white'}`}>
               <i className={`${z.icon} text-xs`} />
               {z.label}
+              <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${zonaFiltro === z.key ? 'bg-white/20' : 'bg-df-bg'}`}>
+                {conteoPorZona[z.key] ?? 0}
+              </span>
             </button>
           ))}
           {zonaFiltro && (
@@ -228,11 +243,14 @@ export default function CatalogoEjerciciosPage() {
           <div className="flex gap-2 flex-wrap">
             {MUSCULOS[zonaFiltro]?.map(m => (
               <button key={m} onClick={() => selectMusculo(m)}
-                className={`px-4 py-2 rounded-full text-xs font-semibold transition-all
+                className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold transition-all
                   ${musculoFiltro === m
                     ? 'bg-df-pink/20 text-df-pink border border-df-pink/40'
                     : 'df-surface text-df-muted hover:text-white'}`}>
                 {m}
+                <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${musculoFiltro === m ? 'bg-df-pink/20' : 'bg-df-bg'}`}>
+                  {conteoPorMusculo[m] ?? 0}
+                </span>
               </button>
             ))}
           </div>
