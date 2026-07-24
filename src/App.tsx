@@ -9,6 +9,7 @@ import loadingAnim      from '@/assets/loading-dumbbell.json'
 import SplashPage                from '@/pages/SplashPage'
 import LoginPage                 from '@/pages/LoginPage'
 import ResetPasswordPage         from '@/pages/ResetPasswordPage'
+import UpdatePasswordPage        from '@/pages/UpdatePasswordPage'
 import RegistroProfesorPage      from '@/pages/RegistroProfesorPage'
 import RegistroAlumnoPage        from '@/pages/RegistroAlumnoPage'
 
@@ -111,6 +112,7 @@ export default function App() {
           <Route path="/login"           element={<PublicRoute><LoginPage /></PublicRoute>} />
           <Route path="/splash"          element={<PublicRoute><SplashPage /></PublicRoute>} />
           <Route path="/reset-password"  element={<PublicRoute><ResetPasswordPage /></PublicRoute>} />
+          <Route path="/update-password" element={<TenantGate><UpdatePasswordPage /></TenantGate>} />
           <Route path="/registro"        element={<RegistroProfesorPage />} />
           <Route path="/registro-alumno" element={<RegistroAlumnoPage />} />
 
