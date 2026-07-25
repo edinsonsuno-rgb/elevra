@@ -82,6 +82,11 @@
     background: var(--brand-primary);
   }
   .df-btn:hover { background: color-mix(in srgb, var(--brand-primary) 100%, white 20%); }
+  .df-link {
+    color: color-mix(in srgb, var(--brand-primary) 100%, white 40%);
+    transition: color 0.2s;
+  }
+  .df-link:hover { color: white; }
   .df-btn-outline { @apply border border-df-border hover:border-df-violet text-df-muted hover:text-df-pink rounded-full transition-all duration-200; }
   .df-btn-ghost   { @apply text-df-muted hover:text-white transition-colors duration-200; }
 

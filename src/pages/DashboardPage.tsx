@@ -219,7 +219,7 @@ export default function DashboardPage() {
             <div>
               <div className="flex items-center justify-between mb-3">
                 <h2 className="text-sm font-bold text-white">Instructores</h2>
-                <Link to="/instructores" className="text-xs text-df-violet hover:text-df-pink transition-colors">Ver todos →</Link>
+                <Link to="/instructores" className="text-xs df-link">Ver todos →</Link>
               </div>
               <div className="grid sm:grid-cols-2 gap-3">
                 {instructoresLista.slice(0, 4).map(ins => (
@@ -242,7 +242,7 @@ export default function DashboardPage() {
             <div>
               <div className="flex items-center justify-between mb-3">
                 <h2 className="text-sm font-bold text-white">Mis alumnos</h2>
-                <Link to="/alumnos" className="text-xs text-df-violet hover:text-df-pink transition-colors">Ver todos →</Link>
+                <Link to="/alumnos" className="text-xs df-link">Ver todos →</Link>
               </div>
               <div className="grid sm:grid-cols-2 gap-3">
                 {alumnos.slice(0, 4).map(a => (
@@ -264,7 +264,7 @@ export default function DashboardPage() {
           <div>
             <div className="flex items-center justify-between mb-3">
               <h2 className="text-sm font-bold text-white">Próximas sesiones</h2>
-              <Link to="/agenda" className="text-xs text-df-violet hover:text-df-pink transition-colors">Ver agenda →</Link>
+              <Link to="/agenda" className="text-xs df-link">Ver agenda →</Link>
             </div>
             <div className="space-y-2">
               {sesiones.slice(0, 4).map(s => (
@@ -292,7 +292,7 @@ export default function DashboardPage() {
           <div className="df-card p-4">
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-sm font-bold text-white">Cobros pendientes</h3>
-              <Link to="/cobros" className="text-xs text-df-violet hover:text-df-pink">Ver todos →</Link>
+              <Link to="/cobros" className="text-xs df-link">Ver todos →</Link>
             </div>
             <div className="space-y-3">
               {pagos.slice(0, 4).map(p => (
