@@ -284,6 +284,7 @@ export default function InstructorDetallePage() {
         display_name:     admin.display_name ?? '',
         al_dia:           tenant.al_dia ?? true,
         logo_url:         tenant.logo_url ?? '',
+        logo_icono_url:   tenant.logo_icono_url ?? '',
         color_primario:   tenant.color_primario ?? '#9b30ff',
         color_secundario: tenant.color_secundario ?? '#7c3aed',
         color_terciario:  tenant.color_terciario ?? '#000000',
