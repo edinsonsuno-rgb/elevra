@@ -51,8 +51,8 @@ export default function LoginPage() {
             boxShadow: `0 30px 90px ${tenant.color_primario}26`,
           }}
         >
-          <div className="px-8 py-10 text-center">
-            <div className="w-40 mx-auto mb-6">
+          <div className="px-8 py-7 text-center">
+            <div className="w-40 mx-auto mb-4">
               <img
                 src={tenant.logo_url ?? '/logo.png'}
                 alt={tenant.nombre}
@@ -60,10 +60,10 @@ export default function LoginPage() {
                 style={{ filter: tenant.usar_marca_elevra ? `drop-shadow(0 0 18px ${tenant.color_primario}80)` : 'none' }}
               />
             </div>
-            <p className="text-[11px] uppercase tracking-[0.35em] text-white/65 mb-3">
+            <p className="text-[11px] uppercase tracking-[0.35em] text-white/65 mb-2">
               tu mejor versión
             </p>
-            <h1 className="font-display text-3xl text-white font-black mb-4">
+            <h1 className="font-display text-3xl text-white font-black mb-3">
               empieza hoy
             </h1>
             <p className="mx-auto max-w-[300px] text-sm text-white/65 leading-6">
@@ -71,7 +71,7 @@ export default function LoginPage() {
             </p>
           </div>
 
-          <div className="px-8 py-8">
+          <div className="px-8 py-6">
             {!started ? (
               <div className="flex flex-col items-center gap-4">
                 <div className="flex gap-2">
@@ -96,7 +96,7 @@ export default function LoginPage() {
                 </button>
               </div>
             ) : (
-              <form onSubmit={handleSubmit} className="space-y-4">
+              <form onSubmit={handleSubmit} className="space-y-3">
                 <div>
                   <label className="text-[11px] font-semibold text-white/65 uppercase tracking-[0.3em] mb-2 block">
                     correo electrónico
@@ -165,7 +165,7 @@ export default function LoginPage() {
                   )}
                 </button>
 
-                <div className="mt-6 text-center text-xs text-white/65">
+                <div className="mt-4 text-center text-xs text-white/65">
                   <a href="/reset-password" className="underline underline-offset-2 decoration-df-purple/30 hover:text-white">
                     ¿Olvidaste tu contraseña?
                   </a>
