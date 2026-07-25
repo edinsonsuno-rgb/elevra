@@ -2,6 +2,7 @@ import { useState, FormEvent } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/hooks/useAuth'
 import { Spinner } from '@/components/ui/index'
+import Turnstile from '@/components/ui/Turnstile'
 
 export default function PerfilPage() {
   const { user, displayName, updateDisplayName } = useAuth()
@@ -11,6 +12,8 @@ export default function PerfilPage() {
   const [passForm, setPassForm] = useState({ actual: '', nueva: '', confirmar: '' })
   const [passErr,  setPassErr]  = useState<string | null>(null)
   const [passSaved, setPassSaved] = useState(false)
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null)
+  const [captchaResetKey, setCaptchaResetKey] = useState(0)
 
   async function handleNombre(e: FormEvent) {
     e.preventDefault()
@@ -32,8 +35,17 @@ export default function PerfilPage() {
     // sesión robada) pueda cambiarla sin saber la contraseña real.
     const { error: authErr } = await supabase.auth.signInWithPassword({
       email: user!.email!, password: passForm.actual,
+      options: captchaToken ? { captchaToken } : undefined,
     })
-    if (authErr) { setPassErr('La contraseña actual no es correcta'); return }
+    if (authErr) {
+      setPassErr(
+        authErr.message?.toLowerCase().includes('invalid login credentials')
+          ? 'La contraseña actual no es correcta'
+          : authErr.message
+      )
+      setCaptchaResetKey(k => k + 1)
+      return
+    }
 
     const { error } = await supabase.auth.updateUser({ password: passForm.nueva })
     if (error) { setPassErr(error.message); return }
@@ -106,6 +118,7 @@ export default function PerfilPage() {
           </div>
           {passErr && <p className="text-xs text-red-400 flex items-center gap-1.5"><i className="fa-solid fa-triangle-exclamation" /> {passErr}</p>}
           {passSaved && <p className="text-xs text-green-400 flex items-center gap-1.5"><i className="fa-solid fa-check" /> Contraseña actualizada</p>}
+          <Turnstile onVerify={setCaptchaToken} resetKey={captchaResetKey} />
           <button type="submit" className="df-btn px-5 py-2.5 text-sm flex items-center gap-2">
             <i className="fa-solid fa-lock" /> Actualizar contraseña
           </button>
