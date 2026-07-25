@@ -10,7 +10,7 @@ export default function PerfilPage() {
   const [saving,    setSaving]    = useState(false)
   const [success,   setSuccess]   = useState(false)
   const [loading,   setLoading]   = useState(true)
-  const [passForm,  setPassForm]  = useState({ nueva: '', confirmar: '', show: false })
+  const [passForm,  setPassForm]  = useState({ actual: '', nueva: '', confirmar: '', show: false })
   const [passErr,   setPassErr]   = useState<string | null>(null)
   const [passSaved, setPassSaved] = useState(false)
 
@@ -38,11 +38,18 @@ export default function PerfilPage() {
   async function handlePassword(e: FormEvent) {
     e.preventDefault()
     setPassErr(null); setPassSaved(false)
+    if (!passForm.actual) { setPassErr('Ingresa tu contraseña actual'); return }
     if (passForm.nueva.length < 6) { setPassErr('Mínimo 6 caracteres'); return }
     if (passForm.nueva !== passForm.confirmar) { setPassErr('Las contraseñas no coinciden'); return }
+
+    const { error: authErr } = await supabase.auth.signInWithPassword({
+      email: user!.email!, password: passForm.actual,
+    })
+    if (authErr) { setPassErr('La contraseña actual no es correcta'); return }
+
     const { error } = await supabase.auth.updateUser({ password: passForm.nueva })
     if (error) { setPassErr(error.message); return }
-    setPassForm({ nueva: '', confirmar: '', show: false })
+    setPassForm({ actual: '', nueva: '', confirmar: '', show: false })
     setPassSaved(true)
     setTimeout(() => setPassSaved(false), 3000)
   }
@@ -111,9 +118,15 @@ export default function PerfilPage() {
         <form onSubmit={handlePassword} className="space-y-3">
           <div className="relative">
             <i className="fa-solid fa-lock absolute left-4 top-1/2 -translate-y-1/2 text-df-muted text-sm" />
+            <input type={passForm.show ? 'text' : 'password'} value={passForm.actual}
+              onChange={e => setPassForm(f => ({ ...f, actual: e.target.value }))}
+              placeholder="Contraseña actual" className="df-input !pl-10 pr-12" />
+          </div>
+          <div className="relative">
+            <i className="fa-solid fa-lock absolute left-4 top-1/2 -translate-y-1/2 text-df-muted text-sm" />
             <input type={passForm.show ? 'text' : 'password'} value={passForm.nueva}
               onChange={e => setPassForm(f => ({ ...f, nueva: e.target.value }))}
-              placeholder="Nueva contraseña" className="df-input pl-10 pr-12" />
+              placeholder="Nueva contraseña" className="df-input !pl-10 pr-12" />
             <button type="button" onClick={() => setPassForm(f => ({ ...f, show: !f.show }))}
               className="absolute right-4 top-1/2 -translate-y-1/2 text-df-muted hover:text-white transition-colors">
               <i className={`fa-solid ${passForm.show ? 'fa-eye-slash' : 'fa-eye'} text-sm`} />
@@ -123,7 +136,7 @@ export default function PerfilPage() {
             <i className="fa-solid fa-lock absolute left-4 top-1/2 -translate-y-1/2 text-df-muted text-sm" />
             <input type={passForm.show ? 'text' : 'password'} value={passForm.confirmar}
               onChange={e => setPassForm(f => ({ ...f, confirmar: e.target.value }))}
-              placeholder="Confirmar contraseña" className="df-input pl-10" />
+              placeholder="Confirmar contraseña" className="df-input !pl-10" />
           </div>
           {passErr  && <p className="text-xs text-red-400 flex items-center gap-1"><i className="fa-solid fa-triangle-exclamation" />{passErr}</p>}
           {passSaved && <p className="text-xs text-green-400 flex items-center gap-1"><i className="fa-solid fa-check" />Contraseña actualizada</p>}

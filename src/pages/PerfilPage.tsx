@@ -23,8 +23,18 @@ export default function PerfilPage() {
   async function handlePassword(e: FormEvent) {
     e.preventDefault()
     setPassErr(null); setPassSaved(false)
+    if (!passForm.actual) { setPassErr('Ingresa tu contraseña actual'); return }
     if (passForm.nueva.length < 6) { setPassErr('La contraseña debe tener al menos 6 caracteres'); return }
     if (passForm.nueva !== passForm.confirmar) { setPassErr('Las contraseñas no coinciden'); return }
+
+    // Verificamos la contraseña actual antes de permitir el cambio —
+    // evita que alguien con la sesión abierta (dispositivo compartido,
+    // sesión robada) pueda cambiarla sin saber la contraseña real.
+    const { error: authErr } = await supabase.auth.signInWithPassword({
+      email: user!.email!, password: passForm.actual,
+    })
+    if (authErr) { setPassErr('La contraseña actual no es correcta'); return }
+
     const { error } = await supabase.auth.updateUser({ password: passForm.nueva })
     if (error) { setPassErr(error.message); return }
     setPassForm({ actual: '', nueva: '', confirmar: '' })
@@ -71,6 +81,12 @@ export default function PerfilPage() {
       <div className="df-card p-5 space-y-4">
         <h2 className="text-sm font-bold text-white">Cambiar contraseña</h2>
         <form onSubmit={handlePassword} className="space-y-3">
+          <div>
+            <label className="text-xs font-semibold text-df-muted uppercase tracking-wider mb-1.5 block">Contraseña actual</label>
+            <input type="password" value={passForm.actual}
+              onChange={e => setPassForm(f => ({ ...f, actual: e.target.value }))}
+              placeholder="Tu contraseña actual" className="df-input" />
+          </div>
           <div>
             <label className="text-xs font-semibold text-df-muted uppercase tracking-wider mb-1.5 block">Nueva contraseña</label>
             <input type="password" value={passForm.nueva}
