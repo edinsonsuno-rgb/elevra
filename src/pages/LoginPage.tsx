@@ -51,7 +51,7 @@ export default function LoginPage() {
             boxShadow: `0 30px 90px ${tenant.color_primario}26`,
           }}
         >
-          <div className="px-8 py-7 text-center">
+          <div className="px-8 pt-7 pb-4 text-center">
             <div className="w-40 mx-auto mb-4">
               <img
                 src={tenant.logo_url ?? '/logo.png'}
@@ -71,7 +71,7 @@ export default function LoginPage() {
             </p>
           </div>
 
-          <div className="px-8 py-6">
+          <div className="px-8 pt-2 pb-6">
             {!started ? (
               <div className="flex flex-col items-center gap-4">
                 <div className="flex gap-2">
