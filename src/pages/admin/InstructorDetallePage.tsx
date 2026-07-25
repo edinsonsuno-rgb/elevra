@@ -526,22 +526,6 @@ export default function InstructorDetallePage() {
                 </p>
               </div>
 
-              {/* Preview */}
-              <div className="rounded-xl p-3 flex items-center justify-between"
-                style={{ background: `linear-gradient(135deg, ${form.color_secundario}22, ${form.color_primario}22)`, border: `1px solid ${form.color_primario}44` }}>
-                <div className="flex items-center gap-2">
-                  <div className="w-7 h-7 rounded-lg overflow-hidden bg-df-surface flex items-center justify-center">
-                    <img src={form.logo_url || '/logo.png'} alt="" className="w-full h-full object-contain"
-                      onError={e => { (e.currentTarget as HTMLImageElement).src = '/logo.png' }} />
-                  </div>
-                  <span className="text-sm font-bold text-white">{form.nombre || 'Sin nombre'}</span>
-                </div>
-                <div className="px-3 py-1.5 rounded-lg text-white text-xs font-bold"
-                  style={{ background: `linear-gradient(135deg, ${form.color_secundario}, ${form.color_primario})` }}>
-                  Vista previa
-                </div>
-              </div>
-
               <button type="submit" disabled={saving}
                 className="df-btn px-5 py-2.5 text-sm flex items-center gap-2">
                 {saving
