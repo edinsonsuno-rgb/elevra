@@ -52,6 +52,12 @@ export function applyBrand(brand: TenantBrand) {
 
   document.title = brand.nombre
 
+  const favicon = document.querySelector<HTMLLinkElement>('link[rel="icon"]')
+  if (favicon) favicon.href = brand.logo_url || '/logo.png'
+
+  const appleIcon = document.querySelector<HTMLLinkElement>('link[rel="apple-touch-icon"]')
+  if (appleIcon) appleIcon.href = brand.logo_url || '/icons/apple-touch-icon.png'
+
   const theme = document.querySelector('meta[name="theme-color"]')
   theme?.setAttribute('content', brand.color_primario)
 
