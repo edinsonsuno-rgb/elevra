@@ -24,7 +24,7 @@ async function fetchProfile(userId: string) {
     .select(`
       display_name, role, tenant_id,
       tenants (
-        id, nombre, subdominio, logo_url,
+        id, nombre, subdominio, logo_url, logo_icono_url,
         color_primario, color_secundario, color_terciario,
         color_texto1, color_texto2, card_brillo, usar_marca_elevra
       )

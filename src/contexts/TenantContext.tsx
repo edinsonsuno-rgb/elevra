@@ -10,6 +10,7 @@ export interface TenantBrand {
   nombre:             string
   subdominio:         string
   logo_url:           string | null
+  logo_icono_url:     string | null
   color_primario:     string
   color_secundario:   string
   color_terciario:    string
@@ -82,6 +83,7 @@ export function TenantProvider({ children }: { children: ReactNode }) {
         nombre,
         subdominio,
         logo_url,
+        logo_icono_url,
         color_primario,
         color_secundario,
         color_terciario,

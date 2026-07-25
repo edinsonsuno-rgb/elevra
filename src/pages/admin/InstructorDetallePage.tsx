@@ -9,6 +9,7 @@ interface TenantData {
   nombre:           string
   subdominio:       string
   logo_url:         string | null
+  logo_icono_url:   string | null
   color_primario:   string
   color_secundario: string
   color_terciario:  string
@@ -92,6 +93,7 @@ export default function InstructorDetallePage() {
     display_name:     '',
     al_dia:           true,
     logo_url:         '',
+    logo_icono_url:   '',
     color_primario:   '#9b30ff',
     color_secundario: '#7c3aed',
     color_terciario:  '#000000',
@@ -130,7 +132,7 @@ export default function InstructorDetallePage() {
 
     const [{ data: t }, { data: p }, { data: a }, { data: pl }] = await Promise.all([
       supabase.from('tenants')
-        .select('id, nombre, subdominio, logo_url, color_primario, color_secundario, color_terciario, color_texto1, color_texto2, card_brillo, al_dia, activo')
+        .select('id, nombre, subdominio, logo_url, logo_icono_url, color_primario, color_secundario, color_terciario, color_texto1, color_texto2, card_brillo, al_dia, activo')
         .eq('id', tenantId!)
         .maybeSingle(),
       supabase.from('profiles')
@@ -165,6 +167,7 @@ export default function InstructorDetallePage() {
         display_name:     (p as AdminProfile | null)?.display_name ?? '',
         al_dia:           datos.al_dia ?? true,
         logo_url:         datos.logo_url ?? '',
+        logo_icono_url:   datos.logo_icono_url ?? '',
         color_primario:   cp,
         color_secundario: cs,
         color_terciario:  ct,
@@ -219,6 +222,18 @@ export default function InstructorDetallePage() {
         throw brilloError
       }
 
+      const { error: logoIconoError } = await rpcConTimeout<RpcResponse>(
+        'admin_actualizar_logo_icono',
+        {
+          p_tenant_id: tenant.id,
+          p_logo_icono_url: form.logo_icono_url.trim(),
+        }
+      )
+
+      if (logoIconoError) {
+        throw logoIconoError
+      }
+
       if (admin?.id && form.display_name) {
         const { error: profileError } = await rpcConTimeout<RpcResponse>(
           'admin_actualizar_display_name',
@@ -238,6 +253,7 @@ export default function InstructorDetallePage() {
         nombre: form.nombre,
         al_dia: form.al_dia,
         logo_url: form.logo_url || null,
+        logo_icono_url: form.logo_icono_url || null,
         color_primario: form.color_primario,
         color_secundario: form.color_secundario,
         color_terciario: form.color_terciario,
@@ -440,6 +456,25 @@ export default function InstructorDetallePage() {
                 bucket="ejercicios"
                 folder="logos"
               />
+
+              {/* Logo de descarga (favicon / ícono al instalar la app) */}
+              <div>
+                <ImageUpload
+                  label="Logo de descarga"
+                  value={form.logo_icono_url || null}
+                  onChange={url => setForm(f => ({ ...f, logo_icono_url: url }))}
+                  bucket="ejercicios"
+                  folder="logos-icono"
+                />
+                <p className="text-xs text-df-muted mt-1.5 leading-relaxed">
+                  Este es el ícono que se ve en la pestaña del navegador y al instalar la
+                  app en el celular (no el logo grande del banner). Especificaciones:
+                  imagen <b className="text-white/80">cuadrada</b> (ej. 512×512px),
+                  formato <b className="text-white/80">PNG</b>, con{' '}
+                  <b className="text-white/80">fondo transparente o sólido</b>, sin texto
+                  pequeño ni bordes pegados al borde de la imagen (deja un margen).
+                </p>
+              </div>
 
               {/* Colores */}
               <div>

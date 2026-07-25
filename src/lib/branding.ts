@@ -5,6 +5,7 @@ export const DEFAULT_BRAND: TenantBrand = {
   nombre: 'Elevra',
   subdominio: '',
   logo_url: null,
+  logo_icono_url: null,
   color_primario: '#39D353',
   color_secundario: '#2ECC71',
   color_terciario: '#000000',
@@ -52,11 +53,40 @@ export function applyBrand(brand: TenantBrand) {
 
   document.title = brand.nombre
 
+  const iconoParaApp = brand.logo_icono_url || brand.logo_url
+
   const favicon = document.querySelector<HTMLLinkElement>('link[rel="icon"]')
-  if (favicon) favicon.href = brand.logo_url || '/logo.png'
+  if (favicon) favicon.href = iconoParaApp || '/logo.png'
 
   const appleIcon = document.querySelector<HTMLLinkElement>('link[rel="apple-touch-icon"]')
-  if (appleIcon) appleIcon.href = brand.logo_url || '/icons/apple-touch-icon.png'
+  if (appleIcon) appleIcon.href = iconoParaApp || '/icons/apple-touch-icon.png'
+
+  // Manifest dinámico (ícono/nombre al "Instalar app" en Android) — antes
+  // quedaba fijo en public/manifest.json (heredado de cuando la app era
+  // solo para un instructor). Si el tenant no tiene ícono propio, se deja
+  // el manifest estático de siempre.
+  const manifestLink = document.querySelector<HTMLLinkElement>('link[rel="manifest"]')
+  if (manifestLink) {
+    if (iconoParaApp) {
+      const manifest = {
+        name: brand.nombre,
+        short_name: brand.nombre,
+        description: `App de entrenamiento de ${brand.nombre}`,
+        start_url: '/',
+        display: 'standalone',
+        background_color: '#0a0118',
+        theme_color: brand.color_primario,
+        orientation: 'portrait',
+        icons: [
+          { src: iconoParaApp, sizes: 'any', type: 'image/png', purpose: 'any' },
+        ],
+      }
+      const blob = new Blob([JSON.stringify(manifest)], { type: 'application/json' })
+      manifestLink.href = URL.createObjectURL(blob)
+    } else {
+      manifestLink.href = '/manifest.json'
+    }
+  }
 
   const theme = document.querySelector('meta[name="theme-color"]')
   theme?.setAttribute('content', brand.color_primario)
