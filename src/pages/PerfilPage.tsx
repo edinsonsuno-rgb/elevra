@@ -37,6 +37,11 @@ export default function PerfilPage() {
 
     const { error } = await supabase.auth.updateUser({ password: passForm.nueva })
     if (error) { setPassErr(error.message); return }
+
+    // Aviso por correo — no bloqueamos ni mostramos error al usuario si
+    // esto falla, el cambio de contraseña ya se aplicó correctamente.
+    supabase.functions.invoke('notificar-cambio-password').catch(() => {})
+
     setPassForm({ actual: '', nueva: '', confirmar: '' })
     setPassSaved(true)
     setTimeout(() => setPassSaved(false), 3000)
