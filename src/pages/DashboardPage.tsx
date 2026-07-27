@@ -109,7 +109,7 @@ export default function DashboardPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-df-muted text-sm">{frase}</p>
+          {role !== 'admin' && <p className="text-df-muted text-sm">{frase}</p>}
           <h1 className="text-xl font-black text-white">
             {saludo}, <span className="text-df-violet">{displayName ?? 'Instructora'}</span> 👋
           </h1>

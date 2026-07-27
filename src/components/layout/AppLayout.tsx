@@ -123,7 +123,7 @@ export default function AppLayout() {
         </div>
       </main>
 
-      {esInicio && <WhatsAppFloat mostrarProfe={false} />}
+      {esInicio && !isAdmin && <WhatsAppFloat mostrarProfe={false} />}
     </div>
   )
 }
