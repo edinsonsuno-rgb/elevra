@@ -21,6 +21,7 @@ export default function ConfiguracionPage() {
   const [saving,   setSaving]   = useState<string | null>(null)
   const [saved,    setSaved]    = useState<string | null>(null)
   const [precio,   setPrecio]   = useState(10000)
+  const [whatsapp, setWhatsapp] = useState('')
 
   useEffect(() => {
     if (role && role !== 'admin') navigate('/dashboard')
@@ -34,6 +35,8 @@ export default function ConfiguracionPage() {
       setConfigs(cached)
       const p = cached.find(c => c.clave === 'precio_por_alumno')
       if (p) setPrecio(Number(p.valor))
+      const w = cached.find(c => c.clave === 'whatsapp_soporte')
+      if (w) setWhatsapp(w.valor)
       setLoading(false)
       return
     }
@@ -43,6 +46,8 @@ export default function ConfiguracionPage() {
     setConfigs(list)
     const p = list.find(c => c.clave === 'precio_por_alumno')
     if (p) setPrecio(Number(p.valor))
+    const w = list.find(c => c.clave === 'whatsapp_soporte')
+    if (w) setWhatsapp(w.valor)
     setLoading(false)
   }
 
@@ -58,6 +63,17 @@ export default function ConfiguracionPage() {
     invalidateCachePrefix('config:precio')
     setSaving(null)
     setSaved('precio')
+    setTimeout(() => setSaved(null), 3000)
+    cargar()
+  }
+
+  async function guardarWhatsapp() {
+    setSaving('whatsapp')
+    await supabase.from('configuracion')
+      .upsert({ clave: 'whatsapp_soporte', valor: whatsapp.trim() }, { onConflict: 'clave' })
+    invalidateCachePrefix('configuracion:')
+    setSaving(null)
+    setSaved('whatsapp')
     setTimeout(() => setSaved(null), 3000)
     cargar()
   }
@@ -171,13 +187,26 @@ export default function ConfiguracionPage() {
         </div>
         <div className="df-surface p-4 rounded-xl space-y-2">
           <p className="text-xs text-df-muted uppercase tracking-widest">Número de soporte</p>
-          <p className="text-lg font-black text-white">
-            {configs.find(c => c.clave === 'whatsapp_soporte')?.valor ?? 'No configurado'}
-          </p>
+          <input
+            type="text"
+            value={whatsapp}
+            onChange={e => setWhatsapp(e.target.value)}
+            placeholder="Ej: 573001234567 (con código de país, sin + ni espacios)"
+            className="w-full bg-df-card border border-df-border rounded-lg px-3 py-2 text-sm text-white placeholder:text-df-muted/50"
+          />
           <p className="text-[10px] text-df-muted">
             Este valor se utiliza en el widget de WhatsApp para que los profesores puedan pedir ayuda directamente.
           </p>
         </div>
+        <button onClick={guardarWhatsapp} disabled={saving === 'whatsapp'}
+          className="df-btn px-6 py-3 text-sm flex items-center gap-2">
+          {saving === 'whatsapp'
+            ? <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Guardando...</>
+            : saved === 'whatsapp'
+            ? <><i className="fa-solid fa-check text-green-400" /> Guardado</>
+            : <><i className="fa-solid fa-floppy-disk" /> Guardar número</>
+          }
+        </button>
       </div>
     </div>
   )
