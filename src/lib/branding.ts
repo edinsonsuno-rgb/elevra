@@ -56,7 +56,7 @@ export function applyBrand(brand: TenantBrand) {
   const iconoParaApp = brand.logo_icono_url || brand.logo_url
 
   const favicon = document.querySelector<HTMLLinkElement>('link[rel="icon"]')
-  if (favicon) favicon.href = iconoParaApp || '/logo.png'
+  if (favicon) favicon.href = iconoParaApp || '/icons/icon-192x192.png'
 
   const appleIcon = document.querySelector<HTMLLinkElement>('link[rel="apple-touch-icon"]')
   if (appleIcon) appleIcon.href = iconoParaApp || '/icons/apple-touch-icon.png'
