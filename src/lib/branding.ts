@@ -61,32 +61,11 @@ export function applyBrand(brand: TenantBrand) {
   const appleIcon = document.querySelector<HTMLLinkElement>('link[rel="apple-touch-icon"]')
   if (appleIcon) appleIcon.href = iconoParaApp || '/icons/apple-touch-icon.png'
 
-  // Manifest dinámico (ícono/nombre al "Instalar app" en Android) — antes
-  // quedaba fijo en public/manifest.json (heredado de cuando la app era
-  // solo para un instructor). Si el tenant no tiene ícono propio, se deja
-  // el manifest estático de siempre.
-  const manifestLink = document.querySelector<HTMLLinkElement>('link[rel="manifest"]')
-  if (manifestLink) {
-    if (iconoParaApp) {
-      const manifest = {
-        name: brand.nombre,
-        short_name: brand.nombre,
-        description: `App de entrenamiento de ${brand.nombre}`,
-        start_url: '/',
-        display: 'standalone',
-        background_color: '#0a0118',
-        theme_color: brand.color_primario,
-        orientation: 'portrait',
-        icons: [
-          { src: iconoParaApp, sizes: 'any', type: 'image/png', purpose: 'any' },
-        ],
-      }
-      const blob = new Blob([JSON.stringify(manifest)], { type: 'application/json' })
-      manifestLink.href = URL.createObjectURL(blob)
-    } else {
-      manifestLink.href = '/manifest.json'
-    }
-  }
+  // El manifest.json ("Instalar app" en Android) ya se genera dinámicamente
+  // en el servidor según el subdominio (ver api/manifest.js + vercel.json),
+  // así que no hace falta tocarlo aquí por JS — evita la carrera entre el
+  // manifest estático inicial y este cambio, que causaba mezclas raras
+  // (ícono de un tenant con color de otro).
 
   const theme = document.querySelector('meta[name="theme-color"]')
   theme?.setAttribute('content', brand.color_primario)

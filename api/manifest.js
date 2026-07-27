@@ -8,30 +8,34 @@ export default async function handler(req) {
   const SUPA_URL = process.env.VITE_SUPABASE_URL
   const SUPA_KEY = process.env.VITE_SUPABASE_ANON_KEY
 
-  let nombre   = 'Elevra'
-  let color    = '#39D353'
-  let logo_url = null
+  let nombre        = 'Elevra'
+  let color         = '#39D353'
+  let logo_url      = null
+  let logo_icono_url = null
 
   if (sub && SUPA_URL && SUPA_KEY) {
     try {
       const res = await fetch(
-        `${SUPA_URL}/rest/v1/tenants?subdominio=eq.${sub}&activo=eq.true&select=nombre,color_primario,logo_url&limit=1`,
+        `${SUPA_URL}/rest/v1/tenants?subdominio=eq.${sub}&activo=eq.true&select=nombre,color_primario,logo_url,logo_icono_url&limit=1`,
         { headers: { apikey: SUPA_KEY, Authorization: `Bearer ${SUPA_KEY}` } }
       )
       const data = await res.json()
       if (Array.isArray(data) && data[0]) {
-        nombre   = data[0].nombre        || nombre
-        color    = data[0].color_primario || color
-        logo_url = data[0].logo_url       || null
+        nombre         = data[0].nombre         || nombre
+        color          = data[0].color_primario || color
+        logo_url       = data[0].logo_url       || null
+        logo_icono_url = data[0].logo_icono_url || null
       }
     } catch (_) {}
   }
+
+  const iconoParaApp = logo_icono_url || logo_url
 
   const icons = [
     { src: '/icons/icon-192x192.png', sizes: '192x192', type: 'image/png', purpose: 'maskable' },
     { src: '/icons/icon-512x512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
   ]
-  if (logo_url) icons.unshift({ src: logo_url, sizes: '512x512', type: 'image/png', purpose: 'any' })
+  if (iconoParaApp) icons.unshift({ src: iconoParaApp, sizes: 'any', type: 'image/png', purpose: 'any' })
 
   const manifest = {
     name:             nombre,
