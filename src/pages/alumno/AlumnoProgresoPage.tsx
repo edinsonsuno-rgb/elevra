@@ -17,19 +17,29 @@ interface AlumnoData {
   peso_objetivo: number | null
 }
 
+// Convierte un Date a 'YYYY-MM-DD' usando la fecha LOCAL del navegador (nunca UTC).
+// toISOString() convierte a UTC y en timezones negativos (ej. Colombia UTC-5) puede
+// "brincar" al día siguiente si son más de las 7pm hora local — por eso NO se usa aquí.
+function toLocalISO(d: Date): string {
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${y}-${m}-${day}`
+}
+
 function getLunesDe(fecha: Date): string {
   const d = new Date(fecha)
   const day = d.getDay()
   const diff = d.getDate() - day + (day === 0 ? -6 : 1)
   d.setDate(diff)
-  return d.toISOString().split('T')[0]
+  return toLocalISO(d)
 }
 
 // Domingo (11:59pm) de la semana que inicia en `semanaInicio` (YYYY-MM-DD) = plazo límite para registrar
 function getDomingoDe(semanaInicio: string): string {
   const d = new Date(semanaInicio + 'T12:00:00')
   d.setDate(d.getDate() + 6)
-  return d.toISOString().split('T')[0]
+  return toLocalISO(d)
 }
 
 function formatFechaLarga(fecha: string): string {
@@ -56,8 +66,8 @@ function getSemanasPendientes(registros: Registro[], fechaInicio: string): strin
   const registradas = new Set(registros.map(r => r.semana_inicio))
   let semana = new Date(fechaInicio + 'T12:00:00')
   
-  while (semana.toISOString().split('T')[0] <= lunesHoy) {
-    const key = semana.toISOString().split('T')[0]
+  while (toLocalISO(semana) <= lunesHoy) {
+    const key = toLocalISO(semana)
     if (!registradas.has(key)) pendientes.push(key)
     semana.setDate(semana.getDate() + 7)
   }
@@ -118,7 +128,7 @@ export default function AlumnoProgresoPage() {
       const meses = rango === '1m' ? 1 : 3
       const limite = new Date()
       limite.setMonth(limite.getMonth() - meses)
-      const limiteStr = limite.toISOString().split('T')[0]
+      const limiteStr = toLocalISO(limite)
       return regs.filter(r => r.semana_inicio >= limiteStr)
     }
     // rango es un mes específico 'YYYY-MM'
