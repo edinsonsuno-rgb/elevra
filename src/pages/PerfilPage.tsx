@@ -1,11 +1,13 @@
 import { useState, FormEvent } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/hooks/useAuth'
+import { useTenant } from '@/contexts/TenantContext'
 import { Spinner } from '@/components/ui/index'
 import Turnstile from '@/components/ui/Turnstile'
 
 export default function PerfilPage() {
   const { user, displayName, updateDisplayName } = useAuth()
+  const { tenant } = useTenant()
   const [nombre,   setNombre]   = useState(displayName ?? '')
   const [saving,   setSaving]   = useState(false)
   const [success,  setSuccess]  = useState(false)
@@ -14,6 +16,27 @@ export default function PerfilPage() {
   const [passSaved, setPassSaved] = useState(false)
   const [captchaToken, setCaptchaToken] = useState<string | null>(null)
   const [captchaResetKey, setCaptchaResetKey] = useState(0)
+  const [copiado, setCopiado] = useState(false)
+  const [showShareMenu, setShowShareMenu] = useState(false)
+
+  function copiarSubdominio() {
+    navigator.clipboard.writeText(`${tenant.subdominio}.elevra.lat`)
+      .then(() => { setCopiado(true); setTimeout(() => setCopiado(false), 2000) })
+      .catch(() => {})
+  }
+
+  function shareTo(platform: 'whatsapp' | 'telegram' | 'twitter' | 'facebook') {
+    const url = `https://${tenant.subdominio}.elevra.lat`
+    const text = encodeURIComponent(`Visita ${tenant.nombre} en Elevra: ${url}`)
+    const shareUrl = {
+      whatsapp: `https://api.whatsapp.com/send?text=${text}`,
+      telegram: `https://t.me/share/url?url=${encodeURIComponent(url)}&text=${text}`,
+      twitter:  `https://twitter.com/intent/tweet?text=${text}`,
+      facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`,
+    }[platform]
+    window.open(shareUrl, '_blank', 'noopener')
+    setShowShareMenu(false)
+  }
 
   async function handleNombre(e: FormEvent) {
     e.preventDefault()
@@ -92,6 +115,75 @@ export default function PerfilPage() {
             Guardar nombre
           </button>
         </form>
+      </div>
+
+      {/* Marca y subdominio */}
+      <div className="df-card p-5 space-y-2">
+        <h2 className="text-sm font-bold text-white">Mi marca</h2>
+
+        <div className="rounded-xl p-3 flex items-center justify-between"
+          style={{
+            background: `linear-gradient(135deg, ${tenant.color_secundario ?? '#7c3aed'}22, ${tenant.color_primario ?? '#9b30ff'}22)`,
+            border: `1px solid ${tenant.color_primario ?? '#9b30ff'}44`
+          }}>
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl overflow-hidden bg-df-surface border border-df-border flex items-center justify-center flex-shrink-0">
+              <img src={tenant.logo_url ?? '/logo.png'} alt={tenant.nombre}
+                className="w-full h-full object-contain p-0.5"
+                onError={e => { (e.currentTarget as HTMLImageElement).src = '/logo.png' }} />
+            </div>
+            <div>
+              <p className="text-[10px] text-df-muted uppercase tracking-wider">Marca</p>
+              <p className="text-sm text-white font-semibold">{tenant.nombre}</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <div className="w-5 h-5 rounded-full border border-white/20" style={{ background: tenant.color_primario ?? '#9b30ff' }} title="Color principal" />
+            <div className="w-5 h-5 rounded-full border border-white/20" style={{ background: tenant.color_secundario ?? '#7c3aed' }} title="Color secundario" />
+          </div>
+        </div>
+
+        <div className="df-surface rounded-xl p-3 flex items-center gap-3 justify-between relative">
+          <div className="flex items-center gap-3 min-w-0">
+            <i className="fa-solid fa-globe text-df-muted text-sm w-4 flex-shrink-0" />
+            <div className="min-w-0">
+              <p className="text-[10px] text-df-muted uppercase tracking-wider">Subdominio</p>
+              <p className="text-sm text-white truncate">{tenant.subdominio}.elevra.lat</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <button type="button" onClick={copiarSubdominio} title="Copiar subdominio"
+              className="px-2 py-1 rounded-md bg-df-surface text-df-muted hover:bg-white/5 transition-colors flex items-center gap-2">
+              <i className={`fa-solid ${copiado ? 'fa-check text-green-400' : 'fa-copy'} text-xs`} />
+            </button>
+            <div className="relative">
+              <button type="button" onClick={() => setShowShareMenu(s => !s)} title="Compartir"
+                className="px-2 py-1 rounded-md bg-df-surface text-df-muted hover:bg-white/5 transition-colors flex items-center gap-2">
+                <i className="fa-solid fa-share-nodes text-xs" />
+              </button>
+              {showShareMenu && (
+                <div className="absolute right-0 mt-2 w-44 bg-df-surface border border-df-border rounded-md p-2 shadow-lg z-30">
+                  <button onClick={() => shareTo('whatsapp')}
+                    className="w-full text-left px-2 py-1 rounded hover:bg-white/5 flex items-center gap-2">
+                    <i className="fa-brands fa-whatsapp text-green-400 w-5" /> WhatsApp
+                  </button>
+                  <button onClick={() => shareTo('telegram')}
+                    className="w-full text-left px-2 py-1 rounded hover:bg-white/5 flex items-center gap-2">
+                    <i className="fa-brands fa-telegram text-sky-400 w-5" /> Telegram
+                  </button>
+                  <button onClick={() => shareTo('twitter')}
+                    className="w-full text-left px-2 py-1 rounded hover:bg-white/5 flex items-center gap-2">
+                    <i className="fa-brands fa-twitter text-sky-300 w-5" /> Twitter
+                  </button>
+                  <button onClick={() => shareTo('facebook')}
+                    className="w-full text-left px-2 py-1 rounded hover:bg-white/5 flex items-center gap-2">
+                    <i className="fa-brands fa-facebook text-blue-600 w-5" /> Facebook
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Cambiar contraseña */}
