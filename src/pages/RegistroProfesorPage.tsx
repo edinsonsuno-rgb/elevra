@@ -92,12 +92,10 @@ export default function RegistroProfesorPage() {
 
     if (profileError) { setError(profileError.message); setSaving(false); return }
 
-    // Marcar invitación como usada — awaited para detectar errores de RLS.
+    // Marcar invitación como usada — awaited para detectar errores.
     // Si falla, la cuenta ya está creada; solo logueamos y continuamos.
     const { error: invError } = await supabase
-      .from('invitaciones')
-      .update({ usado: true })
-      .eq('id', invitacion.id)
+      .rpc('marcar_invitacion_propia_usada', { p_invitacion_id: invitacion.id })
     if (invError) console.error('[registro] no se pudo marcar invitación como usada:', invError.message, invError)
     else {
       invalidateCache('admin:instructores')
