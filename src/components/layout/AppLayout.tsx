@@ -44,7 +44,7 @@ export default function AppLayout() {
     { to: '/catalogo',   icon: 'fa-solid fa-layer-group',         label: 'Catálogo' },
     { to: '/agenda',     icon: 'fa-solid fa-calendar-days',       label: 'Agenda' },
     { to: '/cobros',     icon: 'fa-solid fa-file-invoice-dollar', label: 'Cobros' },
-    { to: '/videos',     icon: 'fa-solid fa-clapperboard',        label: 'Videos' },
+    ...(!isAdmin ? [{ to: '/videos', icon: 'fa-solid fa-clapperboard', label: 'Videos' }] : []),
     { to: '/mensajes',   icon: 'fa-solid fa-message',             label: 'Mensajes' },
   ]
 
