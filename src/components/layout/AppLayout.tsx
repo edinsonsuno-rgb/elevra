@@ -16,7 +16,6 @@ const NAV_ADMIN_BASE = [
 ]
 const NAV_SUPERADMIN = [
   { to: '/instructores', icon: 'fa-solid fa-users-gear', label: 'Instructores' },
-  { to: '/mi-marca',     icon: 'fa-solid fa-palette',    label: 'Mi marca'     },
 ]
 
 export default function AppLayout() {
