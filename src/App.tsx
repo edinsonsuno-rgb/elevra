@@ -11,6 +11,7 @@ import LoginPage                 from '@/pages/LoginPage'
 import ResetPasswordPage         from '@/pages/ResetPasswordPage'
 import UpdatePasswordPage        from '@/pages/UpdatePasswordPage'
 import RegistroProfesorPage      from '@/pages/RegistroProfesorPage'
+import RegistroAdminPage         from '@/pages/RegistroAdminPage'
 import RegistroAlumnoPage        from '@/pages/RegistroAlumnoPage'
 
 // Profe / Admin
@@ -40,6 +41,7 @@ import ConfiguracionPage         from '@/pages/admin/ConfiguracionPage'
 import BrandingPage              from '@/pages/admin/BrandingPage'
 import InstructoresPage          from '@/pages/admin/InstructoresPage'
 import InstructorDetallePage     from '@/pages/admin/InstructorDetallePage'
+import AdministradoresPage       from '@/pages/admin/AdministradoresPage'
 
 // Alumno
 import AlumnoDashboard           from '@/pages/alumno/AlumnoDashboard'
@@ -114,6 +116,7 @@ export default function App() {
           <Route path="/reset-password"  element={<PublicRoute><ResetPasswordPage /></PublicRoute>} />
           <Route path="/update-password" element={<TenantGate><UpdatePasswordPage /></TenantGate>} />
           <Route path="/registro"        element={<RegistroProfesorPage />} />
+          <Route path="/registro-admin"  element={<RegistroAdminPage />} />
           <Route path="/registro-alumno" element={<RegistroAlumnoPage />} />
 
           {/* ── Rutas del ALUMNO ── */}
@@ -159,6 +162,7 @@ export default function App() {
             <Route path="/mi-marca"          element={<SuperAdminRoute><BrandingPage /></SuperAdminRoute>} />
             <Route path="/instructores"      element={<SuperAdminRoute><InstructoresPage /></SuperAdminRoute>} />
             <Route path="/instructores/:tenantId" element={<SuperAdminRoute><InstructorDetallePage /></SuperAdminRoute>} />
+            <Route path="/administradores"   element={<SuperAdminRoute><AdministradoresPage /></SuperAdminRoute>} />
           </Route>
 
           <Route path="*" element={<Navigate to="/" replace />} />

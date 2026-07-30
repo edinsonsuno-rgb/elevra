@@ -12,6 +12,7 @@ const NAV_ADMIN_BASE = [
 
   { to: '/planes',       icon: 'fa-solid fa-clipboard-list',   label: 'Planes' },
   { to: '/configuracion',icon: 'fa-solid fa-gear',             label: 'Configuración' },
+  { to: '/administradores', icon: 'fa-solid fa-user-shield',   label: 'Administradores' },
 ]
 const NAV_SUPERADMIN = [
   { to: '/instructores', icon: 'fa-solid fa-users-gear', label: 'Instructores' },
