@@ -63,6 +63,7 @@ export default function AlumnoDetallePage() {
   const [copiado, setCopiado] = useState(false)
   const [tokenAlumno, setTokenAlumno] = useState<string | null>(null)
   const [invitacionUsada, setInvitacionUsada] = useState(false)
+  const [refrescando, setRefrescando] = useState(false)
 
   useEffect(() => { if (id) cargar() }, [id])
 
@@ -102,6 +103,32 @@ export default function AlumnoDetallePage() {
     navigator.clipboard.writeText(link)
     setCopiado(true)
     setTimeout(() => setCopiado(false), 2000)
+  }
+
+  function compartirWhatsApp() {
+    if (!tokenAlumno || !alumno) return
+    const link = `${window.location.origin}/registro-alumno?token=${tokenAlumno}`
+    const msg  = encodeURIComponent(`Hola ${alumno.nombre}, te invito a crear tu cuenta en Elevra. Usa este link para registrarte:\n${link}`)
+    window.open(`https://wa.me/?text=${msg}`, '_blank')
+  }
+
+  async function refrescarInvitacion() {
+    if (!id) return
+    setRefrescando(true)
+    const nuevoToken = crypto.randomUUID()
+    const { error: err } = await supabase
+      .from('alumnos')
+      .update({ invitacion_token: nuevoToken, invitacion_usada: false })
+      .eq('id', id)
+    if (!err) {
+      setTokenAlumno(nuevoToken)
+      setInvitacionUsada(false)
+      const link = `${window.location.origin}/registro-alumno?token=${nuevoToken}`
+      navigator.clipboard.writeText(link)
+      setCopiado(true)
+      setTimeout(() => setCopiado(false), 2500)
+    }
+    setRefrescando(false)
   }
 
   async function eliminarPlan(plan: PlanHistorial) {
@@ -174,16 +201,35 @@ export default function AlumnoDetallePage() {
                 <p className="text-[10px] text-df-muted uppercase tracking-wider mb-2">
                   Link de acceso — sin cuenta creada
                 </p>
-                <button
-                  onClick={copiarLink}
-                  className={`flex items-center gap-2 text-xs px-4 py-2 rounded-xl transition-all
-                    ${copiado
-                      ? 'bg-green-900/30 border border-green-500/30 text-green-400'
-                      : 'df-surface text-df-muted hover:text-white hover:border-df-violet/40'
-                    }`}>
-                  <i className={`fa-solid ${copiado ? 'fa-check' : 'fa-copy'} text-xs`} />
-                  {copiado ? '¡Link copiado!' : 'Copiar link de registro'}
-                </button>
+                <div className="flex gap-2">
+                  <button
+                    onClick={copiarLink}
+                    className={`flex items-center justify-center gap-2 text-xs px-4 py-2 rounded-xl transition-all
+                      ${copiado
+                        ? 'bg-green-900/30 border border-green-500/30 text-green-400'
+                        : 'df-surface text-df-muted hover:text-white hover:border-df-violet/40'
+                      }`}>
+                    <i className={`fa-solid ${copiado ? 'fa-check' : 'fa-copy'} text-xs`} />
+                    {copiado ? '¡Copiado!' : 'Copiar link'}
+                  </button>
+                  <button
+                    onClick={compartirWhatsApp}
+                    title="Enviar por WhatsApp"
+                    className="text-xs px-3 py-2 rounded-xl df-surface text-df-muted hover:text-green-400 transition-all flex items-center gap-1.5">
+                    <i className="fa-brands fa-whatsapp text-sm" />
+                    WhatsApp
+                  </button>
+                  <button
+                    onClick={refrescarInvitacion}
+                    disabled={refrescando}
+                    title="Genera un nuevo link y lo copia al portapapeles"
+                    className="text-xs px-3 py-2 rounded-xl df-surface text-df-muted hover:text-amber-400 transition-all flex items-center gap-1.5">
+                    {refrescando
+                      ? <div className="w-3 h-3 border-2 border-df-muted/30 border-t-df-muted rounded-full animate-spin" />
+                      : <i className="fa-solid fa-rotate-right text-xs" />
+                    }
+                  </button>
+                </div>
               </div>
             )}
             {invitacionUsada && (
