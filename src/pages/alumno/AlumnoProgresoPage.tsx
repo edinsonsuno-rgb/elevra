@@ -25,6 +25,29 @@ function getLunesDe(fecha: Date): string {
   return d.toISOString().split('T')[0]
 }
 
+// Domingo (11:59pm) de la semana que inicia en `semanaInicio` (YYYY-MM-DD) = plazo límite para registrar
+function getDomingoDe(semanaInicio: string): string {
+  const d = new Date(semanaInicio + 'T12:00:00')
+  d.setDate(d.getDate() + 6)
+  return d.toISOString().split('T')[0]
+}
+
+function formatFechaLarga(fecha: string): string {
+  const d = new Date(fecha + 'T12:00:00')
+  return d.toLocaleDateString('es-CO', { day: 'numeric', month: 'long' })
+}
+
+// Mes (YYYY-MM) al que pertenece un registro, según el lunes de esa semana
+function mesDeSemana(semanaInicio: string): string {
+  return semanaInicio.slice(0, 7) // 'YYYY-MM'
+}
+
+function formatMesLabel(mesYYYYMM: string): string {
+  const d = new Date(mesYYYYMM + '-15T12:00:00')
+  const label = d.toLocaleDateString('es-CO', { month: 'long', year: 'numeric' })
+  return label.charAt(0).toUpperCase() + label.slice(1)
+}
+
 function getSemanasPendientes(registros: Registro[], fechaInicio: string): string[] {
   const hoy = new Date()
   const lunesHoy = getLunesDe(hoy)
@@ -70,6 +93,9 @@ export default function AlumnoProgresoPage() {
   const [nuevaMeta,    setNuevaMeta]    = useState('')
   const [resetear,     setResetear]     = useState(false)
 
+  // Filtro de rango del historial / gráfica: 'todo' | '1m' | '3m' | 'YYYY-MM'
+  const [rangoChart, setRangoChart] = useState<string>('3m')
+
   useEffect(() => {
     if (loadingAlumno) return
     if (!alumnoId) { setLoading(false); return }
@@ -85,9 +111,28 @@ export default function AlumnoProgresoPage() {
     return () => { document.head.removeChild(script) }
   }, [])
 
+  // Registros que caen dentro del rango elegido para la gráfica / lista
+  function filtrarPorRango(regs: Registro[], rango: string): Registro[] {
+    if (rango === 'todo') return regs
+    if (rango === '1m' || rango === '3m') {
+      const meses = rango === '1m' ? 1 : 3
+      const limite = new Date()
+      limite.setMonth(limite.getMonth() - meses)
+      const limiteStr = limite.toISOString().split('T')[0]
+      return regs.filter(r => r.semana_inicio >= limiteStr)
+    }
+    // rango es un mes específico 'YYYY-MM'
+    return regs.filter(r => mesDeSemana(r.semana_inicio) === rango)
+  }
+
+  const registrosChart = filtrarPorRango(registros, rangoChart)
+
+  // Meses disponibles (con al menos un registro), para el selector de mes específico
+  const mesesDisponibles = Array.from(new Set(registros.map(r => mesDeSemana(r.semana_inicio)))).sort()
+
   // Inicializar la gráfica de peso cuando haya registros
   useEffect(() => {
-    if (registros.length <= 1) return
+    if (registrosChart.length <= 1) return
     
     // Esperar a que el canvas esté en el DOM
     const timer = setTimeout(() => {
@@ -98,9 +143,9 @@ export default function AlumnoProgresoPage() {
       const existing = (window as any).__pesoChart
       if (existing) existing.destroy()
       
-      const labels  = registros.map(r => formatSemana(r.semana_inicio))
-      const pesos   = registros.map(r => r.peso_kg)
-      const metaArr = registros.map(() => alumno!.peso_objetivo!)
+      const labels  = registrosChart.map(r => formatSemana(r.semana_inicio))
+      const pesos   = registrosChart.map(r => r.peso_kg)
+      const metaArr = registrosChart.map(() => alumno!.peso_objetivo!)
       
       const chart = new (window as any).Chart(canvas, {
         type: 'line',
@@ -151,7 +196,7 @@ export default function AlumnoProgresoPage() {
     }, 300)
     
     return () => clearTimeout(timer)
-  }, [registros, alumno])
+  }, [registrosChart, alumno])
 
   async function cargar(id: string) {
     const { data: a } = await supabase
@@ -220,6 +265,9 @@ export default function AlumnoProgresoPage() {
   }
 
   function abrirRegistro(semana: string) {
+    // Candado: solo se puede crear/editar el registro de la semana en curso.
+    // Las semanas pasadas quedan congeladas (corrección de errores viejos = herramienta aparte para el instructor/admin).
+    if (semana !== getLunesDe(new Date())) return
     const reg = registros.find(r => r.semana_inicio === semana)
     setSemanaReg(semana)
     setPesoInput(reg ? String(reg.peso_kg) : '')
@@ -287,8 +335,9 @@ export default function AlumnoProgresoPage() {
   const primerLunes = registros.length > 0
     ? registros[0].semana_inicio
     : getLunesDe(new Date(Date.now() - 7 * 24 * 60 * 60 * 1000 * 4))
-  const pendientes = getSemanasPendientes(registros, primerLunes)
+  const pendientes = getSemanasPendientes(registros, primerLunes).filter(s => s !== lunesHoy)
   const puedeRegistrarHoy = !registros.find(r => r.semana_inicio === lunesHoy)
+  const plazoActual = getDomingoDe(lunesHoy)
 
   return (
     <div className="space-y-4 pt-2">
@@ -358,17 +407,47 @@ export default function AlumnoProgresoPage() {
               </span>
             </div>
           </div>
-          <div style={{ position: 'relative', height: '180px' }}>
-            <canvas id="pesoChart"
-              role="img"
-              aria-label={`Gráfica de progreso de peso mostrando ${registros.length} registros semanales`}>
-              {registros.map(r => `${formatSemana(r.semana_inicio)}: ${r.peso_kg}kg`).join(', ')}
-            </canvas>
+
+          {/* Selector de rango */}
+          <div className="flex flex-wrap items-center gap-1.5 mb-3">
+            {[
+              { key: '1m',   label: '1 mes' },
+              { key: '3m',   label: '3 meses' },
+              { key: 'todo', label: 'Todo' },
+            ].map(op => (
+              <button key={op.key} onClick={() => setRangoChart(op.key)}
+                className={`px-2.5 py-1 rounded-full text-[10px] font-semibold transition-all
+                  ${rangoChart === op.key ? 'bg-df-purple text-white' : 'bg-df-surface text-df-muted hover:text-white'}`}>
+                {op.label}
+              </button>
+            ))}
+            {mesesDisponibles.length > 0 && (
+              <select value={mesesDisponibles.includes(rangoChart) ? rangoChart : ''}
+                onChange={e => e.target.value && setRangoChart(e.target.value)}
+                className="px-2.5 py-1 rounded-full text-[10px] font-semibold bg-df-surface text-df-muted border-0 outline-none">
+                <option value="" disabled>Mes específico</option>
+                {mesesDisponibles.map(m => (
+                  <option key={m} value={m}>{formatMesLabel(m)}</option>
+                ))}
+              </select>
+            )}
           </div>
+
+          {registrosChart.length > 1 ? (
+            <div style={{ position: 'relative', height: '180px' }}>
+              <canvas id="pesoChart"
+                role="img"
+                aria-label={`Gráfica de progreso de peso mostrando ${registrosChart.length} registros semanales`}>
+                {registrosChart.map(r => `${formatSemana(r.semana_inicio)}: ${r.peso_kg}kg`).join(', ')}
+              </canvas>
+            </div>
+          ) : (
+            <p className="text-xs text-df-muted text-center py-8">No hay suficientes registros en este rango</p>
+          )}
         </div>
       )}
 
-      {/* Semanas pendientes */}
+      {/* Semanas pasadas sin registrar: quedan congeladas, solo informativas */}
       {pendientes.length > 0 && (
         <div className="bg-amber-900/10 border border-amber-500/20 rounded-2xl p-4">
           <div className="flex items-center gap-2 mb-3">
@@ -378,33 +457,43 @@ export default function AlumnoProgresoPage() {
             </p>
           </div>
           <div className="space-y-2">
-            {pendientes.slice(0, 3).map(s => (
-              <button key={s} onClick={() => abrirRegistro(s)}
-                className="w-full flex items-center justify-between bg-amber-900/10 border border-amber-500/20 rounded-xl px-3 py-2 hover:bg-amber-900/20 transition-all">
-                <span className="text-xs text-amber-400">Semana del {formatSemana(s)}</span>
-                <span className="text-xs text-amber-400 flex items-center gap-1">
-                  <i className="fa-solid fa-plus text-xs" /> Registrar
+            {pendientes.slice(-3).map(s => (
+              <div key={s}
+                className="w-full flex items-center justify-between bg-amber-900/5 border border-amber-500/10 rounded-xl px-3 py-2">
+                <span className="text-xs text-amber-400/70">Semana del {formatSemana(s)}</span>
+                <span className="text-[10px] text-amber-400/50 flex items-center gap-1">
+                  <i className="fa-solid fa-lock text-[9px]" /> No registrada
                 </span>
-              </button>
+              </div>
             ))}
           </div>
+          <p className="text-[10px] text-amber-400/50 mt-2">
+            <i className="fa-solid fa-circle-info mr-1" />
+            Las semanas pasadas ya no se pueden registrar ni modificar.
+          </p>
         </div>
       )}
 
-      {/* Botón registrar esta semana */}
+      {/* Botón registrar esta semana + plazo */}
       {puedeRegistrarHoy && (
-        <button onClick={() => abrirRegistro(lunesHoy)}
-          className="df-btn w-full py-3 text-sm flex items-center justify-center gap-2">
-          <i className="fa-solid fa-plus text-xs" /> Registrar peso de esta semana
-        </button>
+        <div className="space-y-2">
+          <p className="text-[11px] text-df-muted text-center">
+            <i className="fa-solid fa-hourglass-half text-df-violet mr-1" />
+            Tienes hasta el <span className="text-white font-semibold">{formatFechaLarga(plazoActual)}</span> para ingresar el registro de esta semana
+          </p>
+          <button onClick={() => abrirRegistro(lunesHoy)}
+            className="df-btn w-full py-3 text-sm flex items-center justify-center gap-2">
+            <i className="fa-solid fa-plus text-xs" /> Registrar peso de esta semana
+          </button>
+        </div>
       )}
 
-      {/* Historial lista */}
+      {/* Historial lista (respeta el mismo rango elegido arriba) */}
       {registros.length > 0 && (
         <div className="df-card p-4 space-y-2">
           <p className="text-xs font-semibold text-df-muted uppercase tracking-wider">Historial</p>
-          {[...registros].reverse().map((r, i) => {
-            const prev = [...registros].reverse()[i + 1]
+          {[...registrosChart].reverse().map((r, i) => {
+            const prev = [...registrosChart].reverse()[i + 1]
             const diff = prev ? (r.peso_kg - prev.peso_kg) : 0
             return (
               <div key={r.id} className="flex items-center justify-between py-2 border-b border-df-border last:border-0">
