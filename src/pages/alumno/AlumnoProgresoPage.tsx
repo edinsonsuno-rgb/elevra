@@ -106,6 +106,11 @@ export default function AlumnoProgresoPage() {
   // Filtro de rango del historial / gráfica: 'todo' | '1m' | '3m' | 'YYYY-MM'
   const [rangoChart, setRangoChart] = useState<string>('3m')
 
+  // Modo comparación: superpone dos meses en la misma gráfica, alineados por "semana N del mes"
+  const [modoComparar, setModoComparar] = useState(false)
+  const [mesA, setMesA] = useState('')
+  const [mesB, setMesB] = useState('')
+
   useEffect(() => {
     if (loadingAlumno) return
     if (!alumnoId) { setLoading(false); return }
@@ -137,76 +142,168 @@ export default function AlumnoProgresoPage() {
 
   const registrosChart = filtrarPorRango(registros, rangoChart)
 
-  // Meses disponibles (con al menos un registro), para el selector de mes específico
+  // Meses disponibles (con al menos un registro), para el selector de mes específico y comparación
   const mesesDisponibles = Array.from(new Set(registros.map(r => mesDeSemana(r.semana_inicio)))).sort()
+  const mesASel = mesA || mesesDisponibles[mesesDisponibles.length - 2] || mesesDisponibles[0] || ''
+  const mesBSel = mesB || mesesDisponibles[mesesDisponibles.length - 1] || ''
 
-  // Inicializar la gráfica de peso cuando haya registros
+  // Registros de un mes, ordenados y numerados como "semana 1, 2, 3..." dentro de ese mes
+  function serieDelMes(mes: string): { semana: number; peso: number }[] {
+    return registros
+      .filter(r => mesDeSemana(r.semana_inicio) === mes)
+      .sort((a, b) => a.semana_inicio.localeCompare(b.semana_inicio))
+      .map((r, i) => ({ semana: i + 1, peso: r.peso_kg }))
+  }
+
+  const serieA = modoComparar ? serieDelMes(mesASel) : []
+  const serieB = modoComparar ? serieDelMes(mesBSel) : []
+  const diffA = serieA.length > 1 ? (serieA[serieA.length - 1].peso - serieA[0].peso) : 0
+  const diffB = serieB.length > 1 ? (serieB[serieB.length - 1].peso - serieB[0].peso) : 0
+
+  // Animación de "dibujo progresivo": cada punto aparece en secuencia en vez de todos de golpe.
+  // Timing ajustado para pocos puntos (5-10): con la fórmula original de Chart.js (10s totales)
+  // se sentiría lento, así que aquí el total escala con la cantidad de puntos, tope ~2.5s.
+  function buildDrawAnimation(pointCount: number) {
+    const totalDuration = Math.min(2500, Math.max(600, pointCount * 260))
+    const delayBetweenPoints = pointCount > 0 ? totalDuration / pointCount : 0
+    const previousY = (ctx: any) =>
+      ctx.index === 0
+        ? ctx.chart.scales.y.getPixelForValue(ctx.dataset.data[0])
+        : ctx.chart.getDatasetMeta(ctx.datasetIndex).data[ctx.index - 1].getProps(['y'], true).y
+    return {
+      x: {
+        type: 'number', easing: 'linear', duration: delayBetweenPoints, from: NaN,
+        delay(ctx: any) {
+          if (ctx.type !== 'data' || ctx.xStarted) return 0
+          ctx.xStarted = true
+          return ctx.index * delayBetweenPoints
+        }
+      },
+      y: {
+        type: 'number', easing: 'linear', duration: delayBetweenPoints, from: previousY,
+        delay(ctx: any) {
+          if (ctx.type !== 'data' || ctx.yStarted) return 0
+          ctx.yStarted = true
+          return ctx.index * delayBetweenPoints
+        }
+      }
+    }
+  }
+
+  // Inicializar la gráfica: modo normal (1 línea de peso + meta) o modo comparación (2 líneas, sin meta)
   useEffect(() => {
-    if (registrosChart.length <= 1) return
-    
-    // Esperar a que el canvas esté en el DOM
+    const puntos = modoComparar
+      ? Math.max(serieA.length, serieB.length)
+      : registrosChart.length
+    if (puntos <= 1) return
+
     const timer = setTimeout(() => {
       const canvas = document.getElementById('pesoChart') as HTMLCanvasElement
       if (!canvas) return
-      
-      // Destruir instancia anterior si existe
+
       const existing = (window as any).__pesoChart
       if (existing) existing.destroy()
-      
-      const labels  = registrosChart.map(r => formatSemana(r.semana_inicio))
-      const pesos   = registrosChart.map(r => r.peso_kg)
-      const metaArr = registrosChart.map(() => alumno!.peso_objetivo!)
-      
-      const chart = new (window as any).Chart(canvas, {
-        type: 'line',
-        data: {
-          labels,
-          datasets: [
-            {
-              label: 'Peso (kg)',
-              data: pesos,
-              borderColor: '#8B5CF6',
-              backgroundColor: 'rgba(139,92,246,0.1)',
-              borderWidth: 2.5,
-              fill: true,
-              tension: 0.4,
-              pointBackgroundColor: '#8B5CF6',
-              pointRadius: 4,
-              pointHoverRadius: 6,
-            },
-            {
-              label: 'Meta',
-              data: metaArr,
-              borderColor: '#22c55e',
-              borderWidth: 1.5,
-              borderDash: [6, 4],
-              fill: false,
-              tension: 0,
-              pointRadius: 0,
-            }
-          ]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: { legend: { display: false } },
-          scales: {
-            y: {
-              ticks: { font: { size: 11 }, color: '#888', callback: (v: number) => v + 'kg' },
-              grid: { color: 'rgba(128,128,128,0.1)' }
-            },
-            x: {
-              ticks: { font: { size: 11 }, color: '#888', autoSkip: false, maxRotation: 45 },
-              grid: { display: false }
+
+      let chartConfig: any
+
+      if (modoComparar) {
+        const maxSemanas = Math.max(serieA.length, serieB.length, 1)
+        const labels = Array.from({ length: maxSemanas }, (_, i) => `Semana ${i + 1}`)
+        const dataA = labels.map((_, i) => serieA[i]?.peso ?? null)
+        const dataB = labels.map((_, i) => serieB[i]?.peso ?? null)
+
+        chartConfig = {
+          type: 'line',
+          data: {
+            labels,
+            datasets: [
+              {
+                label: formatMesLabel(mesASel),
+                data: dataA,
+                borderColor: '#8B5CF6',
+                backgroundColor: 'rgba(139,92,246,0.1)',
+                borderWidth: 2.5, fill: false, tension: 0.4, spanGaps: true,
+                pointBackgroundColor: '#8B5CF6', pointRadius: 4, pointHoverRadius: 6,
+              },
+              {
+                label: formatMesLabel(mesBSel),
+                data: dataB,
+                borderColor: '#F472B6',
+                backgroundColor: 'rgba(244,114,182,0.1)',
+                borderWidth: 2.5, fill: false, tension: 0.4, spanGaps: true,
+                pointBackgroundColor: '#F472B6', pointRadius: 4, pointHoverRadius: 6,
+              },
+            ]
+          },
+          options: {
+            responsive: true, maintainAspectRatio: false,
+            animation: buildDrawAnimation(maxSemanas),
+            plugins: { legend: { display: false } },
+            scales: {
+              y: { ticks: { font: { size: 11 }, color: '#888', callback: (v: number) => v + 'kg' }, grid: { color: 'rgba(128,128,128,0.1)' } },
+              x: { ticks: { font: { size: 11 }, color: '#888', autoSkip: false, maxRotation: 45 }, grid: { display: false } }
             }
           }
         }
-      })
+      } else {
+        const labels  = registrosChart.map(r => formatSemana(r.semana_inicio))
+        const pesos   = registrosChart.map(r => r.peso_kg)
+        const metaArr = registrosChart.map(() => alumno!.peso_objetivo!)
+
+        chartConfig = {
+          type: 'line',
+          data: {
+            labels,
+            datasets: [
+              {
+                label: 'Peso (kg)',
+                data: pesos,
+                borderColor: '#8B5CF6',
+                backgroundColor: 'rgba(139,92,246,0.1)',
+                borderWidth: 2.5,
+                fill: true,
+                tension: 0.4,
+                pointBackgroundColor: '#8B5CF6',
+                pointRadius: 4,
+                pointHoverRadius: 6,
+              },
+              {
+                label: 'Meta',
+                data: metaArr,
+                borderColor: '#22c55e',
+                borderWidth: 1.5,
+                borderDash: [6, 4],
+                fill: false,
+                tension: 0,
+                pointRadius: 0,
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: buildDrawAnimation(pesos.length),
+            plugins: { legend: { display: false } },
+            scales: {
+              y: {
+                ticks: { font: { size: 11 }, color: '#888', callback: (v: number) => v + 'kg' },
+                grid: { color: 'rgba(128,128,128,0.1)' }
+              },
+              x: {
+                ticks: { font: { size: 11 }, color: '#888', autoSkip: false, maxRotation: 45 },
+                grid: { display: false }
+              }
+            }
+          }
+        }
+      }
+
+      const chart = new (window as any).Chart(canvas, chartConfig)
       ;(window as any).__pesoChart = chart
     }, 300)
-    
+
     return () => clearTimeout(timer)
-  }, [registrosChart, alumno])
+  }, [registrosChart, alumno, modoComparar, mesASel, mesBSel])
 
   async function cargar(id: string) {
     const { data: a } = await supabase
@@ -409,46 +506,104 @@ export default function AlumnoProgresoPage() {
           <div className="flex justify-between items-center mb-3">
             <p className="text-sm font-bold text-white">Historial de peso</p>
             <div className="flex gap-3">
-              <span className="flex items-center gap-1.5 text-[10px] text-df-muted">
-                <span className="w-3 h-0.5 bg-df-violet inline-block rounded" />Peso
-              </span>
-              <span className="flex items-center gap-1.5 text-[10px] text-df-muted">
-                <span className="w-3 h-0.5 border-t-2 border-dashed border-green-400 inline-block" />Meta
-              </span>
+              {modoComparar ? (
+                <>
+                  <span className="flex items-center gap-1.5 text-[10px] text-df-muted">
+                    <span className="w-3 h-0.5 bg-df-violet inline-block rounded" />{formatMesLabel(mesASel)}
+                  </span>
+                  <span className="flex items-center gap-1.5 text-[10px] text-df-muted">
+                    <span className="w-3 h-0.5 bg-pink-400 inline-block rounded" />{formatMesLabel(mesBSel)}
+                  </span>
+                </>
+              ) : (
+                <>
+                  <span className="flex items-center gap-1.5 text-[10px] text-df-muted">
+                    <span className="w-3 h-0.5 bg-df-violet inline-block rounded" />Peso
+                  </span>
+                  <span className="flex items-center gap-1.5 text-[10px] text-df-muted">
+                    <span className="w-3 h-0.5 border-t-2 border-dashed border-green-400 inline-block" />Meta
+                  </span>
+                </>
+              )}
             </div>
           </div>
 
-          {/* Selector de rango */}
+          {/* Selector de rango (modo normal) / selector de meses (modo comparar) */}
           <div className="flex flex-wrap items-center gap-1.5 mb-3">
-            {[
-              { key: '1m',   label: '1 mes' },
-              { key: '3m',   label: '3 meses' },
-              { key: 'todo', label: 'Todo' },
-            ].map(op => (
-              <button key={op.key} onClick={() => setRangoChart(op.key)}
-                className={`px-2.5 py-1 rounded-full text-[10px] font-semibold transition-all
-                  ${rangoChart === op.key ? 'bg-df-purple text-white' : 'bg-df-surface text-df-muted hover:text-white'}`}>
-                {op.label}
-              </button>
-            ))}
-            {mesesDisponibles.length > 0 && (
-              <select value={mesesDisponibles.includes(rangoChart) ? rangoChart : ''}
-                onChange={e => e.target.value && setRangoChart(e.target.value)}
-                className="px-2.5 py-1 rounded-full text-[10px] font-semibold bg-df-surface text-df-muted border-0 outline-none">
-                <option value="" disabled>Mes específico</option>
-                {mesesDisponibles.map(m => (
-                  <option key={m} value={m}>{formatMesLabel(m)}</option>
+            {!modoComparar && (
+              <>
+                {[
+                  { key: '1m',   label: '1 mes' },
+                  { key: '3m',   label: '3 meses' },
+                  { key: 'todo', label: 'Todo' },
+                ].map(op => (
+                  <button key={op.key} onClick={() => setRangoChart(op.key)}
+                    className={`px-2.5 py-1 rounded-full text-[10px] font-semibold transition-all
+                      ${rangoChart === op.key ? 'bg-df-purple text-white' : 'bg-df-surface text-df-muted hover:text-white'}`}>
+                    {op.label}
+                  </button>
                 ))}
-              </select>
+                {mesesDisponibles.length > 0 && (
+                  <select value={mesesDisponibles.includes(rangoChart) ? rangoChart : ''}
+                    onChange={e => e.target.value && setRangoChart(e.target.value)}
+                    className="px-2.5 py-1 rounded-full text-[10px] font-semibold bg-df-surface text-df-muted border-0 outline-none">
+                    <option value="" disabled>Mes específico</option>
+                    {mesesDisponibles.map(m => (
+                      <option key={m} value={m}>{formatMesLabel(m)}</option>
+                    ))}
+                  </select>
+                )}
+              </>
+            )}
+
+            {modoComparar && mesesDisponibles.length > 0 && (
+              <>
+                <select value={mesASel} onChange={e => setMesA(e.target.value)}
+                  className="px-2.5 py-1 rounded-full text-[10px] font-semibold bg-df-surface text-df-violet border-0 outline-none">
+                  {mesesDisponibles.map(m => (
+                    <option key={m} value={m}>{formatMesLabel(m)}</option>
+                  ))}
+                </select>
+                <span className="text-[10px] text-df-muted">vs</span>
+                <select value={mesBSel} onChange={e => setMesB(e.target.value)}
+                  className="px-2.5 py-1 rounded-full text-[10px] font-semibold bg-df-surface text-pink-400 border-0 outline-none">
+                  {mesesDisponibles.map(m => (
+                    <option key={m} value={m}>{formatMesLabel(m)}</option>
+                  ))}
+                </select>
+              </>
+            )}
+
+            {mesesDisponibles.length > 1 && (
+              <button onClick={() => setModoComparar(v => !v)}
+                className={`ml-auto px-2.5 py-1 rounded-full text-[10px] font-semibold transition-all flex items-center gap-1
+                  ${modoComparar ? 'bg-df-purple text-white' : 'bg-df-surface text-df-muted hover:text-white'}`}>
+                <i className="fa-solid fa-code-compare text-[9px]" /> Comparar meses
+              </button>
             )}
           </div>
 
-          {registrosChart.length > 1 ? (
+          {/* Resumen de diferencia por mes, solo en modo comparación */}
+          {modoComparar && (serieA.length > 1 || serieB.length > 1) && (
+            <div className="flex gap-4 mb-2 text-[10px]">
+              {serieA.length > 1 && (
+                <span className="text-df-violet font-semibold">
+                  {formatMesLabel(mesASel)}: {diffA > 0 ? '+' : ''}{diffA.toFixed(1)} kg
+                </span>
+              )}
+              {serieB.length > 1 && (
+                <span className="text-pink-400 font-semibold">
+                  {formatMesLabel(mesBSel)}: {diffB > 0 ? '+' : ''}{diffB.toFixed(1)} kg
+                </span>
+              )}
+            </div>
+          )}
+
+          {(modoComparar ? Math.max(serieA.length, serieB.length) : registrosChart.length) > 1 ? (
             <div style={{ position: 'relative', height: '180px' }}>
               <canvas id="pesoChart"
                 role="img"
-                aria-label={`Gráfica de progreso de peso mostrando ${registrosChart.length} registros semanales`}>
-                {registrosChart.map(r => `${formatSemana(r.semana_inicio)}: ${r.peso_kg}kg`).join(', ')}
+                aria-label="Gráfica de progreso de peso">
               </canvas>
             </div>
           ) : (
