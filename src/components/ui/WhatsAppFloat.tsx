@@ -64,9 +64,9 @@ export default function WhatsAppFloat({ mostrarProfe = false }: Props) {
           {mostrarProfe && whatsappProfe && (
             <button
               onClick={() => abrirWhatsApp(whatsappProfe, `Hola ${nombreProfe}, tengo una consulta sobre mi entrenamiento.`)}
-              className="flex items-center gap-3 bg-df-card border border-df-border rounded-2xl px-4 py-3 shadow-lg hover:border-green-500/40 transition-all group">
-              <div className="w-9 h-9 rounded-full bg-green-900/30 flex items-center justify-center flex-shrink-0 group-hover:bg-green-900/50 transition-all">
-                <i className="fa-brands fa-whatsapp text-green-400 text-lg" />
+              className="flex items-center gap-3 bg-df-card border border-df-border rounded-2xl px-4 py-3 shadow-lg hover:border-df-violet/40 transition-all group">
+              <div className="w-9 h-9 rounded-full bg-df-purple/20 flex items-center justify-center flex-shrink-0 group-hover:bg-df-purple/40 transition-all">
+                <i className="fa-brands fa-whatsapp text-df-violet text-lg" />
               </div>
               <div className="text-left">
                 <p className="text-xs font-bold text-white">Soporte profesor</p>
@@ -79,9 +79,9 @@ export default function WhatsAppFloat({ mostrarProfe = false }: Props) {
           {whatsappSoporte && (
             <button
               onClick={() => abrirWhatsApp(whatsappSoporte, `Hola, necesito ayuda con la app Elevra.`)}
-              className="flex items-center gap-3 bg-df-card border border-df-border rounded-2xl px-4 py-3 shadow-lg hover:border-df-violet/40 transition-all group">
-              <div className="w-9 h-9 rounded-full bg-df-purple/20 flex items-center justify-center flex-shrink-0 group-hover:bg-df-purple/40 transition-all">
-                <i className="fa-brands fa-whatsapp text-df-violet text-lg" />
+              className="flex items-center gap-3 bg-df-card border border-df-border rounded-2xl px-4 py-3 shadow-lg hover:border-green-500/40 transition-all group">
+              <div className="w-9 h-9 rounded-full bg-green-900/30 flex items-center justify-center flex-shrink-0 group-hover:bg-green-900/50 transition-all">
+                <i className="fa-brands fa-whatsapp text-green-400 text-lg" />
               </div>
               <div className="text-left">
                 <p className="text-xs font-bold text-white">Soporte técnico</p>
