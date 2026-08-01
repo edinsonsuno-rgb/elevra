@@ -1,4 +1,4 @@
-import { useState, FormEvent } from 'react'
+import { useState, useEffect, FormEvent } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/hooks/useAuth'
 import { useTenant } from '@/contexts/TenantContext'
@@ -9,6 +9,9 @@ export default function PerfilPage() {
   const { user, displayName, updateDisplayName } = useAuth()
   const { tenant } = useTenant()
   const [nombre,   setNombre]   = useState(displayName ?? '')
+  const [whatsapp, setWhatsapp] = useState('')
+  const [savingWa, setSavingWa] = useState(false)
+  const [successWa, setSuccessWa] = useState(false)
   const [saving,   setSaving]   = useState(false)
   const [success,  setSuccess]  = useState(false)
   const [passForm, setPassForm] = useState({ actual: '', nueva: '', confirmar: '' })
@@ -18,6 +21,12 @@ export default function PerfilPage() {
   const [captchaResetKey, setCaptchaResetKey] = useState(0)
   const [copiado, setCopiado] = useState(false)
   const [showShareMenu, setShowShareMenu] = useState(false)
+
+  useEffect(() => {
+    if (!user) return
+    supabase.from('profiles').select('whatsapp').eq('id', user.id).single()
+      .then(({ data }) => { if (data) setWhatsapp(data.whatsapp ?? '') })
+  }, [user])
 
   function copiarSubdominio() {
     navigator.clipboard.writeText(`${tenant.subdominio}.elevra.lat`)
@@ -44,6 +53,14 @@ export default function PerfilPage() {
     await updateDisplayName(nombre)
     setSaving(false); setSuccess(true)
     setTimeout(() => setSuccess(false), 3000)
+  }
+
+  async function handleWhatsapp(e: FormEvent) {
+    e.preventDefault()
+    setSavingWa(true); setSuccessWa(false)
+    await supabase.from('profiles').upsert({ id: user?.id, whatsapp: whatsapp || null })
+    setSavingWa(false); setSuccessWa(true)
+    setTimeout(() => setSuccessWa(false), 3000)
   }
 
   async function handlePassword(e: FormEvent) {
@@ -113,6 +130,35 @@ export default function PerfilPage() {
             className="df-btn px-5 py-2.5 text-sm flex items-center gap-2">
             {saving ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <i className="fa-solid fa-floppy-disk" />}
             Guardar nombre
+          </button>
+        </form>
+
+        {/* WhatsApp */}
+        <form onSubmit={handleWhatsapp} className="space-y-3 pt-4 border-t border-df-border">
+          <div>
+            <label className="text-xs font-semibold text-df-muted uppercase tracking-wider mb-1.5 block">
+              WhatsApp
+            </label>
+            <div className="relative">
+              <i className="fa-brands fa-whatsapp absolute left-4 top-1/2 -translate-y-1/2 text-green-400 text-sm" />
+              <input value={whatsapp} onChange={e => setWhatsapp(e.target.value)}
+                placeholder="573001234567 (sin + ni espacios)"
+                className="df-input !pl-10" />
+            </div>
+            <p className="text-[10px] text-df-muted mt-1">
+              <i className="fa-solid fa-circle-info mr-1 text-df-violet" />
+              Tus alumnos podrán contactarte directamente desde "Soporte profesor"
+            </p>
+          </div>
+          {successWa && (
+            <p className="text-xs text-green-400 flex items-center gap-1.5">
+              <i className="fa-solid fa-check" /> WhatsApp actualizado
+            </p>
+          )}
+          <button type="submit" disabled={savingWa}
+            className="df-btn px-5 py-2.5 text-sm flex items-center gap-2">
+            {savingWa ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <i className="fa-solid fa-floppy-disk" />}
+            Guardar WhatsApp
           </button>
         </form>
       </div>
