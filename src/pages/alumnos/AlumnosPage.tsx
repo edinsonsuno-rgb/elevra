@@ -72,6 +72,18 @@ export default function AlumnosPage() {
                     </p>
                     <p className="text-xs text-df-muted truncate">{a.email}</p>
                   </div>
+                  {a.telefono && (
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault(); e.stopPropagation()
+                        const numero = a.telefono!.replace(/\D/g, '')
+                        window.open(`https://wa.me/${numero}?text=${encodeURIComponent(`Hola ${a.nombre.split(' ')[0]}, `)}`, '_blank')
+                      }}
+                      title="Escribir por WhatsApp"
+                      className="w-7 h-7 rounded-full bg-green-900/30 hover:bg-green-900/50 flex items-center justify-center flex-shrink-0 transition-all">
+                      <i className="fa-brands fa-whatsapp text-green-400 text-sm" />
+                    </button>
+                  )}
                   <div className={`w-2 h-2 rounded-full flex-shrink-0 ${a.activo ? 'bg-green-400' : 'bg-zinc-600'}`} />
                 </div>
                 <div className="flex items-center justify-between">

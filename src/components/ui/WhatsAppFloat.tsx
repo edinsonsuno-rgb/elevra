@@ -69,8 +69,8 @@ export default function WhatsAppFloat({ mostrarProfe = false }: Props) {
                 <i className="fa-brands fa-whatsapp text-green-400 text-lg" />
               </div>
               <div className="text-left">
-                <p className="text-xs font-bold text-white">{nombreProfe ?? 'Mi instructor'}</p>
-                <p className="text-[10px] text-df-muted">Hablar con mi profe</p>
+                <p className="text-xs font-bold text-white">Soporte profesor</p>
+                <p className="text-[10px] text-df-muted">{nombreProfe ?? 'Tu instructor'}</p>
               </div>
             </button>
           )}
