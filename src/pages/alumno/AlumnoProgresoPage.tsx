@@ -160,31 +160,16 @@ export default function AlumnoProgresoPage() {
   const diffA = serieA.length > 1 ? (serieA[serieA.length - 1].peso - serieA[0].peso) : 0
   const diffB = serieB.length > 1 ? (serieB[serieB.length - 1].peso - serieB[0].peso) : 0
 
-  // Animación de "dibujo progresivo": cada punto aparece en secuencia en vez de todos de golpe.
-  // Timing ajustado para pocos puntos (5-10): con la fórmula original de Chart.js (10s totales)
-  // se sentiría lento, así que aquí el total escala con la cantidad de puntos, tope ~2.5s.
-  function buildDrawAnimation(pointCount: number) {
-    const totalDuration = Math.min(2500, Math.max(600, pointCount * 260))
-    const delayBetweenPoints = pointCount > 0 ? totalDuration / pointCount : 0
-    const previousY = (ctx: any) =>
-      ctx.index === 0
-        ? ctx.chart.scales.y.getPixelForValue(ctx.dataset.data[0])
-        : ctx.chart.getDatasetMeta(ctx.datasetIndex).data[ctx.index - 1].getProps(['y'], true).y
+  // Animación "tipo montaña": toda el área/línea crece desde la base en vez de dibujarse
+  // punto por punto de izquierda a derecha (esa versión se sentía forzada).
+  function buildRiseAnimation() {
     return {
-      x: {
-        type: 'number', easing: 'linear', duration: delayBetweenPoints, from: NaN,
-        delay(ctx: any) {
-          if (ctx.type !== 'data' || ctx.xStarted) return 0
-          ctx.xStarted = true
-          return ctx.index * delayBetweenPoints
-        }
-      },
       y: {
-        type: 'number', easing: 'linear', duration: delayBetweenPoints, from: previousY,
-        delay(ctx: any) {
-          if (ctx.type !== 'data' || ctx.yStarted) return 0
-          ctx.yStarted = true
-          return ctx.index * delayBetweenPoints
+        easing: 'easeOutQuart',
+        duration: 850,
+        from: (ctx: any) => {
+          if (ctx.type !== 'data') return undefined
+          return ctx.chart.scales.y.getPixelForValue(ctx.chart.scales.y.min)
         }
       }
     }
@@ -237,11 +222,11 @@ export default function AlumnoProgresoPage() {
           },
           options: {
             responsive: true, maintainAspectRatio: false,
-            animation: buildDrawAnimation(maxSemanas),
+            animation: buildRiseAnimation(),
             plugins: { legend: { display: false } },
             scales: {
               y: { ticks: { font: { size: 11 }, color: '#888', callback: (v: number) => v + 'kg' }, grid: { color: 'rgba(128,128,128,0.1)' } },
-              x: { ticks: { font: { size: 11 }, color: '#888', autoSkip: false, maxRotation: 45 }, grid: { display: false } }
+              x: { ticks: { font: { size: 10 }, color: '#888', autoSkip: true, maxTicksLimit: 6, maxRotation: 0, minRotation: 0 }, grid: { display: false } }
             }
           }
         }
@@ -259,7 +244,15 @@ export default function AlumnoProgresoPage() {
                 label: 'Peso (kg)',
                 data: pesos,
                 borderColor: '#8B5CF6',
-                backgroundColor: 'rgba(139,92,246,0.1)',
+                backgroundColor: (ctx: any) => {
+                  const { chart } = ctx
+                  const { ctx: canvasCtx, chartArea } = chart
+                  if (!chartArea) return 'rgba(139,92,246,0.15)'
+                  const gradient = canvasCtx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom)
+                  gradient.addColorStop(0, 'rgba(139,92,246,0.45)')
+                  gradient.addColorStop(1, 'rgba(139,92,246,0)')
+                  return gradient
+                },
                 borderWidth: 2.5,
                 fill: true,
                 tension: 0.4,
@@ -282,7 +275,7 @@ export default function AlumnoProgresoPage() {
           options: {
             responsive: true,
             maintainAspectRatio: false,
-            animation: buildDrawAnimation(pesos.length),
+            animation: buildRiseAnimation(),
             plugins: { legend: { display: false } },
             scales: {
               y: {
@@ -290,7 +283,7 @@ export default function AlumnoProgresoPage() {
                 grid: { color: 'rgba(128,128,128,0.1)' }
               },
               x: {
-                ticks: { font: { size: 11 }, color: '#888', autoSkip: false, maxRotation: 45 },
+                ticks: { font: { size: 10 }, color: '#888', autoSkip: true, maxTicksLimit: 6, maxRotation: 0, minRotation: 0 },
                 grid: { display: false }
               }
             }
