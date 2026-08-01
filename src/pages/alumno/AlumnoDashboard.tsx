@@ -186,7 +186,7 @@ export default function AlumnoDashboard() {
         <div className="flex items-center justify-between mb-3">
           <p className="text-xs font-semibold text-df-muted uppercase tracking-wider">Rutina</p>
           <select value={diaSeleccionado} onChange={e => setDiaSeleccionado(e.target.value)}
-            className="df-input !w-auto py-1 px-2 text-xs max-w-[110px]">
+            className="df-input !w-auto py-1 px-2 text-xs max-w-[150px]">
             {DIAS_ORDER.map(d => (
               <option key={d} value={d}>
                 {DIAS_LABEL[d]}{d === DIAS_MAP[new Date().getDay()] ? ' (hoy)' : ''}
