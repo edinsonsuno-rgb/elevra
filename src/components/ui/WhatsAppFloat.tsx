@@ -95,13 +95,13 @@ export default function WhatsAppFloat({ mostrarProfe = false }: Props) {
       {/* Botón principal flotante */}
       <button
         onClick={() => setAbierto(v => !v)}
-        className={`w-14 h-14 rounded-full shadow-lg flex items-center justify-center transition-all
+        className={`w-11 h-11 rounded-full shadow-lg flex items-center justify-center transition-all
           ${abierto
             ? 'bg-df-surface border border-df-border rotate-45'
             : 'bg-green-500 hover:bg-green-400 glow-pink'
           }`}
         style={!abierto ? { boxShadow: '0 4px 20px rgba(37,211,102,0.4)' } : {}}>
-        <i className={`text-white text-xl transition-all ${abierto ? 'fa-solid fa-xmark' : 'fa-brands fa-whatsapp'}`} />
+        <i className={`text-white text-base transition-all ${abierto ? 'fa-solid fa-xmark' : 'fa-brands fa-whatsapp'}`} />
       </button>
     </div>
   )
