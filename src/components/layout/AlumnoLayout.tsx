@@ -60,8 +60,8 @@ export default function AlumnoLayout() {
   return (
     <div className="flex h-screen bg-df-bg overflow-hidden">
       <aside className="w-16 lg:w-56 flex-shrink-0 bg-df-card border-r border-df-border flex flex-col py-4">
-        <div className="px-3 lg:px-4 mb-6">
-          <img src={tenant.logo_url ?? '/logo.png'} alt={tenant.nombre} className="h-8 w-auto max-w-[120px] object-contain" />
+        <div className="px-3 lg:px-4 mb-6 overflow-hidden">
+          <img src={tenant.logo_url ?? '/logo.png'} alt={tenant.nombre} className="h-8 w-full max-w-[120px] object-contain object-left" />
         </div>
 
         <nav className="flex-1 flex flex-col gap-1 px-2 overflow-y-auto">
