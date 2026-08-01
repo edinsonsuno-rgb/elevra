@@ -104,7 +104,7 @@ export default function PerfilPage() {
               <i className="fa-brands fa-whatsapp absolute left-4 top-1/2 -translate-y-1/2 text-green-400 text-sm" />
               <input value={whatsapp} onChange={e => setWhatsapp(e.target.value)}
                 placeholder="573001234567 (sin + ni espacios)"
-                className="df-input pl-10" />
+                className="df-input !pl-10" />
             </div>
             <p className="text-[10px] text-df-muted mt-1">
               <i className="fa-solid fa-circle-info mr-1 text-df-violet" />

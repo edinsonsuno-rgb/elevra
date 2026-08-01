@@ -406,7 +406,7 @@ export default function EditarRutinaPage() {
           <div className="relative">
             <i className="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-df-muted text-xs" />
             <input value={busqueda} onChange={e => setBusqueda(e.target.value)}
-              placeholder="Buscar ejercicio o músculo..." className="df-input pl-9 text-sm py-2" autoFocus />
+              placeholder="Buscar ejercicio o músculo..." className="df-input !pl-9 text-sm py-2" autoFocus />
           </div>
           <div className="flex gap-2 flex-wrap">
             {['superior','media','inferior'].map(z => (

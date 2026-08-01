@@ -114,7 +114,7 @@ export default function CobroFormPage() {
                 <span className="absolute left-4 top-1/2 -translate-y-1/2 text-df-muted text-sm">$</span>
                 <input type="number" min={0} value={form.monto || ''}
                   onChange={e => set('monto', Number(e.target.value))}
-                  placeholder="0" className="df-input pl-8" required />
+                  placeholder="0" className="df-input !pl-8" required />
               </div>
             </div>
             <div>

@@ -111,7 +111,7 @@ export default function ConfiguracionPage() {
               <input
                 type="number" min={1000} step={1000} value={precio}
                 onChange={e => setPrecio(Number(e.target.value))}
-                className="df-input pl-8 text-xl font-black text-center"
+                className="df-input !pl-8 text-xl font-black text-center"
               />
             </div>
             <button onClick={() => setPrecio(p => p + 1000)}

@@ -197,7 +197,7 @@ export default function RegistroAlumnoPage() {
                   value={form.password}
                   onChange={e => set('password', e.target.value)}
                   placeholder="Mínimo 6 caracteres"
-                  className="df-input pl-10 pr-12" required
+                  className="df-input !pl-10 pr-12" required
                 />
                 <button type="button" onClick={() => set('showPass', !form.showPass)}
                   className="absolute right-4 top-1/2 -translate-y-1/2 text-df-muted hover:text-white transition-colors">
@@ -217,7 +217,7 @@ export default function RegistroAlumnoPage() {
                   value={form.confirmar}
                   onChange={e => set('confirmar', e.target.value)}
                   placeholder="Repite tu contraseña"
-                  className="df-input pl-10" required
+                  className="df-input !pl-10" required
                 />
               </div>
               {form.confirmar && form.password !== form.confirmar && (
