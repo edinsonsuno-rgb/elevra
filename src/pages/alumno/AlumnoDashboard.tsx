@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/hooks/useAuth'
 import { useAlumnoId } from '@/hooks/useAlumnoId'
+import { useTenant } from '@/contexts/TenantContext'
 import { Spinner } from '@/components/ui/index'
 
 const DIAS_MAP: Record<number, string> = {
@@ -46,6 +47,7 @@ function pctPlan(inicio: string, fin: string): number {
 
 export default function AlumnoDashboard() {
   const { displayName } = useAuth()
+  const { tenant } = useTenant()
   const navigate = useNavigate()
   const { alumnoId, loading: loadingAlumno } = useAlumnoId()
 
@@ -54,6 +56,7 @@ export default function AlumnoDashboard() {
   const [sesiones,    setSesiones]    = useState<Sesion[]>([])
   const [pagos,       setPagos]       = useState<Pago[]>([])
   const [loading,     setLoading]     = useState(true)
+  const [fraseProfe,  setFraseProfe]  = useState<string | null>(null)
   const [diaSeleccionado, setDiaSeleccionado] = useState(DIAS_MAP[new Date().getDay()])
 
   const hora = new Date().getHours()
@@ -64,6 +67,16 @@ export default function AlumnoDashboard() {
     if (!alumnoId) { setLoading(false); return }
     cargar(alumnoId)
   }, [alumnoId, loadingAlumno])
+
+  useEffect(() => {
+    if (!tenant?.id) return
+    supabase.from('profiles')
+      .select('motivational_phrase')
+      .eq('tenant_id', tenant.id)
+      .eq('role', 'instructor')
+      .single()
+      .then(({ data }) => setFraseProfe(data?.motivational_phrase ?? null))
+  }, [tenant?.id])
 
   async function cargar(id: string) {
     const hoy = new Date().toISOString().split('T')[0]
@@ -125,6 +138,17 @@ export default function AlumnoDashboard() {
           {(displayName ?? 'A').charAt(0).toUpperCase()}
         </div>
       </div>
+
+      {/* Mensaje motivacional del instructor */}
+      {fraseProfe && (
+        <div className="df-card p-4 relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-df-purple/10 to-transparent pointer-events-none" />
+          <p className="text-sm text-df-text italic leading-relaxed">
+            <i className="fa-solid fa-quote-left text-df-violet text-xs mr-1.5" />
+            {fraseProfe}
+          </p>
+        </div>
+      )}
 
       {/* Plan activo */}
       {planActivo ? (
