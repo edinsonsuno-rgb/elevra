@@ -18,6 +18,8 @@ export interface CatalogoEjercicio {
   musculo_url: string | null
   zona: 'superior' | 'media' | 'inferior' | null
   musculo: string | null
+  categoria_entrenamiento: string | null
+  patron_movimiento: string | null
   seg_principiante: number
   seg_intermedio: number
   seg_avanzado: number
@@ -32,7 +34,7 @@ const ZONAS = [
 ] as const
 
 const MUSCULOS: Record<string, string[]> = {
-  superior: ['Pecho', 'Espalda', 'Hombros', 'Bíceps', 'Tríceps'],
+  superior: ['Pecho', 'Espalda', 'Hombros', 'Bíceps', 'Tríceps', 'Antebrazos'],
   media:    ['Abdomen', 'Oblicuos', 'Lumbar'],
   inferior: ['Cuádriceps', 'Isquiotibiales', 'Glúteos', 'Pantorrillas'],
 }
@@ -43,6 +45,7 @@ const COLOR_MUSCULO: Record<string, string> = {
   'Hombros':        '#EF9F27',
   'Bíceps':         '#7F77DD',
   'Tríceps':        '#378ADD',
+  'Antebrazos':     '#B08D57',
   'Abdomen':        '#5DCAA5',
   'Oblicuos':       '#1D9E75',
   'Lumbar':         '#B4B2A9',
@@ -51,6 +54,19 @@ const COLOR_MUSCULO: Record<string, string> = {
   'Glúteos':        '#E24B4A',
   'Pantorrillas':   '#85B7EB',
 }
+
+const CATEGORIAS = [
+  { key: 'Fuerza',         label: 'Fuerza',         icon: 'fa-solid fa-dumbbell' },
+  { key: 'Movilidad',      label: 'Movilidad',      icon: 'fa-solid fa-arrows-spin' },
+  { key: 'Cardio',         label: 'Cardio',         icon: 'fa-solid fa-heart-pulse' },
+  { key: 'Núcleo',         label: 'Núcleo',         icon: 'fa-solid fa-circle-dot' },
+  { key: 'Rehabilitación', label: 'Rehabilitación', icon: 'fa-solid fa-kit-medical' },
+] as const
+
+const PATRONES = [
+  'Empuje', 'Tirar', 'Estiramiento', 'Pliométrico', 'Funcional',
+  'Explosivo', 'Equilibrio', 'Calentamiento', 'Isométrico',
+] as const
 
 function EjercicioCard({ ej, isAdmin, onEliminar }: {
   ej: CatalogoEjercicio
@@ -93,10 +109,15 @@ function EjercicioCard({ ej, isAdmin, onEliminar }: {
         )}
 
         {ej.musculo && (
-          <div className="absolute bottom-2 left-2 z-10">
+          <div className="absolute bottom-2 left-2 z-10 flex gap-1 flex-wrap">
             <span className="text-[10px] font-bold bg-black/60 text-white px-2 py-0.5 rounded-full">
               {ej.musculo}
             </span>
+            {ej.categoria_entrenamiento && (
+              <span className="text-[10px] font-bold bg-df-purple/70 text-white px-2 py-0.5 rounded-full">
+                {ej.categoria_entrenamiento}
+              </span>
+            )}
           </div>
         )}
 
@@ -116,6 +137,11 @@ function EjercicioCard({ ej, isAdmin, onEliminar }: {
 
       <div className="p-4">
         <h3 className="font-black text-white truncate mb-1">{ej.nombre}</h3>
+        {ej.patron_movimiento && (
+          <p className="text-[10px] text-df-violet font-semibold uppercase tracking-wider mb-1">
+            {ej.patron_movimiento}
+          </p>
+        )}
         {ej.descripcion && (
           <p className="text-xs text-df-muted line-clamp-2 mb-3">{ej.descripcion}</p>
         )}
@@ -158,7 +184,10 @@ function EjercicioRow({ ej, isAdmin, isOpen, onToggle, onEliminar }: {
         <div className="flex-1 min-w-0">
           <p className="text-white text-sm font-semibold truncate">{ej.nombre}</p>
           <p className="text-df-muted text-[11px] mt-0.5">
-            {ej.musculo}{!tieneFotos && <span className="text-df-muted/70"> · sin fotos</span>}
+            {ej.musculo}
+            {ej.categoria_entrenamiento && <> · {ej.categoria_entrenamiento}</>}
+            {ej.patron_movimiento && <> · {ej.patron_movimiento}</>}
+            {!tieneFotos && <span className="text-df-muted/70"> · sin fotos</span>}
           </p>
         </div>
         <span className="hidden sm:inline text-green-400 text-[11px] flex-shrink-0">
@@ -206,8 +235,10 @@ export default function CatalogoEjerciciosPage() {
   const [ejercicios, setEjercicios] = useState<CatalogoEjercicio[]>([])
   const [loading,    setLoading]    = useState(true)
   const [busqueda,   setBusqueda]   = useState('')
-  const [zonaFiltro,   setZonaFiltro]   = useState<string | null>(null)
-  const [musculoFiltro, setMusculoFiltro] = useState<string | null>(null)
+  const [zonaFiltro,      setZonaFiltro]      = useState<string | null>(null)
+  const [musculoFiltro,   setMusculoFiltro]   = useState<string | null>(null)
+  const [categoriaFiltro, setCategoriaFiltro] = useState<string | null>(null)
+  const [patronFiltro,    setPatronFiltro]    = useState<string | null>(null)
   const [expandidoId, setExpandidoId] = useState<string | null>(null)
   const { role } = useAuth()
   const isAdmin = role === 'admin'
@@ -250,12 +281,29 @@ export default function CatalogoEjerciciosPage() {
     setMusculoFiltro(musculoFiltro === musculo ? null : musculo)
   }
 
+  function selectCategoria(categoria: string) {
+    setCategoriaFiltro(categoriaFiltro === categoria ? null : categoria)
+  }
+
+  function selectPatron(patron: string) {
+    setPatronFiltro(patronFiltro === patron ? null : patron)
+  }
+
+  function limpiarTodo() {
+    setZonaFiltro(null)
+    setMusculoFiltro(null)
+    setCategoriaFiltro(null)
+    setPatronFiltro(null)
+  }
+
   const filtrados = ejercicios.filter(e => {
     const coincide = e.nombre.toLowerCase().includes(busqueda.toLowerCase()) ||
       (e.descripcion ?? '').toLowerCase().includes(busqueda.toLowerCase())
-    const porZona    = zonaFiltro    ? e.zona === zonaFiltro       : true
-    const porMusculo = musculoFiltro ? e.musculo === musculoFiltro  : true
-    return coincide && porZona && porMusculo
+    const porZona     = zonaFiltro      ? e.zona === zonaFiltro                        : true
+    const porMusculo   = musculoFiltro   ? e.musculo === musculoFiltro                   : true
+    const porCategoria = categoriaFiltro ? e.categoria_entrenamiento === categoriaFiltro : true
+    const porPatron     = patronFiltro    ? e.patron_movimiento === patronFiltro          : true
+    return coincide && porZona && porMusculo && porCategoria && porPatron
   })
 
   const conteoPorZona = ZONAS.reduce((acc, z) => {
@@ -269,6 +317,16 @@ export default function CatalogoEjerciciosPage() {
         return acc
       }, {} as Record<string, number>)
     : {}
+
+  const conteoPorCategoria = CATEGORIAS.reduce((acc, c) => {
+    acc[c.key] = ejercicios.filter(e => e.categoria_entrenamiento === c.key).length
+    return acc
+  }, {} as Record<string, number>)
+
+  const conteoPorPatron = PATRONES.reduce((acc, p) => {
+    acc[p] = ejercicios.filter(e => e.patron_movimiento === p).length
+    return acc
+  }, {} as Record<string, number>)
 
   if (loading) return <Spinner />
 
@@ -311,12 +369,6 @@ export default function CatalogoEjerciciosPage() {
               </span>
             </button>
           ))}
-          {zonaFiltro && (
-            <button onClick={() => { setZonaFiltro(null); setMusculoFiltro(null) }}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-full text-xs text-df-muted hover:text-red-400 df-surface transition-all">
-              <i className="fa-solid fa-xmark text-xs" /> Limpiar
-            </button>
-          )}
         </div>
       </div>
 
@@ -343,13 +395,57 @@ export default function CatalogoEjerciciosPage() {
         </div>
       )}
 
+      {/* Filtro Categoría de entrenamiento */}
+      <div className="space-y-2">
+        <p className="text-xs font-semibold text-df-muted uppercase tracking-wider">Categoría de entrenamiento</p>
+        <div className="flex gap-2 flex-wrap">
+          {CATEGORIAS.map(c => (
+            <button key={c.key} onClick={() => selectCategoria(c.key)}
+              className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold transition-all
+                ${categoriaFiltro === c.key
+                  ? 'bg-df-purple text-white'
+                  : 'df-surface text-df-muted hover:text-white'}`}>
+              <i className={`${c.icon} text-xs`} />
+              {c.label}
+              <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${categoriaFiltro === c.key ? 'bg-white/20' : 'bg-df-bg'}`}>
+                {conteoPorCategoria[c.key] ?? 0}
+              </span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Filtro Patrón de movimiento */}
+      <div className="space-y-2">
+        <p className="text-xs font-semibold text-df-muted uppercase tracking-wider">Patrón de movimiento</p>
+        <div className="flex gap-2 flex-wrap">
+          {PATRONES.map(p => (
+            <button key={p} onClick={() => selectPatron(p)}
+              className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold transition-all
+                ${patronFiltro === p
+                  ? 'bg-df-pink/20 text-df-pink border border-df-pink/40'
+                  : 'df-surface text-df-muted hover:text-white'}`}>
+              {p}
+              <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${patronFiltro === p ? 'bg-df-pink/20' : 'bg-df-bg'}`}>
+                {conteoPorPatron[p] ?? 0}
+              </span>
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* Resumen filtros activos */}
-      {(zonaFiltro || musculoFiltro || busqueda) && (
-        <p className="text-xs text-df-muted">
+      {(zonaFiltro || musculoFiltro || categoriaFiltro || patronFiltro || busqueda) && (
+        <p className="text-xs text-df-muted flex items-center gap-2 flex-wrap">
           Mostrando <span className="text-white font-semibold">{filtrados.length}</span> ejercicio(s)
           {zonaFiltro && <> · Zona: <span className="text-df-violet capitalize">{zonaFiltro}</span></>}
           {musculoFiltro && <> · Músculo: <span className="text-df-pink">{musculoFiltro}</span></>}
+          {categoriaFiltro && <> · Categoría: <span className="text-df-violet">{categoriaFiltro}</span></>}
+          {patronFiltro && <> · Patrón: <span className="text-df-pink">{patronFiltro}</span></>}
           {busqueda && <> · Búsqueda: <span className="text-df-pink">"{busqueda}"</span></>}
+          <button onClick={limpiarTodo} className="text-df-muted hover:text-red-400 transition-all">
+            <i className="fa-solid fa-xmark" /> Limpiar todo
+          </button>
         </p>
       )}
 
