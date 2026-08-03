@@ -5,7 +5,15 @@ import { Spinner, Modal } from '@/components/ui/index'
 import { useAuth } from '@/hooks/useAuth'
 
 interface Alumno { id: string; nombre: string; documento: string | null; tipo_documento: string | null; nivel: string }
-interface CatalogoEj { id: string; nombre: string; foto_inicio_url: string | null; zona: string | null; musculo: string | null }
+interface CatalogoEj {
+  id: string
+  nombre: string
+  foto_inicio_url: string | null
+  zona: string | null
+  musculo: string | null
+  categoria_entrenamiento: string | null
+  patron_movimiento: string | null
+}
 interface Item {
   tempId:    string
   tipo:      'ejercicio' | 'descanso'
@@ -24,10 +32,17 @@ const DIAS_LABEL: Record<string, string> = {
 }
 
 const MUSCULOS: Record<string, string[]> = {
-  superior: ['Pecho', 'Espalda', 'Hombros', 'Bíceps', 'Tríceps'],
+  superior: ['Pecho', 'Espalda', 'Hombros', 'Bíceps', 'Tríceps', 'Antebrazos'],
   media:    ['Abdomen', 'Oblicuos', 'Lumbar'],
   inferior: ['Cuádriceps', 'Isquiotibiales', 'Glúteos', 'Pantorrillas'],
 }
+
+const CATEGORIAS = ['Fuerza', 'Movilidad', 'Cardio', 'Núcleo', 'Rehabilitación'] as const
+
+const PATRONES = [
+  'Empuje', 'Tirar', 'Estiramiento', 'Pliométrico', 'Funcional',
+  'Explosivo', 'Equilibrio', 'Calentamiento', 'Isométrico',
+] as const
 
 type DiaKey = typeof DIAS[number]
 type DiaData = { esDescanso: boolean; items: Item[] }
@@ -55,10 +70,12 @@ export default function AsignarRutinaPage() {
   // Modal selector ejercicio
   const [modalEj,       setModalEj]       = useState(false)
   const [diaTarget,     setDiaTarget]     = useState<DiaKey | null>(null)
-  const [catalogo,      setCatalogo]      = useState<CatalogoEj[]>([])
-  const [busqueda,      setBusqueda]      = useState('')
-  const [zonaFiltro,    setZonaFiltro]    = useState<string | null>(null)
-  const [musculoFiltro, setMusculoFiltro] = useState<string | null>(null)
+  const [catalogo,        setCatalogo]        = useState<CatalogoEj[]>([])
+  const [busqueda,        setBusqueda]        = useState('')
+  const [zonaFiltro,      setZonaFiltro]      = useState<string | null>(null)
+  const [musculoFiltro,   setMusculoFiltro]   = useState<string | null>(null)
+  const [categoriaFiltro, setCategoriaFiltro] = useState<string | null>(null)
+  const [patronFiltro,    setPatronFiltro]    = useState<string | null>(null)
 
   // Modal descanso
   const [modalDesc,  setModalDesc]  = useState(false)
@@ -74,7 +91,7 @@ export default function AsignarRutinaPage() {
   async function cargar() {
     const [{ data: a }, { data: c }] = await Promise.all([
       supabase.from('alumnos').select('id,nombre,documento,tipo_documento,nivel').eq('id', id!).single(),
-      supabase.from('catalogo_ejercicios').select('id,nombre,foto_inicio_url,zona,musculo').order('nombre'),
+      supabase.from('catalogo_ejercicios').select('id,nombre,foto_inicio_url,zona,musculo,categoria_entrenamiento,patron_movimiento').order('nombre'),
     ])
     setAlumno(a)
     setCatalogo(c ?? [])
@@ -208,8 +225,10 @@ export default function AsignarRutinaPage() {
   const filtrados = catalogo.filter(e =>
     (e.nombre.toLowerCase().includes(busqueda.toLowerCase()) ||
     (e.musculo ?? '').toLowerCase().includes(busqueda.toLowerCase())) &&
-    (zonaFiltro    ? e.zona    === zonaFiltro    : true) &&
-    (musculoFiltro ? e.musculo === musculoFiltro : true)
+    (zonaFiltro      ? e.zona                   === zonaFiltro      : true) &&
+    (musculoFiltro   ? e.musculo                 === musculoFiltro   : true) &&
+    (categoriaFiltro ? e.categoria_entrenamiento === categoriaFiltro : true) &&
+    (patronFiltro    ? e.patron_movimiento       === patronFiltro    : true)
   )
 
   if (loading) return <Spinner />
@@ -389,7 +408,7 @@ export default function AsignarRutinaPage() {
       </div>
 
       {/* Modal seleccionar ejercicio */}
-      <Modal open={modalEj} onClose={() => { setModalEj(false); setZonaFiltro(null); setMusculoFiltro(null) }} title="Seleccionar ejercicio">
+      <Modal open={modalEj} onClose={() => { setModalEj(false); setZonaFiltro(null); setMusculoFiltro(null); setCategoriaFiltro(null); setPatronFiltro(null) }} title="Seleccionar ejercicio">
         <div className="space-y-3">
           <div className="relative">
             <i className="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-df-muted text-xs" />
@@ -423,6 +442,30 @@ export default function AsignarRutinaPage() {
             </div>
           )}
 
+          {/* Categoría de entrenamiento */}
+          <div className="flex gap-2 flex-wrap">
+            {CATEGORIAS.map(c => (
+              <button key={c} type="button"
+                onClick={() => setCategoriaFiltro(categoriaFiltro === c ? null : c)}
+                className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all
+                  ${categoriaFiltro === c ? 'bg-df-purple text-white' : 'df-surface text-df-muted hover:text-white'}`}>
+                {c}
+              </button>
+            ))}
+          </div>
+
+          {/* Patrón de movimiento */}
+          <div className="flex gap-2 flex-wrap">
+            {PATRONES.map(p => (
+              <button key={p} type="button"
+                onClick={() => setPatronFiltro(patronFiltro === p ? null : p)}
+                className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all
+                  ${patronFiltro === p ? 'bg-df-pink/20 text-df-pink border border-df-pink/40' : 'df-surface text-df-muted hover:text-white'}`}>
+                {p}
+              </button>
+            ))}
+          </div>
+
           <div className="space-y-2 max-h-72 overflow-y-auto">
             {filtrados.length === 0 && <p className="text-xs text-df-muted text-center py-4">Sin resultados</p>}
             {filtrados.map(ej => (
@@ -436,7 +479,13 @@ export default function AsignarRutinaPage() {
                 }
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-bold text-white truncate">{ej.nombre}</p>
-                  {ej.musculo && <p className="text-xs text-df-muted">{ej.zona} · {ej.musculo}</p>}
+                  {ej.musculo && (
+                    <p className="text-xs text-df-muted truncate">
+                      {ej.zona} · {ej.musculo}
+                      {ej.categoria_entrenamiento && <> · {ej.categoria_entrenamiento}</>}
+                      {ej.patron_movimiento && <> · {ej.patron_movimiento}</>}
+                    </p>
+                  )}
                 </div>
                 <i className="fa-solid fa-plus text-df-violet text-sm flex-shrink-0" />
               </button>
