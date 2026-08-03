@@ -13,22 +13,37 @@ const ZONAS = [
 ] as const
 
 const MUSCULOS: Record<string, string[]> = {
-  superior: ['Pecho', 'Espalda', 'Hombros', 'Bíceps', 'Tríceps'],
+  superior: ['Pecho', 'Espalda', 'Hombros', 'Bíceps', 'Tríceps', 'Antebrazos'],
   media:    ['Abdomen', 'Oblicuos', 'Lumbar'],
   inferior: ['Cuádriceps', 'Isquiotibiales', 'Glúteos', 'Pantorrillas'],
 }
 
+const CATEGORIAS = [
+  { key: 'Fuerza',         label: 'Fuerza',         icon: 'fa-solid fa-dumbbell' },
+  { key: 'Movilidad',      label: 'Movilidad',      icon: 'fa-solid fa-arrows-spin' },
+  { key: 'Cardio',         label: 'Cardio',         icon: 'fa-solid fa-heart-pulse' },
+  { key: 'Núcleo',         label: 'Núcleo',         icon: 'fa-solid fa-circle-dot' },
+  { key: 'Rehabilitación', label: 'Rehabilitación', icon: 'fa-solid fa-kit-medical' },
+] as const
+
+const PATRONES = [
+  'Empuje', 'Tirar', 'Estiramiento', 'Pliométrico', 'Funcional',
+  'Explosivo', 'Equilibrio', 'Calentamiento', 'Isométrico',
+] as const
+
 const FORM_INICIAL = {
-  nombre:           '',
-  descripcion:      '',
-  imagen_url:       '',
-  foto_inicio_url:  '',
-  foto_fin_url:     '',
-  zona:             '' as 'superior' | 'media' | 'inferior' | '',
-  musculo:          '',
-  seg_principiante: 4,
-  seg_intermedio:   3,
-  seg_avanzado:     2,
+  nombre:                  '',
+  descripcion:             '',
+  imagen_url:              '',
+  foto_inicio_url:         '',
+  foto_fin_url:            '',
+  zona:                    '' as 'superior' | 'media' | 'inferior' | '',
+  musculo:                 '',
+  categoria_entrenamiento: '',
+  patron_movimiento:       '',
+  seg_principiante:        4,
+  seg_intermedio:          3,
+  seg_avanzado:            2,
 }
 
 export default function CatalogoEjercicioFormPage() {
@@ -51,16 +66,18 @@ export default function CatalogoEjercicioFormPage() {
     supabase.from('catalogo_ejercicios').select('*').eq('id', id!).single()
       .then(({ data }) => {
         if (data) setForm({
-          nombre:           data.nombre,
-          descripcion:      data.descripcion ?? '',
-          imagen_url:       data.imagen_url ?? '',
-          foto_inicio_url:  data.foto_inicio_url ?? '',
-          foto_fin_url:     data.foto_fin_url ?? '',
-          zona:             data.zona ?? '',
-          musculo:          data.musculo ?? '',
-          seg_principiante: data.seg_principiante,
-          seg_intermedio:   data.seg_intermedio,
-          seg_avanzado:     data.seg_avanzado,
+          nombre:                  data.nombre,
+          descripcion:             data.descripcion ?? '',
+          imagen_url:              data.imagen_url ?? '',
+          foto_inicio_url:         data.foto_inicio_url ?? '',
+          foto_fin_url:            data.foto_fin_url ?? '',
+          zona:                    data.zona ?? '',
+          musculo:                 data.musculo ?? '',
+          categoria_entrenamiento: data.categoria_entrenamiento ?? '',
+          patron_movimiento:       data.patron_movimiento ?? '',
+          seg_principiante:        data.seg_principiante,
+          seg_intermedio:          data.seg_intermedio,
+          seg_avanzado:            data.seg_avanzado,
         })
         setLoading(false)
       })
@@ -77,9 +94,11 @@ export default function CatalogoEjercicioFormPage() {
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
-    if (!form.nombre.trim()) { setError('El nombre es obligatorio'); return }
-    if (!form.zona)          { setError('Selecciona la zona corporal'); return }
-    if (!form.musculo)       { setError('Selecciona el músculo principal'); return }
+    if (!form.nombre.trim())            { setError('El nombre es obligatorio'); return }
+    if (!form.zona)                     { setError('Selecciona la zona corporal'); return }
+    if (!form.musculo)                  { setError('Selecciona el músculo principal'); return }
+    if (!form.categoria_entrenamiento)  { setError('Selecciona la categoría de entrenamiento'); return }
+    if (!form.patron_movimiento)        { setError('Selecciona el patrón de movimiento'); return }
     setSaving(true); setError(null)
 
     // Chequeo de nombre duplicado (ignora mayúsculas/minúsculas y espacios)
@@ -184,6 +203,45 @@ export default function CatalogoEjercicioFormPage() {
               </div>
             </div>
           )}
+        </div>
+
+        {/* Categoría y patrón de movimiento */}
+        <div className="df-card p-5 space-y-4">
+          <h2 className="text-sm font-bold text-white">Clasificación de entrenamiento</h2>
+
+          <div>
+            <label className="text-xs font-semibold text-df-muted uppercase tracking-wider mb-2 block">
+              Categoría de entrenamiento *
+            </label>
+            <div className="flex flex-wrap gap-2">
+              {CATEGORIAS.map(c => (
+                <button type="button" key={c.key} onClick={() => set('categoria_entrenamiento', c.key)}
+                  className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold transition-all
+                    ${form.categoria_entrenamiento === c.key
+                      ? 'bg-df-purple text-white'
+                      : 'df-surface text-df-muted hover:text-white'}`}>
+                  <i className={c.icon} /> {c.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <label className="text-xs font-semibold text-df-muted uppercase tracking-wider mb-2 block">
+              Patrón de movimiento *
+            </label>
+            <div className="flex flex-wrap gap-2">
+              {PATRONES.map(p => (
+                <button type="button" key={p} onClick={() => set('patron_movimiento', p)}
+                  className={`px-4 py-2 rounded-full text-xs font-semibold transition-all
+                    ${form.patron_movimiento === p
+                      ? 'bg-df-pink/20 text-df-pink border border-df-pink/40'
+                      : 'df-surface text-df-muted hover:text-white'}`}>
+                  {p}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
 
         {/* Fotos */}
